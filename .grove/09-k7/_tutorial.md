@@ -46,21 +46,17 @@ plain-text entries for them into links. Only the second cuts `copy-edit`.
 
 ## Continuation context
 
-Parts 1–3 and their complete packages now use the label-card API recorded in
-`tutorial/README.md`. The entry index and every concept page link to it.
-Part 3's temporary next route is the existing callback explanation; replace
-it when part 4 lands. Parts 4–5 remain plain text in the index.
+The five parts and their complete packages use the label-card API recorded
+in `tutorial/README.md`. The index links every part; part 3 leads to part 4,
+then part 5. The landing map and every concept page already link the index.
 
-`current_label` returns a borrowed opaque `Label`, not a pointer. Its region
-is `owner($card)` and refresh invalidates it at entry. `Label` already has
-its own unique destructor. The part 5 exercise can therefore change the
-operation to give an independent owned Label snapshot, removing the borrow
-invalidation clause and making the caller's destruction obligation explicit.
-The changed semantic contract needs a distinct publication/access identity;
-do not pretend the existing symbol also implements the changed contract.
-No raw-pointer allocator extension is needed. The later Watch subscription
-is independent of Card: do not silently add callback retention to the
-existing card creation/refresh/destruction operations.
+`current_label` returns a borrowed opaque `Label`, not a pointer, through
+the finished checkpoint. Its region is `owner($card)` and refresh invalidates
+it at entry. Part 5's separate `tutorial::owned` package returns an independent
+owned Label snapshot via `fixture_current_label_owned`; the existing unique
+Label destructor discharges the new caller obligation. No allocator extension
+or new failure mode is introduced. The Watch subscription is independent of
+Card and delivers only a scalar change number. Preserve that boundary.
 
 ## Handed forward
 
@@ -75,3 +71,15 @@ existing card creation/refresh/destruction operations.
   text elements, eight allocated elements and the terminator visible; compare
   valid status with invalid output elements on failure. The prose carries all
   facts. Use the shared vocabulary and commit source plus generated SVG.
+- **art — tutorial/04-callbacks.md:** fill the plan's G7 tutorial slot.
+  Adapt or reuse the existing G7 source with Watch/watch_labels/destroy_watch
+  names. Distinguish synchronous registration return, permitted later
+  invocation starts, consumption at destructor entry and quiescence at its
+  return; show the outside_callback precondition. The prose carries all facts,
+  including zero delivery and no termination guarantee. Do not imply a Card
+  is retained or an earlier Label borrow extended.
+- **art — tutorial/05-access-and-change.md:** compare the borrowed Label
+  ending at refresh/owner destruction with the owned snapshot's independent
+  destroy_label obligation. Reuse the established ownership/borrow vocabulary;
+  do not add a raw-pointer allocation model. An additional access diagram is
+  unnecessary here; the four-clause table and linked G3 explanation cover it.

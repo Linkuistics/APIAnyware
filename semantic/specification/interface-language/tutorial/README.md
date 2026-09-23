@@ -30,16 +30,19 @@ The API's intended observations are:
 | `refresh_card` | Replace the card's label; old label borrows become invalid at entry, even while the card remains alive. |
 | `destroy_label` | Consume an owned label. Borrowing a label never grants permission to call this destructor. |
 | `copy_text` | Borrow a valid label and write seven UTF-8 code units plus a final zero into disjoint caller storage. Return the `CopyStatus` case `copied` (`0`) or `unavailable` (`1`); failure leaves no readable output. |
+| `LabelChanged` | Receive a scalar change number in one synchronous callback invocation. |
+| `watch_labels` | Retain a callback for zero-or-more notifications after registration returns; return an owned `Watch`. |
+| `Watch` and `destroy_watch` | A separate unique subscription owner; destruction consumes it and returns only when no callback is running or can start. |
 
 For a concrete label, imagine `READY!!`: seven one-byte code units followed
 by the zero terminator when copied. The length is measured in code units,
 not in user-perceived characters. A refresh may choose another seven-code-unit
 label. The exact spelling is not part of the contract.
 
-The later callback exercise adds a label-change notification subscription,
+The callback exercise adds a label-change notification subscription,
 with a callback and a separate unique `Watch` owner whose destruction waits
 for quiescence. It does not retain a `Card` or extend a borrowed `Label`'s
-lifetime. The later ownership exercise changes `current_label` to return
+lifetime. The ownership exercise changes `current_label` to return
 an independent owned `Label` snapshot. Its caller then uses `destroy_label`
 to discharge the new obligation.
 
@@ -52,20 +55,21 @@ from the domain obligations.
 
 Each checkpoint is a complete [package](../glossary.md#package) for a narrower
 declared subset of synthetic release 1. The package identities differ so you
-can read each file independently. Later parts add APIs; they do not fill holes
-in earlier declarations ([`L2–L3`](../language.md#l2)).
+can read each file independently. Parts 2–4 add APIs; they do not fill holes
+in earlier declarations ([`L2–L3`](../language.md#l2)). Part 5 first assembles that release, then
+publishes an explicitly different owned-snapshot variant for the change exercise.
 
 | Part | New concept | Checkpoint |
 |---|---|---|
 | [1. A package and one resource](01-lifetime.md) | Publication, ownership and nullable creation | [Card lifetime package](../examples/tutorial/01-lifetime.ail) |
 | [2. Lending access](02-lending.md) | Owner-dependent borrows and earlier invalidation | [Label lending package](../examples/tutorial/02-lending.ail) |
 | [3. Caller-supplied storage and failure](03-storage.md) | Text extent, writable output and a closed status domain | [Text copying package](../examples/tutorial/03-storage.ail) |
-| 4. Callbacks and teardown (forthcoming) | Invocation schedule, owner scope and quiescent destruction | Subscription package (forthcoming) |
-| 5. Reaching the code, and changing the contract (forthcoming) | Access paths and the borrowed-to-owned change | Finished package and changed contract (forthcoming) |
+| [4. Callbacks and teardown](04-callbacks.md) | Invocation schedule, owner scope and quiescent destruction | [Subscription package](../examples/tutorial/04-callbacks.ail) |
+| [5. Reaching the code, and changing the contract](05-access-and-change.md) | Access paths and the borrowed-to-owned change | [Finished package](../examples/tutorial/05-finished.ail) and [owned variant](../examples/tutorial/05-owned.ail) |
 
 Every function already has an [access path](../glossary.md#access-path) in
-part 1. For now, follow the existing synthetic symbol-path form; part 5 will
-explain its four clauses. Omitting those paths would make even the first
+part 1. For now, follow the existing synthetic symbol-path form;
+[part 5](05-access-and-change.md) explains its four clauses. Omitting those paths would make even the first
 checkpoint incomplete ([`A2`](../profiles.md#a2)).
 
 ## How to check your work

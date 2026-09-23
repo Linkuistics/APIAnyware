@@ -352,7 +352,5 @@ The length still excludes the terminator, so capacity seven leaves no room
 for the required final zero.
 
 Return: [Describing a small API](README.md).
-Part 4, *Callbacks and teardown*, is forthcoming.
-Next: [the callback explanation](../explanation/contracts.md#callbacks) introduces
-the next obligation.
+Next: [4. Callbacks and teardown](04-callbacks.md).
 

@@ -1,0 +1,293 @@
+// region: checkpoint
+language "0.1";
+package tutorial::callbacks version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending, refresh, text copying and independent label-change notifications; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card, @CopyStatus, @copy_text, @Watch, @LabelChanged, @watch_labels, @destroy_watch]);
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Card {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_card);
+    sharing(transferable);
+    isolation(none);
+    doc("Owns its current label; refresh replaces that label.");
+  }
+  fn create_card() -> nullable<Card> {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(parallel);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    outcome created {
+      when(returned, nonnull($result));
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    outcome allocation_failed {
+      when(returned, null($result));
+      meaning(failure);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_create_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn destroy_card(card: Card) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($card, consume);
+    retain($card, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  resource Label {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_label);
+    sharing(transferable);
+    isolation(none);
+    doc("A label of seven nonzero UTF-8 code units; an owned Label is an independent snapshot.");
+  }
+  fn destroy_label(label: Label) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($label, consume);
+    retain($label, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn current_label(card: Card) -> Label {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    input($card, borrow);
+    retain($card, none);
+    valid($card, call);
+    outcome lent {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, borrow(owner($card)));
+      invalidated_by($result, [@refresh_card]);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_current_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn refresh_card(card: Card) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(arguments);
+    variadic(false);
+    input($card, borrow);
+    retain($card, none);
+    valid($card, call);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_refresh_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  enum CopyStatus: i32 {
+    available([test]);
+    deprecated(no);
+    values(closed);
+    sharing(value);
+    isolation(none);
+    case copied = 0;
+    case unavailable = 1;
+  }
+  fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(arguments);
+    variadic(false);
+    input($label, borrow);
+    retain($label, none);
+    valid($label, call);
+    input($destination, borrow);
+    retain($destination, none);
+    valid($destination, call);
+    direction($destination, out);
+    aliasing($destination, disjoint);
+    extent($destination, buffer(7, 8, elements));
+    contents($destination, text("utf-8", nul));
+    outcome copied {
+      when(returned, equal($result, 0));
+      meaning(success);
+      state($result, valid);
+      state($destination[], valid);
+    }
+    outcome unavailable {
+      when(returned, equal($result, 1));
+      meaning(failure);
+      state($result, valid);
+      state($destination[], invalid);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_copy_text");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  resource Watch {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_watch);
+    sharing(transferable);
+    isolation(none);
+  }
+  callback LabelChanged(change: u64) -> unit {
+    available([test]);
+    deprecated(no);
+    sharing(shared);
+    isolation(none);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    callback_abi(native, "c");
+    representation(fixture, "closure");
+    outcome handled {
+      when(returned, any);
+      meaning(success);
+    }
+  }
+  fn watch_labels(handler: LabelChanged) -> Watch {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($handler, borrow);
+    retain($handler, strong(owner($result)));
+    valid($handler, call);
+    callback $handler {
+      timing(after_return);
+      count(0, many);
+      scope(owner($result));
+      executor(any);
+      concurrency(serial);
+      reentrancy(forbidden);
+      quiescence(@destroy_watch);
+    }
+    outcome registered {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_watch_labels");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn destroy_watch(subscription: Watch) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($subscription, consume);
+    retain($subscription, none);
+    requires(outside_callback(@watch_labels::handler));
+    outcome stopped {
+      when(returned, any);
+      meaning(success);
+      doc("No callback is running or can start after this completion.");
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_watch");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}
+// endregion
+

@@ -78,7 +78,7 @@ when creation returns null there is nothing to destroy
    `compatibility`. These facts are already part of a complete package
    ([`L3`](../language.md#l3), [`L5`](../language.md#l5),
    [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
-   Part 5 will explain access paths in detail.
+   [Part 5](05-access-and-change.md) explains access paths in detail.
 
 ## Checkpoint package
 
