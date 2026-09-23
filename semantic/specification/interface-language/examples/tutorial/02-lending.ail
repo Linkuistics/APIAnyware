@@ -1,0 +1,158 @@
+// region: checkpoint
+language "0.1";
+package tutorial::lending version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending and refresh; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card]);
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Card {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_card);
+    sharing(transferable);
+    isolation(none);
+    doc("Owns its current label; refresh replaces that label.");
+  }
+  fn create_card() -> nullable<Card> {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(parallel);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    outcome created {
+      when(returned, nonnull($result));
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    outcome allocation_failed {
+      when(returned, null($result));
+      meaning(failure);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_create_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn destroy_card(card: Card) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($card, consume);
+    retain($card, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  resource Label {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_label);
+    sharing(transferable);
+    isolation(none);
+    doc("A label of seven nonzero UTF-8 code units; an owned Label is an independent snapshot.");
+  }
+  fn destroy_label(label: Label) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($label, consume);
+    retain($label, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn current_label(card: Card) -> Label {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    input($card, borrow);
+    retain($card, none);
+    valid($card, call);
+    outcome lent {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, borrow(owner($card)));
+      invalidated_by($result, [@refresh_card]);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_current_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn refresh_card(card: Card) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(arguments);
+    variadic(false);
+    input($card, borrow);
+    retain($card, none);
+    valid($card, call);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_refresh_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}
+// endregion
+

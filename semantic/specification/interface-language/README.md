@@ -51,7 +51,7 @@ you to read every route in order.
 | Understand how clauses express obligations | [How AIL states a contract](explanation/contracts.md) |
 | Understand package scope and how calls reach code | [Packages, environments and access paths](explanation/packages.md) |
 | Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
-| Learn to read the notation | [Synthetic buffer example](examples/buffers.ail) alongside [its conformance context](conformance.md); the tutorial *Describing a small API* is forthcoming |
+| Learn to read and write the notation | [Describing a small API](tutorial/README.md), with complete checkpoint packages |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 

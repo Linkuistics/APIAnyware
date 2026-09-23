@@ -311,5 +311,5 @@ see [the memory and behavioural rules](../contracts.md).
 
 Continue through [Packages, environments and access paths](packages.md) and
 [Design choices, limits and open questions](choices.md) after the contract page.
-The tutorial *Describing a small API* is forthcoming.
+Then try [Describing a small API](../tutorial/README.md) to write a contract in steps.
 Return to [the overview](../README.md) for the full document map.

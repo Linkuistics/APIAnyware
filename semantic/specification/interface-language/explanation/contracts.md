@@ -793,6 +793,7 @@ contract, nor that every target language can bind it
 
 Next: [Packages, environments and access paths](packages.md), then
 [Design choices, limits and open questions](choices.md).
+For a guided exercise, follow [Describing a small API](../tutorial/README.md).
 See [the canonical contract rules](../contracts.md) for exact obligations. Return to the
 [overview](../README.md) for the document map or the [domain explanation](unsaid.md)
 for the failures these contracts prevent.

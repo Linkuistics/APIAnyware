@@ -1,0 +1,75 @@
+// region: checkpoint
+language "0.1";
+package tutorial::lifetime version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card]);
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Card {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_card);
+    sharing(transferable);
+    isolation(none);
+    doc("Owns its current label; refresh replaces that label.");
+  }
+  fn create_card() -> nullable<Card> {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(parallel);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    outcome created {
+      when(returned, nonnull($result));
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    outcome allocation_failed {
+      when(returned, null($result));
+      meaning(failure);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_create_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn destroy_card(card: Card) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($card, consume);
+    retain($card, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_destroy_card");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}
+// endregion
+

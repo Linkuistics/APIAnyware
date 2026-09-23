@@ -397,7 +397,8 @@ mutations that cite the several distinct obligations in [`C3`](../contracts.md#c
 **Why it matters:** a stable identifier helps locate a rule, but a broad section
 can leave the reader searching for the exact rejecting condition.
 
-Next: inspect the [conformance examples](../conformance.md#positive-specifications)
-with their expected interpretations. The tutorial *Describing a small API* and
-the guide *Reviewing AIL* are forthcoming.
+Next: [Describing a small API](../tutorial/README.md) guides you through writing
+and reading complete checkpoint packages. The guide *Reviewing AIL* is forthcoming.
+For more examples, inspect the [conformance packages](../conformance.md#positive-specifications)
+with their expected interpretations.
 Return to [packages and access paths](packages.md) or [the overview](../README.md).

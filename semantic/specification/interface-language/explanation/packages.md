@@ -364,5 +364,6 @@ environment and path; that limitation is distinct from invalid AIL
 ([`A5`](../profiles.md#a5)).
 
 Next: [Design choices, limits and open questions](choices.md).
+Then write a complete package in [Describing a small API](../tutorial/README.md).
 Return to [How AIL states a contract](contracts.md) for semantic obligations,
 or [the overview](../README.md) for the document map.
