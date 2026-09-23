@@ -49,6 +49,17 @@ cuts nothing.
 
 ## Handed forward
 
+- **art — G2:** `explanation/packages.md`, “What a package claims”. Show the
+  package's surface and exported roots, private support in the dependency
+  closure, exact environments, and pinned imports/profile/ABI definitions.
+  Keep export membership distinct from transitive dependency membership.
+- **art — G3:** `explanation/packages.md`, “Reaching the code”. Show the
+  synthetic `read_count` declaration reaching `currentCount` through
+  `objc_like` and `Outer.Counter.currentCount.get` through `swift_like`.
+  Both select the same synthetic ABI entry with different conventions and
+  implement the whole getter contract. Mark stable fixture compatibility
+  versus the `fixture-build` source recipe; selection is explicit, not ordered.
+  Reuse the shared vocabulary; prose already states every relation.
 - **art — G5:** `explanation/contracts.md`, “How long a borrow lasts”. Add the
   borrow timeline comparing owner destruction with earlier invalidation at
   `replace` entry. Keep `valid($store, call)` distinct from the returned borrow's

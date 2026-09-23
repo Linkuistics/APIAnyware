@@ -19,18 +19,27 @@ rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 A calling convention is only part of an ABI; a [package](#package) selects a tooling-owned
 ABI definition rather than implementing one.
 
+## ABI entry
+
+An ABI entry is a tooling-owned, versioned definition of calling conventions
+and representations selected through a pinned catalogue alias. Defined in
+[Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries);
+rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
+A language name or compiler version alone is not a compatibility guarantee.
+
 ## Access path
 
 An access path describes how a consumer reaches a declaration's code or data in
 specified [environments](#environment), with its ABI, access mechanism,
 [mapping](#mapping) and compatibility
-domain. Defined in [Reaching the code](explanation/unsaid.md#reaching-the-code);
+domain. Defined in [Reaching the code](explanation/packages.md#reaching-the-code);
 rule: [`A2`](profiles.md#a2). A source name alone does not supply a path.
 
 ## Availability
 
 Availability is the set of declared exact environments in which a declaration
-is offered. Defined and governed by [`L3`](language.md#l3). It is not a runtime
+is offered. Defined in [Where it holds](explanation/packages.md#where-it-holds);
+rule: [`L3`](language.md#l3). It is not a runtime
 capability test for an optional member ([`C3`](contracts.md#c3)).
 
 ## Binding
@@ -104,12 +113,28 @@ arguments and results within an [ABI](#abi) definition. Defined in
 rules: [`A1–A2`](profiles.md#a1). Matching its name does not establish compatible
 type layout or runtime requirements.
 
+## Canonical identity
+
+A declaration's canonical identity is its package name, package version and
+declaration name. Defined in [Four identities](explanation/packages.md#four-identities);
+rule: [`L2`](language.md#l2). A source name or access-path name does not replace
+it, and overloads have distinct local declaration names.
+
 ## Cardinality
 
 Cardinality states how many participants a pattern role accepts: exactly one,
 zero or one, zero or more, or one or more. Defined in
 [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
 rule: [`L6`](language.md#l6). Callback invocation count is a separate contract.
+
+## Clause
+
+A clause states a fact using the uniform `name(arguments);` form, whose vocabulary
+and applicability come from the rule files. Defined in
+[From signature to contract](explanation/contracts.md#from-signature-to-contract)
+and [One clause syntax](explanation/choices.md#one-clause-syntax-with-a-closed-vocabulary-in-prose);
+rules: [`L1`](language.md#l1), [`L5`](language.md#l5). Parsing that form alone
+does not establish that the clause is recognized or used validly.
 
 ## Closure
 
@@ -118,6 +143,14 @@ callback's captured environment. Defined here through
 [dependency closure](#dependency-closure) and [callback captures](#callback-captures);
 rules: [`L2–L3`](language.md#l2), [`C2`](contracts.md#c2).
 These explanations always qualify the word to keep the two meanings separate.
+
+## Compatibility domain
+
+A compatibility domain states where an access path's representation can be used:
+the ABI entry's guaranteed stable domain, a resolved artifact set, or a named
+source-build recipe. Defined in [Reaching the code](explanation/packages.md#reaching-the-code);
+rule: [`A4`](profiles.md#a4). “Stable” does not mean merely an unchanged
+calling-convention name.
 
 ## Completion
 
@@ -163,13 +196,14 @@ not mean Rust's `Copy` trait; the synthetic fixture profile does not support it
 
 The dependency closure is the transitive set of declarations and pinned
 dependencies needed to interpret and use a package's declared surface.
-Defined in [Why the signature cannot be the contract](explanation/unsaid.md#why-the-signature-cannot-be-the-contract);
+Defined in [What a package claims](explanation/packages.md#what-a-package-claims);
 rules: [`L2–L3`](language.md#l2). It is not a callback's captured environment.
 
 ## Digest pin
 
 A digest pin selects exact dependency bytes alongside their identifier and
-version. Defined and governed by [`L2`](language.md#l2).
+version. Defined in [What it depends on](explanation/packages.md#what-it-depends-on);
+rule: [`L2`](language.md#l2).
 The synthetic fixture's digest tokens are a testing exception, not hashes of
 the Markdown or usable production pins ([`F1`](profiles.md#f1)).
 
@@ -183,8 +217,9 @@ rule: [`C5`](contracts.md#c5). Invalid output cannot serve as a discriminator.
 ## Environment
 
 An environment is an exact target and platform configuration, optionally refined
-by toolchain, runtime and feature values. Defined and governed by
-[`L3`](language.md#l3). It is not a version range; an unlisted configuration is
+by toolchain, runtime and feature values. Defined in
+[Where it holds](explanation/packages.md#where-it-holds);
+rule: [`L3`](language.md#l3). It is not a version range; an unlisted configuration is
 outside the package's claims, not a claim of absence.
 
 ## Executor
@@ -194,6 +229,13 @@ main thread or a profile-defined execution context. Defined in
 [Which calls may run together, and where?](explanation/unsaid.md#which-calls-may-run-together-and-where);
 rules: [`C2–C3`](contracts.md#c2), [`C6`](contracts.md#c6).
 Allowing any executor does not permit simultaneous calls.
+
+## Exports
+
+Exports are the public roots a package explicitly lists for its declared surface.
+Defined in [What a package claims](explanation/packages.md#what-a-package-claims);
+rule: [`L3`](language.md#l3). Private support declarations remain part of the
+authoritative dependency closure even when they are not export roots.
 
 ## FFI
 
@@ -210,6 +252,14 @@ Defined in [A small API](explanation/unsaid.md#a-small-api); AIL's opaque-resour
 rule is [`L4`](language.md#l4), with lifetime rules in [`C2`](contracts.md#c2).
 In AIL, a resource value is already a handle; a pointer to a resource is storage
 containing that handle.
+
+## Import
+
+An import selects a package by name, version and digest and introduces an alias
+for its declarations. Defined in
+[What it depends on](explanation/packages.md#what-it-depends-on);
+rule: [`L2`](language.md#l2). An alias change cannot resolve conflicting pins
+for the same package name and version.
 
 ## Invalidation
 
@@ -236,8 +286,9 @@ Unique handles and reference-counted references carry different obligations.
 ## Mapping
 
 An access mapping accounts for the semantic signature's lowering into an access
-path, including auxiliary arguments and completion modes. Defined and governed
-by [`A2`](profiles.md#a2); see [Reaching the code](explanation/unsaid.md#reaching-the-code).
+path, including auxiliary arguments and completion modes. Defined in
+[Reaching the code](explanation/packages.md#reaching-the-code);
+rule: [`A2`](profiles.md#a2).
 Identity mapping still needs a faithful provider-defined lowering; it does not
 mean “assume the signatures match”.
 
@@ -284,8 +335,9 @@ Copying an address does not create another obligation or transfer the existing o
 ## Package
 
 A package is an authoritative description of a declared API surface, with named
-declarations, exact environments and pinned dependencies. Defined and governed
-by [`L2–L3`](language.md#l2). Completeness is relative to the declared subset, but
+declarations, exact environments and pinned dependencies. Defined in
+[What a package claims](explanation/packages.md#what-a-package-claims);
+rules: [`L2–L3`](language.md#l2). Completeness is relative to the declared subset, but
 covers that subset's entire dependency closure and applicable obligations.
 
 ## Pattern
@@ -317,14 +369,14 @@ selecting buffer elements are distinct paths with different extent requirements.
 
 A profile is a versioned, digest-pinned definition of additional source types,
 clauses, access mechanisms or behavioural rules. Defined in
-[Reaching the code](explanation/unsaid.md#reaching-the-code); rule:
+[Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries); rule:
 [`A1`](profiles.md#a1). It is a semantic extension, not a performance measurement
 or a preferences preset, and cannot weaken core requirements.
 
 ## Projection
 
 A projection is a consumer's presentation or adaptation of the authoritative
-contract. Defined in [Reaching the code](explanation/unsaid.md#reaching-the-code);
+contract. Defined in [One contract, several views](explanation/packages.md#one-contract-several-views);
 rules: [`A2`](profiles.md#a2), [`A5`](profiles.md#a5).
 A prose or machine view retains access to the facts; an operation that discards
 observable distinctions needs a different declaration.
@@ -333,7 +385,7 @@ observable distinctions needs a different declaration.
 
 A provider supplies a profile or ABI definition through a manifest and the
 tooling support needed to interpret or realize it. Defined in
-[Reaching the code](explanation/unsaid.md#reaching-the-code);
+[Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries);
 rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 A manifest reference does not imply that every consumer supports it.
 
@@ -369,6 +421,23 @@ rules: [`C1`](contracts.md#c1), [`C3`](contracts.md#c3).
 AIL's static region ends with the loaded API instance, not necessarily with the
 process; earlier invalidators can shorten borrow validity.
 
+## Representation
+
+A representation defines how a semantic type is realized at an access boundary,
+including the layout or runtime operations needed to use it. Defined in
+[Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries);
+rule: [`A3`](profiles.md#a3). Semantic record fields alone do not establish
+stable native offsets or alignment.
+
+## Resolution set
+
+A resolution set explicitly supplies the pinned dependencies and artifact
+identities needed to interpret a package. Defined in
+[What it depends on](explanation/packages.md#what-it-depends-on) and
+[Reaching the code](explanation/packages.md#reaching-the-code);
+rules: [`L2`](language.md#l2), [`A4`](profiles.md#a4).
+Validation does not fetch missing dependencies implicitly.
+
 ## Retention
 
 Retention describes callee storage beyond immediate use, distinguishing no
@@ -401,10 +470,19 @@ which a contract can refer. Defined in
 rules: [`C1`](contracts.md#c1), [`L2`](language.md#l2).
 A place can select a field, pointee or buffer elements within a slot.
 
+## Source identity
+
+A source identity names a declaration according to a selected profile's exact
+interpretation, separately from its canonical AIL identity and access paths.
+Defined in [Four identities](explanation/packages.md#four-identities);
+rules: [`L2`](language.md#l2), [`L5`](language.md#l5), [`A1–A2`](profiles.md#a1).
+A source spelling alone does not imply a callable linker symbol.
+
 ## Surface
 
 A surface is the API subset and release a package explicitly claims to specify.
-Defined and governed by [`L3`](language.md#l3). Omitting an unrelated API is
+Defined in [What a package claims](explanation/packages.md#what-a-package-claims);
+rule: [`L3`](language.md#l3). Omitting an unrelated API is
 different from omitting an obligation of an exported declaration.
 
 ## Validation
@@ -417,5 +495,7 @@ It neither proves a binary honours the assertions nor proves binding feasibility
 for a chosen target language.
 
 Next: [How AIL states a contract](explanation/contracts.md) for paired AIL examples,
-or [the canonical contract rules](contracts.md) for exact obligations.
+[Packages, environments and access paths](explanation/packages.md) for publication
+and access, or [Design choices, limits and open questions](explanation/choices.md)
+for the trade-offs. See [the canonical contract rules](contracts.md) for exact obligations.
 Return to [the overview](README.md) for the document map.

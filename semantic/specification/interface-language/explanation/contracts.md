@@ -77,7 +77,7 @@ does not establish a valid contract ([`L1`](../language.md#l1),
 The choice makes obligations individually addressable, at the cost of a longer
 body and several rule lookups. Putting ownership in types is an alternative;
 the [design proposal](../../../docs/design/2026-09-22-interface-language.md#7-dedicated-syntax-direction)
-left that decision open, and the [audit's Q3](../../../docs/research/interface-language-documentation-audit.md#4-possible-language-issues-surfaced-for-review)
+left that decision open, and [Q3](choices.md#q3)
 records the missing rationale for draft 0.1's choice. Neither fragment hides
 the need for a complete function's effects and access path
 ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
@@ -277,7 +277,7 @@ that survives delivery: `borrow(call)` cannot describe a returned view
 The principle is to track both a lifetime boundary and earlier invalidators.
 AIL chooses this split instead of a single “valid until next use” description.
 It can name an owner independently of mutation, but a reader follows facts
-across entry and outcome clauses. That cost is [audit Q5](../../../docs/research/interface-language-documentation-audit.md#4-possible-language-issues-surfaced-for-review).
+across entry and outcome clauses. That cost is [Q5](choices.md#q5).
 The mutable variant illustrates only the relationship: its omitted operation
 contracts are needed to check whether the named invalidator is legal.
 
@@ -692,9 +692,8 @@ completeness. It cannot prove that a native implementation honours the asserted
 contract, nor that every target language can bind it
 ([`C8`](../contracts.md#c8), [`A5`](../profiles.md#a5)).
 
-Continue to the [conformance examples](../conformance.md#positive-specifications)
-to read these facts together, or [the canonical contract rules](../contracts.md)
-for exact obligations. *Packages, environments and access paths* and *Design
-choices, limits and open questions* are forthcoming. Return to the
+Next: [Packages, environments and access paths](packages.md), then
+[Design choices, limits and open questions](choices.md).
+See [the canonical contract rules](../contracts.md) for exact obligations. Return to the
 [overview](../README.md) for the document map or the [domain explanation](unsaid.md)
 for the failures these contracts prevent.

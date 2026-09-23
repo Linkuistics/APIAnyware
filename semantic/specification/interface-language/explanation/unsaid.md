@@ -309,6 +309,7 @@ Continue to [How AIL states a contract](contracts.md) to see these obligations
 in AIL, using the [glossary](../glossary.md) for terms. For exact obligations,
 see [the memory and behavioural rules](../contracts.md).
 
-*Packages, environments and access paths*, *Design choices, limits and open
-questions*, and the tutorial *Describing a small API* are forthcoming.
+Continue through [Packages, environments and access paths](packages.md) and
+[Design choices, limits and open questions](choices.md) after the contract page.
+The tutorial *Describing a small API* is forthcoming.
 Return to [the overview](../README.md) for the full document map.

@@ -49,13 +49,15 @@ you to read every route in order.
 |---|---|
 | Understand why the contract is needed | [What a signature leaves unsaid](explanation/unsaid.md) |
 | Understand how clauses express obligations | [How AIL states a contract](explanation/contracts.md) |
+| Understand package scope and how calls reach code | [Packages, environments and access paths](explanation/packages.md) |
+| Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
 | Learn to read the notation | [Synthetic buffer example](examples/buffers.ail) alongside [its conformance context](conformance.md); the tutorial *Describing a small API* is forthcoming |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 
 Continue from the domain page to [How AIL states a contract](explanation/contracts.md).
-*Packages, environments and access paths* and *Design choices, limits and open
-questions* are forthcoming.
+Then read [Packages, environments and access paths](explanation/packages.md)
+and [Design choices, limits and open questions](explanation/choices.md).
 
 ## What is normative
 
@@ -123,9 +125,8 @@ specified, profile-supported source-only access is legitimate
 These limits do not introduce a partial-specification mode. A package may describe
 a named subset of a larger API when that subset and its entire
 [dependency closure](glossary.md#dependency-closure) are specified
-([`L2–L3`](language.md#l2)). The forthcoming *Design choices, limits and open
-questions* explains the trade-offs; the existing pressure cases above show the
-boundary now.
+([`L2–L3`](language.md#l2)). [Design choices, limits and open questions](explanation/choices.md)
+explains the trade-offs and the pressure cases at this boundary.
 
 ## Design history
 
