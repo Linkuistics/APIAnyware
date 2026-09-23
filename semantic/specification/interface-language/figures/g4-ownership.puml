@@ -1,0 +1,39 @@
+@startuml
+!include style/ail.puml
+title G4 · Follow one destruction or release obligation
+hide footbox
+$caller(caller, "Caller")
+$callee(callee, "Callee")
+== Borrowed input ==
+note over caller : Before entry: caller holds one obligation.
+caller --> callee : At entry: lend access to the handle
+note over caller, callee
+  After entry: caller still holds the obligation.
+  Borrowing transfers none to the callee.
+end note
+== Consumed input ==
+note over caller : Before entry: caller holds one obligation.
+caller -> callee : At entry: transfer the handle's obligation
+note over callee : Just after entry: callee holds the obligation.
+note over caller, callee
+  Success or failure does not undo this transfer.
+  The callee discharges the obligation unless it
+  explicitly returns it as an owned output.
+end note
+== Non-null owned result ==
+note over callee : Before delivery: callee holds the obligation to give.
+callee -> caller : At delivery: give the handle and one obligation
+note over caller : After delivery: caller holds one obligation.
+note over caller, callee
+  A null result supplies no obligation.
+  Separate strong retention creates another obligation;
+  it does not transfer the caller's existing one.
+end note
+legend bottom
+  Three separate cases, not one call sequence. Time runs downward within each case.
+  Actor = caller; rectangular participant = callee.
+  Solid arrow = ownership transfer; dashed arrow = borrowed access.
+  Notes track the obligation, not exclusive access or pointer copies.
+  Non-normative: C2, C3, C5. No retention event is drawn.
+endlegend
+@enduml

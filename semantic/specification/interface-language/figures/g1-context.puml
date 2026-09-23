@@ -1,0 +1,24 @@
+@startuml
+!include style/ail.puml
+title G1 · One publication boundary, one shared contract
+top to bottom direction
+$producer(producers, "Human authors · Analysers · Third-party tools\nProducers")
+$validator(validation, "Publication validation\nCompleteness and consistency")
+$package(contract, "Authoritative AIL package\nDeclared API surface and its contract")
+$catalogue(catalogue, "Profile and ABI catalogue entries\nSelected by identifier, version and digest")
+$consumer(consumers, "Binding generators · Documentation renderers · LLM tooling\nConsumers")
+producers --> validation : submit under the same rules
+validation --> contract : publish only when complete and consistent
+contract -right-> catalogue : pins
+contract --> consumers : supplies the same contract
+note left of validation
+  Does not prove that a binary
+  honours the assertions.
+end note
+legend bottom
+  Proposed roles, not running tools. Non-normative: L2–L3, C8, A1, A5.
+  Shapes: rectangle = producer; hexagon = validator; folder = package;
+  cylinder = catalogue; component = consumer.
+  Labelled arrows show publication, dependency or consumption, not runtime calls.
+endlegend
+@enduml

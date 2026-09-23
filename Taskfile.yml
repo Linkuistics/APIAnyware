@@ -15,6 +15,17 @@ tasks:
     cmds:
       - task: docs:links
       - task: docs:examples
+      - task: docs:diagrams
+
+  docs:diagrams:
+    desc: Regenerate diagram SVGs with pinned renderers and fail on differences
+    cmds:
+      - python3 {{.DOCS_TOOLS}}/docs_diagrams.py {{.SPEC}}/figures
+
+  docs:diagrams:write:
+    desc: Update committed diagram SVGs after editing their sources or styles
+    cmds:
+      - python3 {{.DOCS_TOOLS}}/docs_diagrams.py {{.SPEC}}/figures --write
 
   docs:links:
     desc: Check relative links, #fragments and page reachability in the interface-language docs

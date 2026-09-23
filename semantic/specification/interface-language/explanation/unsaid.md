@@ -67,6 +67,17 @@ to callee, even on failure; borrowing an input transfers no obligation. The call
 therefore need separate answers for `watch_open`'s result, `watch_view`'s watch
 argument and `watch_close`'s watch argument.
 
+Follow the obligation in these three separate cases: borrowing leaves it with
+the caller, consumption transfers it at entry even on failure, and delivery of
+a non-null owned result gives the caller one obligation. A null result gives
+none. The cases illustrate possible contracts, not facts inferred from the
+header; retention is a separate event (non-normative;
+[`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+![Three separate sequences track the obligation: caller keeps it when lending access, gives it to the callee at consumption, or receives it with a non-null owned result.](../figures/g4-ownership.svg)
+
+[Diagram source](../figures/g4-ownership.puml)
+
 In summary (non-normative): AIL distinguishes a type's release discipline from
 input transfer and output transfer. Unique resources have one destruction
 obligation per owned handle; reference-counted values have one release
@@ -103,6 +114,14 @@ bytes can occupy exactly three bytes of storage. A three-code-unit,
 zero-terminated string needs room for a fourth code unit, its terminator. Reading
 until zero in the binary case can overrun the allocation. Treating string
 capacity as its text length can expose bytes that are not part of the text.
+
+Compare the readable payload with the storage needed in these two cases;
+the extra zero belongs to the text's storage, not its reported length.
+
+| Possible contract | Reported length | Minimum storage for this case | Readable payload |
+|---|---|---|---|
+| Binary bytes | 3 bytes | 3 bytes | All 3 bytes, even if one is zero |
+| Zero-terminated text | 3 code units | 4 code units, including the terminator | The 3 code units before the terminator |
 
 [Buffer extent](../glossary.md#buffer-extent) distinguishes readable initialized
 length from allocated capacity, and names the units. [Contents](../glossary.md#contents)
@@ -153,6 +172,15 @@ that call is nested under an active call. A design can forbid this even when
 ordinary sequential calls are legal. A binding that guesses can race shared
 state or deadlock on a lock already held by the outer call.
 
+Read these as three independent questions: answering one does not answer the
+other two.
+
+| Contract dimension | Question the binding needs answered |
+|---|---|
+| Entry executor | Where may the caller enter the operation? |
+| Concurrency | May independent calls overlap? |
+| Re-entrancy | May a nested call enter on the same receiver or resource while an earlier call is active? |
+
 In summary (non-normative): AIL separates nominal sharing and
 [isolation](../glossary.md#isolation) from each callable's entry executor,
 concurrency and re-entrancy.
@@ -196,6 +224,9 @@ binding generator needs to choose release operations and protect lifetimes; a
 documentation renderer needs to tell callers when bytes remain usable; LLM
 tooling needs those same facts to avoid suggesting an invalid call sequence.
 Without a shared account, each consumer has to rediscover or guess them.
+
+The [publication map](../README.md#the-problem-in-brief) places these consumers
+around the same contract and shows the boundary every producer crosses.
 
 AIL's choice is one authoritative [package](../glossary.md#package) describing
 the selected API [surface](../glossary.md#surface).

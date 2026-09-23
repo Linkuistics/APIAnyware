@@ -26,7 +26,24 @@ third-party tools are intended to produce AIL [packages](glossary.md#package);
 before binding generators, documentation renderers and LLM tooling consume the
 same contract. Start with [What a signature leaves unsaid](explanation/unsaid.md).
 
+The map shows that every producer crosses the same publication boundary and
+every consumer reads the same authoritative contract. The package pins its
+[profile](glossary.md#profile) and [ABI](glossary.md#abi) catalogue dependencies
+by identifier, version and [digest](glossary.md#digest-pin); validation checks
+completeness and consistency, not whether a binary honours the assertions.
+These are proposed roles, not running tools (non-normative;
+[`L2–L3`](language.md#l2), [`C8`](contracts.md#c8),
+[`A1`](profiles.md#a1), [`A5`](profiles.md#a5)).
+
+![Producers submit to publication validation; the authoritative package pins profile and ABI entries and supplies the same contract to all consumers.](figures/g1-context.svg)
+
+[Diagram source](figures/g1-context.puml) ·
+[Figure vocabulary and regeneration](figures/style/vocabulary.txt)
+
 ## Paths through the documentation
+
+Choose a starting page by the task you want to do; the table does not require
+you to read every route in order.
 
 | If you want to… | Start at… |
 |---|---|

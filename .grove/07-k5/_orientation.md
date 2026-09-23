@@ -36,23 +36,15 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
 - `proof` has walked the landing page to the domain explanation to the
   normative files, from a cold start and from a direct entry.
 
-## Handed forward
+## Figure assets
 
-- **art — G1:** insert the context map in `README.md`, “The problem in brief”,
-  after the short prose and domain-page link; reuse it on `explanation/unsaid.md`
-  as appropriate without delaying the concrete header. Show human authors,
-  analysers and third-party producers passing the same publication-validation
-  boundary, an authoritative package with pinned profile/ABI catalogue
-  dependencies, and binding generators, documentation renderers and LLM tooling
-  as consumers. Validation checks completeness/consistency, not binary truth
-  (L2–L3, A1, A5, C8). These are proposed roles, not running tools. Establish the
-  shared visual vocabulary, source and generated SVG under `figures/` (§6).
-- **art — G4:** insert the ownership sequence in `explanation/unsaid.md`,
-  “Who is responsible for releasing a value?”, after the paragraph distinguishing
-  owned result, consumed input and borrowed input. Show which party holds the
-  obligation before/after each event; consumption is at entry on every outcome,
-  including failure (C3), and a non-null owned result gives one obligation at
-  delivery (C5). Keep retention separate from transfer. Introduce only caller,
-  callee, handle and obligation, already explained in prose. Commit source/SVG
-  for reuse by `explanation/contracts.md` in the concepts increment; if that
-  increment supplies the figure, explicitly hand the slot onward as §9.1 allows.
+G1 is `figures/g1-context.puml` plus its SVG, embedded in the landing page and
+linked as the publication map from the domain explanation. G4 is
+`figures/g4-ownership.puml` plus its SVG, embedded in the ownership section and
+available for reuse by `explanation/contracts.md`. Both use
+`figures/style/ail.puml`; the vocabulary and regeneration commands are in
+`figures/style/vocabulary.txt`. These paths are relative to
+`semantic/specification/interface-language/`.
+
+`task docs:check` includes `docs:diagrams`, which compares regenerated SVG bytes.
+Use `task docs:diagrams:write` after source or style edits, then inspect the SVGs.

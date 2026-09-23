@@ -1,0 +1,26 @@
+AIL figure vocabulary
+
+PlantUML figures include ail.puml. Role shapes are defined by its macros:
+producer = rectangle; package = folder; catalogue = cylinder;
+validator = hexagon; consumer = component; caller = actor;
+callee = rectangular participant; owner = entity (circle on a base).
+Use the same shapes when adding D2 or Mermaid styles; only PlantUML is used yet.
+Every element is labelled with the prose's name. Colour is redundant.
+
+Contract relations (PlantUML arrow spelling):
+ownership transfer = solid (->); borrow = dashed (-->);
+invalidation = marked end (->x); callback entry = dotted (-[dotted]>).
+A contract diagram reserves these line styles for these meanings. Context and
+structure diagrams label each relation and state its meaning in their own key.
+Every diagram includes a key and has adjacent prose explaining its takeaway.
+Keep context before detail; read time downward within a sequence case.
+
+One source (.puml or .d2) and one generated .svg per diagram, with matching stems.
+Shared includes live in style/ and have no SVG of their own.
+Regenerate: task docs:diagrams:write
+Verify: task docs:diagrams (also included in task docs:check)
+PlantUML 1.2026.8, Graphviz 16.1.0; D2 0.9.0 with dagre and theme 0.
+PlantUML uses SansSerif from the local Java font environment; a different font
+installation may change SVG bytes. Inspect such a difference before accepting it.
+Mermaid remains available once its renderer is installed, pinned and added to
+the check. Do not commit an SVG the check cannot regenerate.

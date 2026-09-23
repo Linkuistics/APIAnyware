@@ -1,0 +1,41 @@
+' Shared AIL vocabulary. Include from every PlantUML diagram.
+skinparam backgroundColor #FCFCFC
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 15
+skinparam defaultFontColor #172B3A
+skinparam ArrowColor #34495E
+skinparam LineColor #34495E
+skinparam roundcorner 0
+skinparam componentStyle uml2
+skinparam sequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DF
+skinparam NoteBorderColor #756538
+skinparam LegendBackgroundColor #F4F6F8
+skinparam LegendBorderColor #647789
+!procedure $producer($id, $label)
+rectangle "$label" as $id #EAF2F8
+!endprocedure
+!procedure $package($id, $label)
+folder "$label" as $id #E8F3EB
+!endprocedure
+!procedure $catalogue($id, $label)
+database "$label" as $id #F2EDF7
+!endprocedure
+!procedure $validator($id, $label)
+hexagon "$label" as $id #FFF1D6
+!endprocedure
+!procedure $consumer($id, $label)
+component "$label" as $id #EAF2F8
+!endprocedure
+!procedure $caller($id, $label)
+actor "$label" as $id #EAF2F8
+!endprocedure
+!procedure $callee($id, $label)
+participant "$label" as $id #E8F3EB
+!endprocedure
+!procedure $owner($id, $label)
+entity "$label" as $id #F2EDF7
+!endprocedure
+' Contract arrows: -> transfer; --> borrow; ->x invalidation; -[dotted]> callback entry.
+' Context relations use labelled solid arrows; their meaning is given in the local key.

@@ -227,6 +227,14 @@ first `art` session defines it once, as shared style files under
 - colour only as a redundant cue, never the only one;
 - the prose's names on every element, and a key on every diagram.
 
+The shared vocabulary is now defined in
+[`figures/style/vocabulary.txt`](../../specification/interface-language/figures/style/vocabulary.txt),
+with PlantUML role macros in
+[`figures/style/ail.puml`](../../specification/interface-language/figures/style/ail.puml).
+G1 and G4 use PlantUML. `task docs:diagrams` compares regenerated SVG bytes;
+`task docs:diagrams:write` explicitly updates them. The check also supports the
+pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
+
 | ID | Level | Question it answers | Kind | Home |
 |---|---|---|---|---|
 | G1 | Context | Who writes AIL packages, what do they depend on, and who reads them? | C4 system context | Landing page; reused as the map on explanation pages |
