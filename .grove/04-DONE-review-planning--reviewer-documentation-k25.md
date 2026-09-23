@@ -47,3 +47,23 @@ any of it executes. Produce findings, not fixes.
 Findings are committed, each with its location, the evidence and a severity.
 An `integrate-review-planning` leaf is cut only if a finding is worth acting
 on, placed where `pick` reaches it next.
+
+## Decisions (running log)
+
+D1. The reviewed producer is commit `8103dd6b`, whose parent is the audit's
+`1c4b8e7ec3da`. Its diff leaves the specification corpus unchanged, so direct
+reads of that corpus also check the audit's cited revision. This is a
+documentation-only inspection; no test, build, lint or format commands run.
+
+D2. Three findings warrant integration: the clause inventory omits vocabulary
+defined outside tables; early draft leaves defer their inbound navigation to
+later siblings; and the audit overstates the semantic effect of capitalization.
+The review report retains evidence and severity for each. The plan and task
+contracts remain unchanged by this review; inserting integration only shifts
+later siblings' positions.
+
+D3. Findings are in
+`semantic/docs/design/2026-09-23-interface-language-documentation-plan-review.md`.
+Integration is `reviewer-documentation-k26`, immediately after this review and
+before `docs-foundation-k4`. Its charter points to this review for independent
+triage rather than restating the findings as mandatory fixes.
