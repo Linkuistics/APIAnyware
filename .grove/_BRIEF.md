@@ -276,7 +276,7 @@ are editorial evidence only; human comprehension and the correction's effect
 remain unassessed. Keep future examples explicit about these boundaries and
 preserve the separation of domain requirements, API promises and AIL choices.
 
-The initial tutorial pipeline completed (`tutorial-k7`). The index and five
+The tutorial correction completed (`tutorial-k47`, closing `tutorial-k7`). The index and five
 parts lead through complete synthetic label-card packages to a borrowed-to-owned change. The
 finished package returns a Label borrow bounded by Card lifetime and invalidated
 at refresh entry; the separate owned variant returns an independent snapshot
@@ -284,8 +284,17 @@ using the existing Label destructor. Watch notifications carry only a scalar,
 retain no Card and extend no Label borrow. Destructor entry consumes Watch;
 quiescence holds at return, with no delivery or eventual-return promise. Four
 `tutorial-` figures and the part-5 comparison show these obligations. Whole-set
-proof found no outstanding defect or handoff; `task docs:check` passed. The
-first-path reading checkpoint remains the human comprehension check.
+proof found no further actionable defect or outstanding handoff; `task docs:check`
+passed, with all eleven SVGs reproduced. The corrected steps explain program
+and library actions before the related abstractions. Each part links its new
+material and complete checkpoint; the index and part 5 link the owned-snapshot
+exercise before the long package. Four rendered figures and both part-5 tables
+agree with the surrounding explanations and canonical rules.
+At `first-path-reading-k48`, assess whether those explanations are understandable
+and whether the local routes resolve P7's difficulty finding new material,
+especially the ownership exercise. These are editorial observations, not evidence
+of human comprehension or the effectiveness of a stage. Preserve that distinction
+in any later Grove issue update; this proof establishes no new process remedy.
 
 The root brief is the requirements authority for later sessions. There are no
 three unresolved interdependent decisions requiring a full grilling: the human
