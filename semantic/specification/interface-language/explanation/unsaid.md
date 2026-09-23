@@ -4,11 +4,11 @@
 > **Reader:** language designers who can read C, but are new to API binding.
 > **Before this:** nothing; [the overview](../README.md) introduces AIL's purpose.
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
-> **Rules:** [C1–C6](../contracts.md#c1) define the obligations below; [A1–A5](../profiles.md#a1) define access and consumer agreement.
+> **Rules:** [`C1–C6`](../contracts.md#c1) define the obligations below; [`A1–A5`](../profiles.md#a1) define access and consumer agreement.
 
 An [API binding](../glossary.md#binding) lets code in one language use an API
 offered in another. A [foreign-function interface (FFI)](../glossary.md#ffi)
-provides the crossing: it can arrange a call and represent its arguments.
+arranges calls and represents their arguments across the language boundary.
 The binding also has to preserve what callers owe and what the API promises.
 Those obligations are the [binding contract](../glossary.md#binding-contract).
 
@@ -29,7 +29,8 @@ void watch_close(Watch *watch);
 ```
 
 Opening a watch also registers a notification callback. The view operation
-returns a pointer and has storage for an output length; closing ends the watch.
+returns a pointer and accepts caller-supplied storage for an output length;
+closing ends the watch.
 These names suggest a use, but do not establish a safe calling protocol.
 The header is deliberately insufficient: the contrasting contracts below are
 possible answers to investigate, not facts inferred from these declarations.
@@ -60,9 +61,9 @@ carries one such obligation; this does not imply exclusive access. A
 [borrow](../glossary.md#borrow) carries access without transferring that
 obligation; it does not imply Rust-style exclusivity or compiler enforcement.
 
-Giving an owned result moves responsibility from callee to caller.
-[Consuming](../glossary.md#consume) an input moves it from caller to callee, even
-on failure; merely borrowing an input does neither. The caller and callee
+When the callee gives an owned result, it transfers responsibility to the caller.
+[Consuming](../glossary.md#consume) an input transfers responsibility from caller
+to callee, even on failure; borrowing an input transfers no obligation. The caller and callee
 therefore need separate answers for `watch_open`'s result, `watch_view`'s watch
 argument and `watch_close`'s watch argument.
 
@@ -70,8 +71,8 @@ In summary (non-normative): AIL distinguishes a type's release discipline from
 input transfer and output transfer. Unique resources have one destruction
 obligation per owned handle; reference-counted values have one release
 obligation per owned reference. Input consumption occurs at entry on every
-outcome, including failure ([C2](../contracts.md#c2), [C3](../contracts.md#c3),
-[C5](../contracts.md#c5)). [Retaining](../glossary.md#retention) a separate
+outcome, including failure ([`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3),
+[`C5`](../contracts.md#c5)). [Retaining](../glossary.md#retention) a separate
 reference is a different event from taking over the caller's obligation.
 
 ### How long can the caller use a view?
@@ -80,7 +81,7 @@ Suppose `watch_view` lends bytes from its watch. In one contract the bytes remai
 usable until the watch is destroyed. In another, the next call to `watch_view`
 refreshes internal storage and invalidates the previous view, even though the
 watch is still alive. Keeping the watch alive only solves the first case.
-Keeping an expired pointer in a target-language object does not keep its bytes
+Keeping an invalid pointer in a target-language object does not keep its bytes
 alive; later access can read freed or repurposed storage.
 
 [Borrow validity](../glossary.md#borrow-validity) says how long borrowed access
@@ -93,7 +94,7 @@ API instance, and for a named owner. Returned borrows outlive their delivery, so
 the current call is not a sufficient region for them. Each returned borrow also
 names its earlier invalidating operations, even when there are none. For the
 refresh case, a listed operation invalidates at entry and has a corresponding
-mutation contract ([C1](../contracts.md#c1), [C5](../contracts.md#c5)).
+mutation contract ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 ### How many bytes exist, and what do they contain?
 
@@ -114,7 +115,7 @@ includes it. A pointer whose bound can only be found by scanning for a terminato
 needs a [profile](../glossary.md#profile)-defined contract (a semantic extension,
 not a preference preset); the core does not guess a maximum. The
 `length` output pointer is a separate piece of storage from the bytes returned
-by `watch_view` ([C3](../contracts.md#c3), [C4](../contracts.md#c4)).
+by `watch_view` ([`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)).
 
 ### What can the caller read when a call fails?
 
@@ -129,11 +130,12 @@ meaning and the state of its outputs. A null result is not inherently failure:
 another API might use null for a successful “no value” answer. Likewise, turning
 every status into an exception can discard a distinction that callers need.
 
-In summary (non-normative): AIL partitions each completion's possibilities into
-non-overlapping, exhaustive outcomes and describes output validity in each.
+In summary (non-normative): AIL partitions the possibilities of each
+[completion](../glossary.md#completion) into non-overlapping, exhaustive outcomes
+and describes output validity in each.
 An invalid output cannot even be tested for null. A failure label describes the
 observation rather than silently translating it into an exception
-([C5](../contracts.md#c5)).
+([`C5`](../contracts.md#c5)).
 
 ### Which calls may run together, and where?
 
@@ -151,12 +153,13 @@ that call is nested under an active call. A design can forbid this even when
 ordinary sequential calls are legal. A binding that guesses can race shared
 state or deadlock on a lock already held by the outer call.
 
-In summary (non-normative): AIL separates nominal sharing and isolation from
-each callable's entry executor, concurrency and re-entrancy.
+In summary (non-normative): AIL separates nominal sharing and
+[isolation](../glossary.md#isolation) from each callable's entry executor,
+concurrency and re-entrancy.
 [Shared](../glossary.md#shared) permits references to cross executors; it does
-not promise safe concurrent mutation ([C2](../contracts.md#c2),
-[C3](../contracts.md#c3)). Callback invocations have their own schedule
-constraints ([C6](../contracts.md#c6)).
+not promise safe concurrent mutation ([`C2`](../contracts.md#c2),
+[`C3`](../contracts.md#c3)). Callback invocations have their own schedule
+constraints ([`C6`](../contracts.md#c6)).
 
 ### When is it safe to discard callback state?
 
@@ -174,8 +177,9 @@ being waited for can also deadlock.
 
 [Callback captures](../glossary.md#callback-captures) are the state a callback
 needs, here reachable through `context`. This is the captured-environment sense
-of “closure”, not a dependency closure. Count, start timing, executor, permitted
-overlap and teardown each need an answer. “Later” does not mean “exactly once”.
+of “closure”, not a [dependency closure](../glossary.md#dependency-closure).
+Invocation count, start timing, executor, permitted overlap and teardown each
+need an answer. “Later” does not mean “exactly once”.
 
 In summary (non-normative): AIL describes a callback type separately from the
 schedule of each registration. The core supports callbacks confined to the
@@ -183,7 +187,7 @@ registration call or to the lifetime of a returned unique owner with quiescent
 destruction. A blocking destructor requires a call from outside the callback
 unless a profile supplies a non-deadlocking protocol. Cancellation with a
 separate acknowledgement needs a profile; cancellation return cannot stand in
-for quiescence ([C2](../contracts.md#c2), [C6](../contracts.md#c6)).
+for quiescence ([`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
 
 ## Why the signature cannot be the contract
 
@@ -193,16 +197,18 @@ documentation renderer needs to tell callers when bytes remain usable; LLM
 tooling needs those same facts to avoid suggesting an invalid call sequence.
 Without a shared account, each consumer has to rediscover or guess them.
 
-AIL's choice is one authoritative package describing the selected API surface.
+AIL's choice is one authoritative [package](../glossary.md#package) describing
+the selected API [surface](../glossary.md#surface).
 The intended producers are human authors, analysers and third-party tools; none
 gets a weaker publication standard. A smaller declared surface is legitimate,
 but everything it depends on still needs a contract. That transitive set is its
 [dependency closure](../glossary.md#dependency-closure), not callback captures.
 
-In summary (non-normative): validation checks completeness and internal
-consistency; it cannot establish that a binary honours the author's assertions.
-The producer still needs evidence for them ([L2–L3](../language.md#l2),
-[C8](../contracts.md#c8)). This choice makes authoring demanding: an unresolved
+In summary (non-normative): [validation](../glossary.md#validation) checks
+completeness and internal consistency; it cannot establish that a binary
+honours the author's assertions.
+The producer still needs evidence for them ([`L2–L3`](../language.md#l2),
+[`C8`](../contracts.md#c8)). This choice makes authoring demanding: an unresolved
 obligation blocks publication instead of becoming a confidence score in the
 package. The [design proposal](../../../docs/design/2026-09-22-interface-language.md#3-publication-boundary)
 explains that boundary.
@@ -214,14 +220,15 @@ a function through a linker symbol with invoking an object method through a
 runtime message send. A third possibility is compiling a source-level call when
 there is no directly usable symbol. These are different
 [access paths](../glossary.md#access-path); a source spelling does not itself
-establish any of them ([A2](../profiles.md#a2)).
+establish any of them ([`A2`](../profiles.md#a2)).
 
 The [application binary interface (ABI)](../glossary.md#abi) governs the machine
 boundary: value representation and layout, argument and result passing, and
 runtime requirements. A [calling convention](../glossary.md#calling-convention)
 is the call protocol within that larger definition. Matching the call protocol
-while disagreeing about a record's layout can still corrupt the crossing
-([A1](../profiles.md#a1), [A3](../profiles.md#a3)).
+while disagreeing about a record's layout can still cause the callee to
+misinterpret the caller's arguments
+([`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3)).
 
 AIL separates those mechanics from the contract. In summary (non-normative), a
 [profile](../glossary.md#profile) defines versioned source or access semantics;
@@ -230,23 +237,24 @@ representations and calling conventions. [Providers](../glossary.md#provider)
 supply these definitions through manifests and tooling. A package selects them
 by pinned identity rather than embedding an ABI algorithm. Source access names
 a build recipe; it does not promise independently stable binary compatibility
-([A1](../profiles.md#a1), [A4](../profiles.md#a4)).
+([`A1`](../profiles.md#a1), [`A4`](../profiles.md#a4)).
 
-For this header, a mapping would need to account for both the callback and its
-context argument. This page does not supply that mapping. The existing
+For this header, a [mapping](../glossary.md#mapping) would need to account for
+both the callback and its context argument. This page does not supply that mapping. The existing
 [synthetic callback example](../examples/callbacks.ail) uses a synthetic fixture
 profile, catalogue and digest tokens whose callback representation has no
 separately visible context argument. It is not an AIL translation of this C
-header ([A2](../profiles.md#a2), [F1](../profiles.md#f1)).
+header ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 
 A [projection](../glossary.md#projection) is a consumer's presentation of the
 contract. Prose and a typed object model can look different while preserving
 access to the same facts. A convenience operation that hides a meaningful
-success status changes what callers can observe; it needs a distinct declaration
-rather than pretending to be another path to the same operation. A valid package
-can also exceed a particular binding generator's capabilities. These are
-different failures: malformed specification versus unsupported binding
-([A2](../profiles.md#a2), [A5](../profiles.md#a5)).
+success status changes what callers can observe; the producer describes it with
+a distinct declaration rather than another path to the same operation. A valid
+package can also exceed a particular binding generator's capabilities. These are
+different questions: whether the specification is valid and whether a consumer
+can implement its binding
+([`A2`](../profiles.md#a2), [`A5`](../profiles.md#a5)).
 
 ## What your language-design knowledge covers, and where it misleads
 
@@ -256,13 +264,13 @@ AIL does not make. These are non-normative reminders; the linked rules decide.
 
 | Familiar term | Read it here as… | Do not infer… |
 |---|---|---|
-| [Borrow](../glossary.md#borrow) | Access without transferred ownership, for a stated region ([C1](../contracts.md#c1), [C3](../contracts.md#c3)) | Rust's static borrow checking or exclusivity |
-| [Owned](../glossary.md#owned) | One destruction or release obligation ([C2](../contracts.md#c2), [C5](../contracts.md#c5)) | Unique access; a reference-counted object can have several owned references |
-| [Consume](../glossary.md#consume) | Transfer at entry, on failure as well as success ([C3](../contracts.md#c3)) | A move only if the callee succeeds |
-| [Shared](../glossary.md#shared) | References may cross executors ([C2](../contracts.md#c2)) | Race-free concurrent mutation |
-| [Copy](../glossary.md#copy) | An independent semantic copy defined by a profile ([C3](../contracts.md#c3)) | A pointer-bit copy, retain, or Rust's `Copy` trait |
-| [Profile](../glossary.md#profile) | A versioned semantic extension with validation rules ([A1](../profiles.md#a1)) | A performance trace or a set of optional preferences |
-| [Closure](../glossary.md#closure) | Either dependency closure or callback captures, always qualified here ([L2](../language.md#l2), [C2](../contracts.md#c2)) | That the two senses describe the same relationship |
+| [Borrow](../glossary.md#borrow) | Access without transferred ownership, for a stated region ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)) | Rust's static borrow checking or exclusivity |
+| [Owned](../glossary.md#owned) | One destruction or release obligation ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)) | Unique access; a reference-counted object can have several owned references |
+| [Consume](../glossary.md#consume) | Transfer at entry, on failure as well as success ([`C3`](../contracts.md#c3)) | A move only if the callee succeeds |
+| [Shared](../glossary.md#shared) | References may cross executors ([`C2`](../contracts.md#c2)) | Race-free concurrent mutation |
+| [Copy](../glossary.md#copy) | An independent semantic copy defined by a profile ([`C3`](../contracts.md#c3)) | A pointer-bit copy, retain, or Rust's `Copy` trait |
+| [Profile](../glossary.md#profile) | A versioned semantic extension with validation rules ([`A1`](../profiles.md#a1)) | A performance trace or a set of optional preferences |
+| [Closure](../glossary.md#closure) | Either dependency closure or callback captures, always qualified here ([`L2`](../language.md#l2), [`C2`](../contracts.md#c2)) | That the two senses describe the same relationship |
 
 ## Where next
 

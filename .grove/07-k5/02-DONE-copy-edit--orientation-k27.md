@@ -38,3 +38,33 @@ with the prose contract. Preserve the draft's structure and technical truth.
 Do not silently repair structural or technical defects outside this charter;
 use the editorial correction-run procedure if one is found. The prose carries
 all figure facts already, so the pages are usable before art lands.
+
+## Decisions (running log)
+
+- Keep the draft's section order, examples and technical distinctions. This
+  pass supplies missing first-use glossary links, consistent code typography
+  for rule identifiers, and concrete wording with explicit actors. The named
+  prose contract governs; no separate precedent is specified.
+- Read the document set and its documentation authorities directly. No code
+  discovery or structural code claim is needed for this editorial task.
+
+## Copy-edit inspection
+
+Read all three pages against plan §4–§5 and survey §9 C1–C10. Kept headings,
+section order, the C fragment, hypothetical comparisons and canonical rule
+references. Clarified caller-supplied length storage, transfer of responsibility,
+invocation count, ABI argument misinterpretation, and validity versus consumer
+capability. Added glossary links and familiar-profile guidance, and formatted
+rule identifiers consistently. The distinctions specified under Done when
+remain explicit. No structural correction run or ADR change was needed.
+
+`task docs:check` passed: 10 checked files, 8 reachable pages, and the example
+and fence checks passed. This gate does not validate AIL semantics or runtime
+behaviour. SHA-256 manifests before and after matched for `Taskfile.yml` and
+all enumerated files under `semantic/specification/interface-language/`,
+`semantic/specification/tools/` and `semantic/docs/`. A separate heading check
+confirmed glossary alphabetical order ignoring punctuation. Diff inspection
+confirmed edits are limited to these orientation pages and task bookkeeping.
+
+Added `orientation-k28` as the art successor; its body points to the node's
+unchanged G1/G4 handoffs. The node remains live, so no ancestor close is due.
