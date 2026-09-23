@@ -229,6 +229,17 @@ conventions. Whole-document proof found no outstanding defect. Keep future
 examples explicit about these boundaries and replace forthcoming tutorial
 routes when that page lands.
 
+Tutorial is complete (`tutorial-k7`). The index and five parts lead through
+complete synthetic label-card packages to a borrowed-to-owned change. The
+finished package returns a Label borrow bounded by Card lifetime and invalidated
+at refresh entry; the separate owned variant returns an independent snapshot
+using the existing Label destructor. Watch notifications carry only a scalar,
+retain no Card and extend no Label borrow. Destructor entry consumes Watch;
+quiescence holds at return, with no delivery or eventual-return promise. Four
+`tutorial-` figures and the part-5 comparison show these obligations. Whole-set
+proof found no outstanding defect or handoff; `task docs:check` passed. The
+first-path reading checkpoint remains the human comprehension check.
+
 The root brief is the requirements authority for later sessions. There are no
 three unresolved interdependent decisions requiring a full grilling: the human
 has specified purpose, audience, forms, quality direction and the multi-step
