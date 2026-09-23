@@ -1,0 +1,182 @@
+# APIAnyware.improve-api-interface-language-docs — brief
+
+## Goal
+
+Make the proposed API Interface Language understandable and assessable by
+reviewers who know language design, language aesthetics and developer audience
+expectations, but do not know the API binding domain. Deliver a tutorial, guide,
+explanations and precise reference so those reviewers can give informed,
+specific feedback on the language itself.
+
+The human's diagnosis is that the current documentation has too little context
+and explanation and is too dense for that review. Improving sentences alone
+will not satisfy this workstream.
+
+## Done when
+
+- A newcomer to the domain can explain the problem AIL addresses, who would
+  produce and consume it, and why declarations alone do not describe an API's
+  binding-relevant contract.
+- A reviewer can follow a small worked example, read and make a modest change
+  to its AIL description, and understand the consequences without assuming an
+  existing AIL parser, native implementation or APIAnyware integration.
+- Context and explanations make the major choices, alternatives, limitations
+  and trade-offs inspectable. Reviewers can distinguish domain constraints
+  from choices this language makes and can critique both.
+- A review guide supports concrete evaluation of syntax/readability, conceptual
+  consistency, expressive scope, authoring burden, discoverability and fitness
+  for AIL's intended producers and consumers. Questions refer to examples and
+  rules and invite criticism rather than presuppose that the design is right.
+- A complete, navigable reference lets readers verify exact syntax, clause
+  arguments and types, applicability, requiredness, defaults, constraints and
+  rejection conditions. Explanatory pages link to one canonical rule source.
+- The initial audit precedes rewriting. The audit and the rewritten documents
+  are explicitly identifiable as the two deliverables the user's prompt asks
+  for. Reader-facing pages contain the actual documentation, without editorial
+  process boilerplate on every page.
+- The research-informed quality criteria have been checked through drafting,
+  copy-editing, figures and whole-document proof. Local navigation and examples
+  are checked, with evidence and limits stated honestly.
+
+## Decomposition
+
+This is explicitly a multi-step Grove involving web research. Research comes
+before detailed planning, and planning cuts focused document increments. The
+editorial pipeline for each bounded document/set is `draft` -> `copy-edit` ->
+`art` -> `proof`, grown lazily under Grove's editorial procedure. The current
+requirements leaf does not perform those stages.
+
+1. Research the referenced books and primary documentation guidance; derive
+   criteria for this particular audience and review purpose.
+2. Audit the current material, establish the detailed information architecture
+   and named structure briefs, and cut the editorial work into bounded leaves.
+3. Produce and verify the documentation through the editorial stages. Integrate
+   navigation across the set and check the complete reviewer journey.
+
+One literature survey is sufficient initially. No paired survey or implementation
+work is justified by the settled requirements.
+
+## Reader and structure brief
+
+The primary reader knows language design but is new to API binding concepts.
+Do not spend pages teaching general programming or assume knowledge of FFI,
+ABI, ownership transfer, borrow validity, quiescence, projections or profiles.
+Define each domain concept before it becomes necessary and illustrate the
+failure it prevents. API authors and tool implementers are secondary readers;
+the reference still needs to serve them.
+
+The human has specified tutorial, guide and reference, with the latest
+clarification making context and explanation essential. The initial conceptual
+order is:
+
+1. **Orientation:** reader, review purpose, language status, domain problem,
+   intended AIL producers/consumers, and a map to the documentation paths.
+2. **Domain and language explanation:** a small API and what its signature
+   leaves unstated; the concepts AIL uses to express those obligations; design
+   choices, alternatives and limits. Move from concrete need to abstraction.
+3. **Tutorial:** a guided, progressive exercise describing one small synthetic
+   API, with meaningful intermediate checkpoints and a complete final example.
+   Label partial teaching fragments explicitly. Link deeper rationale out of
+   the procedural flow instead of removing it from the documentation set.
+4. **Review/task guide:** self-contained tasks for tracing and changing
+   contracts and judging the design, with expected observations and grounded
+   feedback prompts. Prefer the reviewer's real tasks over generic setup or
+   fictional API invocation instructions.
+5. **Reference:** consistent entries and indexes for exact lookup; retain the
+   formal grammar and complete normative contract as the source of authority.
+
+This order is a learning route, not a compulsory linear reading sequence.
+Every standalone page needs enough local context, prerequisites and links to
+work as a direct entry point. Planning refines the page boundaries and ordered
+section plans from the research; it must preserve the reader and purpose above.
+Every drafting leaf must name a structure-brief artifact that explicitly states
+reader/outcome, ordered sections with their purpose, and emphasis/non-goals.
+
+Emphasise conceptual clarity, language ergonomics, realistic examples, precise
+semantics and honest trade-offs. Brevity is useful only when it does not remove
+the context needed for review. Evaluate the language; do not market it or hide
+awkwardness with unexplained examples.
+
+## Editorial contract
+
+Use the supplied prompt's Diátaxis separation of tutorial, how-to/task guide,
+reference and explanation. The latest audience clarification governs how those
+forms serve this workstream. The prompt's example of getting an API call working
+does not justify inventing a runtime for a language that is still proposed.
+
+Audit content purpose, reader assumptions, missing explanations, organization,
+accuracy, completeness, density, concrete examples, navigation, visual clarity
+and sentence-level style before rewriting. Verify the prompt's attributions
+against original guidance rather than treating its summaries as quotations from
+the books. Explain material tensions between sources and the chosen application.
+
+Use conditions before actions; clear actors and active voice; explicit noun
+references; imperative procedural steps; meaningful identifiers; code typography
+and tagged fences. Reference entries need syntax, operands/types, scope,
+obligations, constraints and errors as applicable to a declaration language.
+Do not dilute a normative distinction to satisfy a mechanical style metric.
+
+Work in repository Markdown, with tables and accessible diagrams when a
+relationship needs them. Mermaid or fenced text diagrams are permitted; provide
+adjacent explanatory text and do not require a new publishing site or graphical
+tool to read the core content. No deployment or website redesign is requested.
+
+## Technical scope and verification
+
+This work explains and improves presentation of draft 0.1. Preserve its proposed
+status, normative force, stable rule identities and supported/unsupported
+boundary. Reorganizing and clarifying prose is in scope; silently changing
+syntax, semantics, fixtures' contracts, ABI/profile support or production
+readiness is not. Surface actual language ambiguities as review feedback rather
+than resolving them by inventing rules. If such a gap prevents a truthful
+example, use a supported example or seek a substantive language decision.
+
+Treat the language files and grammar as technical authorities for AIL. Earlier
+design sketches are rationale, not executable syntax. Synthetic fixture
+catalogues and digest tokens must remain explicitly synthetic; examples do not
+establish facts about real operating-system APIs.
+
+Verification covers rule-to-explanation/example traceability, the completeness
+of final examples and context retained by extracts, links/anchors, code fences,
+tables and a walkthrough of the reviewer journey. Check reference coverage
+against an enumerated grammar/clause/rule inventory rather than a remembered
+list. Separate syntax checks, semantic inspection and unexecuted runtime claims.
+The old disposable checker described in `conformance.md` is historical evidence,
+not a shipped validator or a guaranteed available test command.
+
+There is no requested production-code change, so no new runtime test seam is
+needed. The checked-out Makefile's validation entry covers existing `.apiw`
+artifacts, not this proposed AIL documentation. No Taskfile was found during
+requirements bootstrap; the planning recommendation is to add a root
+`Taskfile.yml` only if this work establishes a useful repeatable documentation
+check, wrapping its existing mechanics. Do not expand the task into a parser,
+semantic validator or general build-system migration.
+
+## Pointers
+
+- Existing language: `semantic/specification/interface-language/README.md`,
+  `language.md`, `contracts.md`, `profiles.md`, `grammar.ebnf`, `baseline.md`,
+  `conformance.md` and `examples/` in that directory.
+- Approved architecture and rationale:
+  `semantic/docs/design/2026-09-22-interface-language.md`.
+- Completed earlier specification-writing plan:
+  `semantic/docs/design/2026-09-22-interface-language-plan.md`. It is historical
+  context, not a fresh mandate to redo its tasks or launch its worker workflow.
+- Documentation placement: `adr/0024-per-language-docs-co-locate-adrs-stay-central.md`
+  and CONTEXT.md's documentation-structure terms. Keep subject material in
+  `semantic/`; do not create a new top-level `docs/` tree.
+- Human-supplied reading list:
+  [Richard Rabil's technical-writing books](https://richardrabil.com/2024/08/18/the-best-books-on-technical-writing-an-in-depth-analysis/).
+
+## Notes
+
+The root brief is the requirements authority for later sessions. There are no
+three unresolved interdependent decisions requiring a full grilling: the human
+has specified purpose, audience, forms, quality direction and the multi-step
+research workflow. Detailed editorial choices belong to research and planning.
+
+No code structure has been investigated in this requirements session. The
+checkout had no matching indexed graph project at startup; index this workspace
+before any later structural code exploration, then apply Tier 2 verification
+and coverage checks. Documentation and config observations here come from direct
+reads, not claims of graph coverage.
