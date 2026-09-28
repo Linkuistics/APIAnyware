@@ -75,7 +75,7 @@ uses the same import ([`L2`](../language.md#l2), [`L4`](../language.md#l4)).
 contain fields or signature slots. Labelled arrows connect packages through
 imports and functions to their nominal owners through
 [`member`](../glossary.md#member).
-`position` and `Canvas` sit side by side in the package; the member arrow
+`position` and `Canvas` share the package folder; the member arrow
 associates them. Follow the result type through `Geometry` to `Point`.
 [Model source](../figures/g9-model.puml).
 
@@ -336,6 +336,16 @@ Both authors used the local name `test`, but the second configuration includes
 a toolchain value that the first omits. A tool comparing environments across
 imports compares those configuration values. Sharing a local name is
 insufficient to establish a match ([`L3`](../language.md#l3)).
+
+Compare the configuration values behind the shared local name `test`; the
+object package adds a compiler selection.
+
+| Configuration entry | `example::buffers` | `example::objects` |
+|---|---|---|
+| Local environment name | `test` | `test` |
+| Target | `fixture64` | `fixture64` |
+| Platform and version | `fixture`, `1` | `fixture`, `1` |
+| Toolchain and version | Omitted | `fixture-compiler`, `1` |
 
 Within a package, a declaration uses `available([test])` to say it is offered
 in that named environment. This is its [availability](../glossary.md#availability).
@@ -607,6 +617,8 @@ address, while `load` reads the pointer value held at its symbol. The chosen
 mechanism tells the consumer which action supplies the value
 ([`L5`](../language.md#l5), [`C7`](../contracts.md#c7), [`A3`](../profiles.md#a3)).
 
+Compare the action at each symbol: the same result type can come from taking
+an address or loading a stored pointer.
 
 | Synthetic declaration | Access obtains | Result type |
 |---|---|---|

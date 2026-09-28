@@ -14,7 +14,7 @@ deactivate view
 note over caller, store
   Program may keep reading the returned bytes while Store lives.
   The result says borrow(owner($store)).
-  invalidated_by([]) names no earlier operation that ends this access.
+  invalidated_by($result, []) names no earlier operation that ends this access.
 end note
 store ->x caller : Store is destroyed: program stops using the returned view
 == Constructed mutable variant, separate from the fixture ==

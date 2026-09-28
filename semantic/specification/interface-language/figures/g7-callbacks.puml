@@ -5,18 +5,18 @@ hide footbox
 $caller(client, "Program\nRegisters and ends callback use")
 $callee(api, "Library API\nInvokes the handler")
 $callee(handler, "Handler\nRuns the callback")
-== Constructed call-scoped operation ==
+== Constructed notify: callback use within the call ==
 note over client, handler
-  Program enters registration.
+  Program enters notify.
   API borrows the handler for this call.
 end note
-api -[dotted]> handler : API starts the handler during registration
+api -[dotted]> handler : API starts the handler during notify
 activate handler
 note over handler : Handler finishes.
 deactivate handler
 note over client, handler
-  Registration completes. Every handler invocation has finished.
-  This registration can start no more. API retains no handler.
+  notify completes. Every handler invocation has finished.
+  This call can start no more. API retains no handler.
 end note
 note over api, handler
   count(1, 1): if this call eventually completes,

@@ -499,6 +499,14 @@ version `1` supplies no answer about that configuration. A range such as
 how much an author asserts about versions they have not listed
 ([`L3`](../language.md#l3)).
 
+Compare what each form would claim for those two platform versions. The range
+is an alternative design, while the exact claim is draft 0.1's form.
+
+| Coverage statement | Platform version `1` | Platform version `2` |
+|---|---|---|
+| Exact version `1` | Within the claim | Outside the claim |
+| Alternative range “version 1 and later” | Within the claim | Within the claim |
+
 In summary (non-normative), draft 0.1 interprets environments as exact values,
 not ranges. Unlisted configurations lie outside the claim. Changed signatures
 or contracts require distinct declarations with disjoint [availability](../glossary.md#availability) or distinct

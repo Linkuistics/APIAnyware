@@ -887,8 +887,8 @@ locally. `requires` takes the `outside_callback` constructor as its argument
 ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
 Use the callback timelines to find the point where the program knows the API
-has finished using the handler. In the constructed case, registration completes
-after the handler has finished, and that registration can start no further
+has finished using the handler. In the constructed case, `notify` completes
+after the handler has finished, and that call can start no further
 invocation. The API retains no handler after the call.
 
 The second case follows successful synthetic `subscribe`. The API keeps its
@@ -905,7 +905,7 @@ completion of the enclosing operation. Read time downward within each case;
 spacing measures no duration. Native scheduling and the machinery that releases
 stored callback state are outside this view.
 
-![Two callback timelines. Constructed registration finishes after its handler has finished. Successful subscribe permits later notifications. Its handler may still run when unsubscribe starts, but all callback use has ended when unsubscribe returns. The subscription trace shows one permitted notification.](../figures/g7-callbacks.svg)
+![Two callback timelines. Constructed notify finishes after its handler has finished. Successful subscribe permits later notifications. Its handler may still run when unsubscribe starts, but all callback use has ended when unsubscribe returns. The subscription trace shows one permitted notification.](../figures/g7-callbacks.svg)
 
 [Callback timing source](../figures/g7-callbacks.puml) ·
 [Ownership cases](#who-owns-what) ·
@@ -1081,6 +1081,14 @@ Retaining creates another owned reference; releasing the final reference
 destroys the counter. In the unique case, destruction
 consumes the handle at entry and invalidates dependent borrows before returning
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+
+Compare what the caller releases and when that release ends the resource's
+lifetime; an owned reference carries one obligation in either case.
+
+| Synthetic type | Caller's obligation | What destroys the resource |
+|---|---|---|
+| Unique `Store` | Pass the owned handle to `destroy` once | `destroy` destroys the store before returning |
+| Reference-counted `Counter` | Release each owned reference it holds | The final release destroys the counter |
 
 Use the state diagram to track who is responsible for destroying one synthetic
 immutable store. If `create` returns a store, the program receives that

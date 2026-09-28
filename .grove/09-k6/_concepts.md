@@ -79,12 +79,3 @@ relationship through concrete actors, actions and examples before technical
 shorthand. State each subject positively, preserving the exact contract,
 alternatives, limits and Q1–Q6. The follow-up human checkpoint is
 `first-path-reading-k48`.
-
-## Handed forward
-
-- **art:** Inspect reused G9 and G10 names in `explanation/packages.md`, G10
-  clause/place in `explanation/contracts.md`, G10 access after G3 in packages,
-  and G10 clause in `explanation/choices.md`. The draft supplies local reading
-  keys and grammar limits. Check the rendered views beside the named examples,
-  with G2–G7 retained for their distinct domain/fixture cases. No unfilled new
-  figure slot is proposed.
