@@ -82,11 +82,6 @@ alternatives, limits and Q1–Q6. The follow-up human checkpoint is
 
 ## Handed forward
 
-- **copy-edit:** Read all three expanded concept pages under the prose contract.
-  In particular, check transitions between located snippets, their omissions
-  and the following explanation; keep geometry/canvas separate from the frozen
-  Store/Counter fixtures and retain Q1–Q6. The fragment sources are in
-  `examples/concepts/`; example markers keep them in step with the pages.
 - **art:** Inspect reused G9 and G10 names in `explanation/packages.md`, G10
   clause/place in `explanation/contracts.md`, G10 access after G3 in packages,
   and G10 clause in `explanation/choices.md`. The draft supplies local reading

@@ -11,7 +11,7 @@
 An API author describing a byte-store library needs more than the contract of
 `view`. A tool reading it also needs the `Store` type, the operation that
 destroys a store, and a way to call each function. The author brings these
-declarations together in a named, versioned [package](../glossary.md#package).
+[declarations](../glossary.md#declaration) together in a named, versioned package.
 The package says which part of the API it describes and which configurations
 it covers ([`L2–L3`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
@@ -51,17 +51,21 @@ package example::geometry version "1" {
 }
 ```
 
-`Point` is local to `example::geometry`: that package contains its definition.
+`Point` is [local](../glossary.md#local-and-imported-declaration) to
+`example::geometry`: that package contains its definition.
 A second package, `example::canvas`, needs points to describe a canvas's
-position. It imports geometry under the alias `Geometry`. When reading the
-canvas package, `Geometry::Point` therefore names an imported type
+position. It [imports](../glossary.md#import) geometry under the alias
+`Geometry`. When reading the canvas package, `Geometry::Point` therefore names an imported type
 ([`L2`](../language.md#l2)).
 
 The model shows the packages first, then their declarations and callable
-slots. A [slot](../glossary.md#slot) is a parameter or result position in a callable's signature.
-`Canvas` is a resource, an opaque handle with its own lifetime contract.
+slots. A [slot](../glossary.md#slot) names a parameter, result or declared
+thrown value in a [callable's](../glossary.md#callable) signature.
+`Canvas` is an [opaque resource](../glossary.md#opaque-resource), a
+[handle](../glossary.md#handle) with its own lifetime contract.
 `position` receives that handle and returns a point. The diagram also shows
-`Filter`, a callback that receives a point and returns a Boolean; its
+`Filter`, a [callback](../glossary.md#callback) that receives a point and
+returns a Boolean; its
 [declaration example](../language.md#reading-aid-non-normative-names-references-and-callable-slots)
 uses the same import ([`L2`](../language.md#l2), [`L4`](../language.md#l4)).
 
@@ -69,7 +73,8 @@ uses the same import ([`L2`](../language.md#l2), [`L4`](../language.md#l4)).
 
 **Reading key:** folders group declarations by package and version. Boxes
 contain fields or signature slots. Labelled arrows connect packages through
-imports and functions to their nominal owners through `member`.
+imports and functions to their nominal owners through
+[`member`](../glossary.md#member).
 `position` and `Canvas` sit side by side in the package; the member arrow
 associates them. Follow the result type through `Geometry` to `Point`.
 [Model source](../figures/g9-model.puml).
@@ -111,8 +116,8 @@ lends it for the call and the callee retains nothing afterwards
 
 Inside `position`, `$canvas` addresses its parameter value. From elsewhere in
 the package, `@position::canvas` identifies that parameter slot and
-`@position::result` identifies its returned point. Each spelling has a
-containing context ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)):
+`@position::result` identifies its result slot, whose type is `Geometry::Point`.
+Each spelling has a containing context ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)):
 
 | Spelling in the canvas package | Referent |
 |---|---|
@@ -178,8 +183,10 @@ package example::canvas version "1" {
 `source(fixture, "Canvas.position")` records the source declaration's name.
 `access direct in [test]` names one way to call it in environment `test`.
 Inside that block, `via` gives the profile's mechanism (`symbol`) and the
-linker identity (`canvas_position`). `abi` selects convention `c` within the
-ABI entry named `native`. The aliases `fixture` and `native` select versioned
+linker identity (`canvas_position`). `abi` selects
+[calling convention](../glossary.md#calling-convention) `c` within the
+[ABI entry](../glossary.md#abi-entry) named `native`.
+The aliases `fixture` and `native` select versioned
 definitions, introduced under [dependencies](#what-it-depends-on).
 [Reaching the code](#reaching-the-code) explains the four access clauses and
 compares two paths for another API ([`A1–A2`](../profiles.md#a1)).
@@ -537,7 +544,8 @@ The message branch uses the fixture's stable compatibility guarantee. The
 source branch uses the `fixture-build` recipe; separately built binaries need
 their own guarantee. Both paths apply in `test`: target `fixture64`, platform
 `fixture` version `1`, and toolchain `fixture-compiler` version `1`. The two
-catalogues use the synthetic digest tokens explained below. Arrows connect
+catalogues use the synthetic digest tokens introduced in
+[What it depends on](#what-it-depends-on). Arrows connect
 choices to definitions a tool reads. Path selection follows the consumer's
 explicit choice or configuration policy; the picture gives neither branch
 priority. Native calling algorithms are outside this view.

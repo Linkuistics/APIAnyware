@@ -48,8 +48,8 @@ The signature names a `Store` parameter and a pointer-to-byte result.
 Inside its braces, `$store` addresses the input and `$result` the return
 value. `outcome viewed` contains the returned obligations; `give` supplies
 borrowing within the owner's lifetime, and the empty `[]` list records no
-earlier invalidator. The full function later on this page shows the cost of
-stating all the other facts too ([`C1`](../contracts.md#c1),
+earlier [invalidator](../glossary.md#invalidation). The full function later
+on this page shows the cost of stating all the other facts too ([`C1`](../contracts.md#c1),
 [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 The same distinction applies to a [callback](../glossary.md#callback). Its
@@ -197,7 +197,7 @@ package example::buffers version "1" {
 `surface` states the subset; `exports` lists public starting declarations.
 Each `@` reference selects a declaration in this package. Following
 `lifecycle(unique, @destroy)` leads from the resource to its destructor.
-The shorter extract leaves that declaration off the page, while the complete
+This fragment omits the `destroy` declaration, while the complete
 package includes it ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
 
 The returned view still needs a lifetime. If its ownership clause is missing,
@@ -360,7 +360,7 @@ in their bodies ([`C3`](../contracts.md#c3)).
 
 Fragment — locates consumption in the synthetic store's destructor.
 The complete [buffer package](../examples/buffers.ail) supplies the remaining
-contracts; compare `view`'s located borrow above.
+contracts; compare the `input($store, borrow)` clause in `view` above.
 
 <!-- ail-example: ../examples/concepts/choices.ail region=consume -->
 ```ail
@@ -490,8 +490,8 @@ package example::buffers version "1" {
 ```
 
 The braces under `environment test` contain its configuration clauses.
-`available([test])` selects that environment by its local name. The provider
-interprets the exact target and platform values ([`L3`](../language.md#l3)).
+`available([test])` selects that environment by its local name. The
+[provider](../glossary.md#provider) interprets the exact target and platform values ([`L3`](../language.md#l3)).
 
 Now consider a consumer running on platform version `2`. An exact claim for
 version `1` supplies no answer about that configuration. A range such as

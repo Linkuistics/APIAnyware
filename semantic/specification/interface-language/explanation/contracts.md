@@ -126,7 +126,8 @@ clauses. The rule files define the permitted names and their meanings
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 The clause railroad follows the same spelling. For `input($store, borrow);`,
-`input` fills `name`; the two arguments are a place and a bare name.
+`input` fills `name`; the two arguments are a [place](../glossary.md#place)
+and a bare name.
 In `give($result, borrow(owner($store)));`, the second argument contains
 nested constructors. Their parentheses stay inside the outer clause's
 parentheses; only the outer clause ends with a semicolon.
@@ -269,9 +270,11 @@ pointer addresses that pointer unless its place explicitly follows the pointer
 
 AIL chooses typed paths rather than implicitly applying every clause throughout
 an aggregate. This makes container and element obligations distinguishable, but
-makes nested contracts longer. It also uses two naming contexts: local
-`$store` inside `view` and external `@view::store`. The latter includes the
-operation identity ([`L2`](../language.md#l2)); [Q4](choices.md#q4) asks about the cost of
+makes nested contracts longer. Inside the `view(store: Store)` declaration
+shown above, `$store` addresses the parameter value. From elsewhere in the
+package, `@view::store` identifies that function's parameter slot: `view`
+locates the callable and `store` locates its parameter
+([`L2`](../language.md#l2)). [Q4](choices.md#q4) asks about the cost of
 learning these two spellings.
 
 ## Who owns what
@@ -293,8 +296,8 @@ Compare these entry contracts from the synthetic buffer example. The first
 lets `view` use the store; the second hands the store to `destroy`.
 
 Fragment — compares borrowing and consuming a store at entry. The complete
-[buffer package](../examples/buffers.ail) supplies the containing declarations
-and their remaining clauses.
+[buffer package](../examples/buffers.ail) supplies `Store`, the functions'
+remaining clauses and the package context.
 
 <!-- ail-example: ../examples/concepts/contracts.ail region=entry-transfer -->
 ```ail
@@ -427,8 +430,8 @@ case; the second is a constructed mutable variant
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 Fragment — shows call validity and the immutable view's lifetime. The complete
-[buffer package](../examples/buffers.ail) supplies `view` and its enclosing
-outcome.
+[buffer package](../examples/buffers.ail) supplies `Store`, the remaining
+function clauses and the package context.
 
 <!-- ail-example: ../examples/concepts/contracts.ail region=owner-borrow -->
 ```ail
@@ -557,8 +560,8 @@ divide that completion into success and failure cases. Each case says which
 values the caller can use ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 Fragment — shows `create` succeeding or failing. The complete
-[buffer package](../examples/buffers.ail) supplies the containing declaration
-and its other contracts.
+[buffer package](../examples/buffers.ail) supplies `Store`, the function's
+other contracts and the package context.
 
 <!-- ail-example: ../examples/concepts/contracts.ail region=null-outcomes -->
 ```ail
@@ -580,8 +583,8 @@ fn create() -> nullable<Store> {
 ```
 
 Fragment — shows `copy_bytes` succeeding or failing. The complete
-[buffer package](../examples/buffers.ail) supplies the containing declaration
-and its other contracts.
+[buffer package](../examples/buffers.ail) supplies `Store`, the function's
+other contracts and the package context.
 
 <!-- ail-example: ../examples/concepts/contracts.ail region=status-outcomes -->
 ```ail
@@ -602,9 +605,9 @@ fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
 }
 ```
 
-The constructor's null is a valid, observable result representing failure. It
-creates no ownership obligation. The copy's Boolean result is valid on both
-outcomes, but on failure the destination elements are unreadable. The caller
+The `create` function's null result is valid and observable, and represents
+failure. It creates no ownership obligation. The `copy_bytes` Boolean result
+is valid on both outcomes, but on failure the destination elements are unreadable. The caller
 finds out what happened by testing the status. After failure, it leaves the
 destination elements unread
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
@@ -998,7 +1001,7 @@ re-entry on separate rows; granting one does not grant the others.
 | Independent calls using the same instance | Serialized | Serialized |
 | Specified nested re-entry | Allowed | Allowed |
 
-The type declaration establishes what uses its references permit. For example,
+The type declaration establishes how callers may use its references. For example,
 the counter's `isolation(main)` confines its use to the main thread, including
 retaining, releasing and destroying it. The operation clauses then say how to
 enter each call. This is the relationship between type-level
@@ -1101,8 +1104,8 @@ Tools may also need to recognize a relationship between declarations. The
 buffer example explicitly connects the resource type to its release operation.
 AIL calls the reusable form of such a relationship a
 [pattern](../glossary.md#pattern). The pattern below gives names to the two
-participants; its instance identifies `Store` and `destroy` as those
-participants ([`L6`](../language.md#l6)).
+participants; its [instance](../glossary.md#pattern-instance) identifies
+`Store` and `destroy` as those participants ([`L6`](../language.md#l6)).
 
 Fragment — connects `Store` to its destructor. The complete
 [buffer package](../examples/buffers.ail) supplies the participant declarations
@@ -1208,9 +1211,9 @@ interpreting or implementing it ([`C3`](../contracts.md#c3), [`A1`](../profiles.
 Compare a core execution fact admitted by the synthetic fixture with one that
 needs additional semantics.
 
-Fragment — shows synchronous execution with returned completion. A complete
-package supplies the containing callable and its other contracts, as in
-[`view`](../examples/buffers.ail).
+Fragment — shows synchronous execution with returned completion. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, `view`'s other
+contracts and the package context.
 
 <!-- ail-example: ../examples/concepts/contracts.ail region=sync -->
 ```ail
