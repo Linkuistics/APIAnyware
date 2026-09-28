@@ -161,9 +161,10 @@ package example::canvas version "1" {
 `fn` introduces the function named `position`. In its parentheses,
 `canvas: Canvas` gives the parameter name and its type; `-> Geometry::Point`
 gives the result type from the package imported as `Geometry`. Type names
-appear without `@`. The braces hold facts about this invocation, including
-the synchronous execution clause. The parameter and result are its
-[slots](#slot).
+appear without `@`. The function's braces enclose clauses describing its
+invocation. Here `execution(sync);` says that the invocation completes before
+control returns to the caller. It makes no promise that the call eventually
+finishes. The parameter and result are its [slots](#slot).
 
 See [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots),
 including the callable railroad and the contrasting `Filter` callback.
@@ -244,7 +245,8 @@ version string and the declaration name after `record`. The parentheses here
 display an identity tuple in prose; they are not an AIL clause. A `Point`
 declared in `example::canvas` would have a different identity. Importing this
 record under the alias `Geometry` gives it a spelling in the importing package
-while preserving its geometry identity; see [local and imported declarations](#local-and-imported-declaration).
+while preserving its identity in `example::geometry`; see
+[local and imported declarations](#local-and-imported-declaration).
 
 See [the two-package model](language.md#l2) and
 [Four identities](explanation/packages.md#four-identities).
@@ -263,8 +265,9 @@ Rule: [`L6`](language.md#l6).
 ## Clause
 
 A clause states a fact using the form `name(arguments);`. For example, a
-callable's `execution(sync);` clause says its execution is synchronous. The
-rule files define each clause's arguments, meaning and permitted locations.
+callable's `execution(sync);` clause says that the invocation completes before
+control returns to the caller; it makes no promise that the call eventually
+finishes. The rule files define each clause's arguments, meaning and permitted locations.
 A parser recognizes the common shape; validation checks whether the named
 clause is recognized and used correctly there.
 
@@ -645,8 +648,9 @@ package example::canvas version "1" {
 `member(@Canvas, instance)` associates `position` with the declaration named
 `Canvas`. `receiver($canvas)` identifies its `canvas` parameter as the receiver.
 The `@` names a declaration; the `$` addresses a value within this callable.
-The function's braces sit beside the resource's braces, so finding a member
-means following the association rather than searching inside the type body.
+Both `position` and `Canvas` are declared directly inside `example::canvas`.
+The `member` clause connects them, so a reader follows that clause to find
+the function's owning type.
 A static member uses the `static` member kind and designates no receiver.
 
 See [the language model](language.md#l2) and

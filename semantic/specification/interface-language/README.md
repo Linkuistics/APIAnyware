@@ -11,7 +11,7 @@ An [API binding](glossary.md#binding) is the code that makes an API available in
 another language. The rules for using the API — what callers supply, what the
 implementation promises, and who releases its resources — form its
 [binding contract](glossary.md#binding-contract). AIL records that contract
-alongside the API's declarations.
+alongside the API's [declarations](glossary.md#declaration).
 
 > **Purpose:** orientation — understand AIL's purpose and choose a reading route.
 > **Reader:** language designers new to [API binding](glossary.md#binding); API authors and tool implementers.

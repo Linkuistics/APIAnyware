@@ -384,9 +384,9 @@ definition and tooling that interprets or implements it. A package selects the
 definition by identifier, version and a [digest pin](../glossary.md#digest-pin)
 for its exact contents, allowing consumers to agree on which rules to apply.
 
-For source-compiled access, the profile names a build recipe with the sources,
-compiler and options needed to build the call. Compatibility is then established
-for that build. For binary access that remains compatible across independent
+For access through a call built by a source compiler, the profile names a build
+recipe with the sources, compiler and options needed to build the call.
+Compatibility is then established for that build. For binary access that remains compatible across independent
 builds, the provider needs to guarantee compatible representations and runtime
 requirements. These are non-normative summaries of [`A1`](../profiles.md#a1)
 and [`A4`](../profiles.md#a4).
@@ -460,7 +460,7 @@ Continue to [How AIL states a contract](contracts.md) to see these obligations
 in AIL, using the [glossary](../glossary.md) for terms. For exact obligations,
 see [the memory and behavioural rules](../contracts.md).
 
-To place the notation before reading a rule, use the
+To see which package or function each name belongs to before reading a rule, use the
 [package shell](../language.md#l1) and
 [two-package language model](../language.md#l2). Those examples introduce
 declarations, imports, member functions and their parameters and results.
