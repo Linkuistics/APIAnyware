@@ -86,6 +86,26 @@ and review-guide drafting. The k48 response identifies language.md L2; it does
 not establish that this document was read or that its first correction failed.
 Keep the reported reading extent and proposed remedies distinct.
 
+## Handed forward
+
+- **art — part 1, step 2:** add a small label-card language-model view before
+  the shell railroad. Use the exact `tutorial::lifetime` version `"1"`
+  example: the package contains sibling declarations `Card`, `create_card`
+  and `destroy_card`; creation has a nullable Card result; destruction has
+  a named `card: Card` parameter and a unit result. Show containment separately
+  from the lifecycle reference from Card to destroy_card. The local prose
+  already explains these relationships. Keep G9's geometry/canvas comparison
+  linked for imports and members, which this free-function exercise does not
+  use. Use the shared visual vocabulary, source plus generated SVG, and an
+  adjacent reading key. Inspect the four reused G10 views in parts 1, 3, 4 and
+  5 with their new captions; their grammar and sources are unchanged.
+- **copy-edit — six tutorial pages:** read each new short excerpt with its
+  surrounding instruction for repeated context and density. Preserve the
+  named containing scope, fragment omissions, complete checkpoints and the
+  early route to the owned-snapshot exercise. Technical checking of the new
+  excerpts belongs to tutorial-k60; this handoff asks for the sentence and
+  terminology charter.
+
 ## First human reading correction
 
 The first human read (`first-path-reading-k8`, D4–D6) requested fuller,

@@ -54,6 +54,32 @@ promises no readable output and no preservation of earlier bytes
 
 ### 2. Define the two permitted status values
 
+Place the status declaration at package level beside `Label` and `copy_text`.
+
+Fragment — shows the status type in `tutorial::storage`. The
+[complete checkpoint](#checkpoint-package) also supplies its environment
+and the package's publication, provider and other declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=storage-enum -->
+```ail
+package tutorial::storage version "1" {
+  enum CopyStatus: i32 {
+    available([test]);
+    deprecated(no);
+    values(closed);
+    sharing(value);
+    isolation(none);
+    case copied = 0;
+    case unavailable = 1;
+  }
+}
+```
+
+The colon names the underlying integer type. Each `case` gives a name to
+one integer value; its semicolon ends the case declaration. The `values`
+clause determines whether unnamed values are admitted
+([`L4`](../language.md#l4), [enumeration grammar](../grammar.ebnf)).
+
 Declare `enum CopyStatus: i32` with `values(closed)` and cases `copied = 0`
 and `unavailable = 1`. Add `sharing(value)`, `isolation(none)`,
 [availability](../glossary.md#availability) and deprecation as shown below.
@@ -67,6 +93,30 @@ Because the enum is closed, the two cases you will describe cover its entire
 domain ([`C5`](../contracts.md#c5)).
 
 ### 3. Lend the label and destination for the call
+
+The two named parameters carry different kinds of reference: a label handle
+and an address at which the library can write bytes.
+
+Fragment — shows copying's input contracts in `tutorial::storage`. The
+[complete checkpoint](#checkpoint-package) also supplies pointer-storage
+clauses, outcomes, effects, access and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=storage-input -->
+```ail
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  input($label, borrow);
+  retain($label, none);
+  valid($label, call);
+  input($destination, borrow);
+  retain($destination, none);
+  valid($destination, call);
+}
+```
+
+`mutptr<u8>` describes writable storage of unsigned eight-bit elements.
+The angle brackets supply `u8` to the pointer type constructor. `$label`
+and `$destination` address their respective parameters; `CopyStatus` names
+the result type ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
 
 Give `copy_text` a `Label` input and a `mutptr<u8>` destination. For each
 parameter, write `input(..., borrow)`, `retain(..., none)` and
@@ -86,6 +136,30 @@ usable throughout the call, even if the function fails to write valid text.
 You will describe that pointer and the bytes reached through it separately.
 
 ### 4. Describe the writable storage
+
+Keep the storage facts in the same function body as the pointer input.
+
+Fragment — shows destination storage in `tutorial::storage`. The
+[complete checkpoint](#checkpoint-package) also supplies input validity,
+outcomes, other effects, access and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=storage-buffer -->
+```ail
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  mutation(arguments);
+  direction($destination, out);
+  aliasing($destination, disjoint);
+  extent($destination, buffer(7, 8, elements));
+  contents($destination, text("utf-8", nul));
+}
+```
+
+The four pointer clauses select `$destination`. `mutation(arguments)`
+describes which input state the call may change ([`C3`](../contracts.md#c3)).
+The constructor `buffer(...)` groups
+length, capacity and unit into the second argument of `extent`;
+`text(...)` groups encoding and termination into the second argument of
+`contents` ([`C4`](../contracts.md#c4)).
 
 Write `direction($destination, out)`. The library writes through this
 pointer and leaves its prior contents unread. Write
@@ -110,6 +184,48 @@ profile supports this encoding ([`C4`](../contracts.md#c4), [`F1`](../profiles.m
 
 ### 5. State what the caller can read on each outcome
 
+The outcomes now connect a returned status with the state of the written bytes.
+
+Fragment — shows copying's outcomes in `tutorial::storage`. The
+[complete checkpoint](#checkpoint-package) also supplies the input and
+storage clauses, effects, access and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=storage-outcomes -->
+```ail
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  outcome copied {
+    when(returned, equal($result, 0));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  outcome unavailable {
+    when(returned, equal($result, 1));
+    meaning(failure);
+    state($result, valid);
+    state($destination[], invalid);
+  }
+}
+```
+
+`$result` selects the status. `$destination[]` follows the pointer to the
+buffer elements whose extent step 4 described. The empty brackets are a
+place selector here; the brackets in `exports([@Card, ...])` instead delimit
+a list of references ([`C1`](../contracts.md#c1), [`L1`](../language.md#l1)).
+
+![Place railroad: a dollar sign and identifier followed by optional repeated field, pointee or buffer-element selectors.](../figures/g10-places.svg)
+
+Trace `$destination[]` through `$`, the identifier `destination`, then the
+`[` and `]` branch. For `$result`, take the bypass after the identifier.
+**Reading key:** open and filled circles mark start and end; square boxes
+are literal tokens and rounded boxes name lexical tokens. Follow one branch
+at a fork and the return arrow to repeat a selector. The track describes
+[`place` syntax](../grammar.ebnf); [`C1`](../contracts.md#c1) decides whether
+the selected value has the required type and extent.
+
+[Place diagram source](../figures/g10-places.puml) ·
+[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
+
 Add two [outcomes](../glossary.md#outcome) describing what happens when the
 call returns. Returning is this function's declared
 [completion](../glossary.md#completion), or way to finish. Use `equal($result, 0)` with
@@ -132,6 +248,21 @@ inspect the valid status.
 need a different signature and completion contract ([`C5`](../contracts.md#c5)).
 
 ### 6. Include copying in the package
+
+Add the copying declarations to the package-level publication clauses.
+The final two export references name the status type and copying function.
+
+Fragment — shows publication in `tutorial::storage`. The
+[complete checkpoint](#checkpoint-package) also supplies the header,
+dependencies, environment and all declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=storage-publication -->
+```ail
+package tutorial::storage version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending, refresh and text copying; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card, @CopyStatus, @copy_text]);
+}
+```
 
 Use the checkpoint's package name, describe copying in its
 [surface](../glossary.md#surface), and add `CopyStatus` and `copy_text` to

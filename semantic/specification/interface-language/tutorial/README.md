@@ -113,6 +113,31 @@ the label, copying and subscription operations with their own complete
 contracts. This lets you learn one group at a time while seeing all the facts
 that group requires ([`L2–L3`](../language.md#l2)).
 
+Here is the shape you will start with. The package contains the card type
+and the functions that create and destroy cards.
+
+Fragment — shows the first checkpoint's document and declaration structure.
+The [complete lifetime package](../examples/tutorial/01-lifetime.ail) also
+supplies publication, environment, provider and declaration contracts.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=index-shell -->
+```ail
+language "0.1";
+package tutorial::lifetime version "1" {
+  resource Card { /* Resource contract omitted. */ }
+  fn create_card() -> nullable<Card> { /* Call contract omitted. */ }
+  fn destroy_card(card: Card) -> unit { /* Call contract omitted. */ }
+}
+```
+
+The `language` header selects AIL's version. The next line gives this API
+description its own name and version. Inside its braces, `resource` and `fn`
+introduce declarations. `card: Card` names an input and its type; the arrow
+introduces the result type. Creation may return null, while destruction's
+`unit` result has no value ([`L1–L2`](../language.md#l1),
+[`L4`](../language.md#l4)). Part 1 develops this shell with a
+[syntax diagram and located clauses](01-lifetime.md#2-name-the-package-and-the-api-it-covers).
+
 Use the map to open a part or its complete checkpoint file. The final row
 includes both the assembled example and the separate ownership exercise.
 
@@ -139,7 +164,8 @@ meaning. They belong in each complete description from the start
 
 Read each checkpoint as a document. Compare it with your description and
 follow its references: for example, follow the card's `lifecycle` to its
-destructor. Use the expected observations to explain what a caller does at
+destructor in [part 1's located resource example](01-lifetime.md#card-lifetime).
+Use the expected observations to explain what a caller does at
 each step. Answer the questions before opening the answers, then inspect the
 invalid variant and the rule that rejects it.
 

@@ -43,13 +43,63 @@ new card and eventually passes that handle to `destroy_card`. On allocation
 failure it receives null and has no card to destroy. You will write those
 two cases explicitly in AIL.
 
-In AIL, declare `Card` as an [opaque resource](../glossary.md#opaque-resource).
+In AIL, `Card` will be an [opaque resource](../glossary.md#opaque-resource).
 Its value is already a [handle](../glossary.md#handle) identifying a card whose
-internal layout stays private. Write a `Card` parameter when passing that
-handle. `ptr<Card>` would describe storage containing a handle, a different
-value ([`L4`](../language.md#l4)).
+internal layout stays private. The following shell shows where that type
+and the operations using it are declared ([`L4`](../language.md#l4)).
 
 ### 2. Name the package and the API it covers
+
+Begin with the document's outer structure. This fragment locates the card
+and its two operations inside one package; the next steps fill their bodies.
+
+Fragment — shows the document shell and declaration locations. The
+[complete checkpoint](#checkpoint-package) also supplies provider pins, an
+environment and all declaration contracts.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-shell -->
+```ail
+language "0.1";
+package tutorial::lifetime version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card]);
+  resource Card { /* Lifetime and other nominal contracts omitted. */ }
+  fn create_card() -> nullable<Card> { /* Call contract omitted. */ }
+  fn destroy_card(card: Card) -> unit { /* Call contract omitted. */ }
+}
+```
+
+The outer braces contain package items. `resource` and `fn` introduce
+declarations; each has its own braced body. `surface` and `exports` are
+[clauses](../glossary.md#clause), whose parentheses hold arguments and whose
+semicolons end the statements. The brackets in `exports` contain a list.
+`@Card` selects a declaration in this package, while `card: Card` gives a
+parameter its type, written without `@` ([`L1–L2`](../language.md#l1)).
+
+Read `fn destroy_card(card: Card) -> unit` from left to right: function name,
+named parameter with its type, then result type. `unit` means no result value.
+Creation has no parameters and returns either a card or null, written
+`nullable<Card>` ([`L4`](../language.md#l4)).
+
+![Document, item and clause railroads show a header followed by a package containing repeated items, and a clause ending in a semicolon.](../figures/g10-shell.svg)
+
+Trace the first track with `"0.1"`, `tutorial::lifetime` and `"1"` from the
+fragment. The repeated `item` path admits the declarations and clauses inside
+the braces. **Reading key:** start at an open circle and follow arrowheads to
+the filled circle. Square boxes show literal tokens; rounded boxes name
+grammar productions or lexical tokens. A fork selects an alternative, a
+bypass permits omission, and a return track repeats a part. This is the
+[`document`, `item` and `clause` syntax](../grammar.ebnf); completeness also
+depends on [`L3`](../language.md#l3).
+
+[Shell diagram source](../figures/g10-shell.puml) ·
+[Language model with imports and members](../language.md#reading-aid-non-normative-locate-the-declarations-first)
+
+Here all three declarations are local to `tutorial::lifetime`. The tutorial
+uses free functions with explicit parameters. For a comparison with an imported
+type and a function associated with a nominal owner by `member`, follow the
+language model above: its geometry/canvas examples show those additional
+relationships ([`L2`](../language.md#l2), [`L5`](../language.md#l5)).
 
 Write `language "0.1";` and the package header shown in the checkpoint.
 `tutorial::lifetime` names this description and `"1"` is its version.
@@ -63,6 +113,32 @@ operations can arrive in a later package because creating and destroying a
 card can be described fully on their own ([`L3`](../language.md#l3)).
 
 ### 3. Select the synthetic definitions and configuration
+
+The package also identifies the definitions used to interpret its calls.
+Here are those selections and the configuration they support.
+
+Fragment — shows package dependencies and an environment. The
+[complete checkpoint](#checkpoint-package) also supplies publication clauses
+and declarations. Both digest strings are synthetic test tokens from
+[`F1`](../profiles.md#f1).
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-environment -->
+```ail
+package tutorial::lifetime version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+}
+```
+
+`fixture`, `native` and `test` are names introduced inside this package.
+The quoted strings identify the selected definitions and exact configuration.
+These `use` declarations select provider catalogues; importing declarations
+from another AIL package uses the separate `import` form in
+[`L2`](../language.md#l2).
 
 Copy the two `use` declarations and the `test` environment from the checkpoint.
 The `fixture` alias selects a [profile](../glossary.md#profile), the extension
@@ -82,7 +158,40 @@ where they apply with `available([test])`. This describes that exact
 configuration; claims about other configurations require their own evidence
 and description ([`L3`](../language.md#l3), [`F1`](../profiles.md#f1)).
 
+<a id="card-lifetime"></a>
+
 ### 4. Give `Card` its lifetime and sharing rules
+
+The resource's body records how an owner handles a card. Its lifetime clause
+points to the destructor beside it in the package.
+
+Fragment — shows `Card` inside `tutorial::lifetime`. The
+[complete checkpoint](#checkpoint-package) also supplies publication,
+provider and environment declarations and both functions.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-resource -->
+```ail
+package tutorial::lifetime version "1" {
+  resource Card {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_card);
+    sharing(transferable);
+    isolation(none);
+  }
+  // create_card and destroy_card are sibling declarations, omitted here.
+}
+```
+
+`available([test])` refers to the environment just defined. `deprecated(no)`
+states that this public declaration is not deprecated. The empty list in
+`implements([])` records that there are no implemented interfaces
+([`L3`](../language.md#l3), [`L5`](../language.md#l5)).
+
+Use `Card` as the parameter type when passing its handle, as the shell's
+`destroy_card(card: Card)` does. `ptr<Card>` would describe storage
+containing a handle, a different value ([`L4`](../language.md#l4)).
 
 In `resource Card`, write `lifecycle(unique, @destroy_card)`. This
 [lifecycle](../glossary.md#lifecycle) says that each owned card carries one
@@ -100,6 +209,39 @@ The individual operations still state where and how callers enter them
 
 ### 5. Describe creation's success and failure
 
+Creation's two cases sit inside the function whose result they describe.
+
+Fragment — shows creation outcomes in `tutorial::lifetime`. The
+[complete checkpoint](#checkpoint-package) also supplies the function's
+availability, effects and access path, and the surrounding package facts.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-outcomes -->
+```ail
+fn create_card() -> nullable<Card> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  outcome allocation_failed {
+    when(returned, null($result));
+    meaning(failure);
+    state($result, valid);
+    give($result, owned);
+  }
+}
+```
+
+`created` and `allocation_failed` name outcomes within this function.
+`$result` selects this invocation's returned value, a
+[place](../glossary.md#place). The declaration reference `@create_card`
+instead selects the function itself; `@create_card::result` identifies its
+result slot from elsewhere. Inside this body, clauses use `$result` to
+describe that value ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+In `when(returned, nonnull($result));`, the inner parentheses belong to
+the predicate and the outer parentheses hold `when`'s two arguments.
+
 Give `create_card` the result type `nullable<Card>`. For each possible
 result, write an [outcome](../glossary.md#outcome): a named case explaining
 what happened and which value the caller can use. Pair `nonnull($result)`
@@ -114,6 +256,29 @@ creates no obligation, because ownership applies only to a non-null
 reference ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 ### 6. Transfer responsibility when destruction begins
+
+Destruction describes its input in the function body. The outcome records
+the single successful way this destructor returns.
+
+Fragment — shows consumption in `tutorial::lifetime`. The
+[complete checkpoint](#checkpoint-package) also supplies availability,
+effects, access and the surrounding package facts.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-consume -->
+```ail
+fn destroy_card(card: Card) -> unit {
+  input($card, consume);
+  retain($card, none);
+  outcome done {
+    when(returned, any);
+    meaning(success);
+  }
+}
+```
+
+The signature introduces `card`; `$card` selects that parameter's value.
+`any` covers the returned case without testing a value: this function has
+a `unit` result ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 Give `destroy_card` one `Card` parameter and a `unit` result. The caller
 supplies a valid, non-null card that it owns. Write
@@ -131,6 +296,40 @@ destruction itself is already described by consumption and lifecycle
 ([`C2–C3`](../contracts.md#c2)).
 
 ### 7. Complete the facts about each call
+
+Use creation to locate the remaining clauses and the access block. The
+clauses describe the call; the nested block identifies its implementation.
+
+Fragment — shows creation's common facts in `tutorial::lifetime`. The
+[complete checkpoint](#checkpoint-package) also supplies the outcomes from
+step 5 and the package context from steps 2–4.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lifetime-effects-access -->
+```ail
+fn create_card() -> nullable<Card> {
+  available([test]);
+  deprecated(no);
+  execution(sync);
+  completions([returned]);
+  executor(any);
+  concurrency(parallel);
+  reentrancy(allowed);
+  mutation(none);
+  variadic(false);
+  // Outcomes omitted.
+  access direct in [test] {
+    abi(native, "c");
+    via(fixture, "symbol", "fixture_create_card");
+    mapping(identity);
+    compatibility(stable);
+  }
+}
+```
+
+`direct` names a path within `create_card`; `[test]` selects the environment
+where it applies. `native` and `fixture` refer to the package's two `use`
+aliases. The quoted symbol identifies the synthetic implementation
+([`A2`](../profiles.md#a2)).
 
 For both functions, copy the checkpoint's [availability](../glossary.md#availability),
 deprecation and seven effect [clauses](../glossary.md#clause). Read the effects

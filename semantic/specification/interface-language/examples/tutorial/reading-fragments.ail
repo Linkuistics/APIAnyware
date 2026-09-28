@@ -1,0 +1,391 @@
+// Teaching fragments for the tutorial; each region is incomplete.
+// Read the named checkpoint for the complete synthetic contract.
+
+// region: lifetime-shell
+language "0.1";
+package tutorial::lifetime version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card]);
+  resource Card { /* Lifetime and other nominal contracts omitted. */ }
+  fn create_card() -> nullable<Card> { /* Call contract omitted. */ }
+  fn destroy_card(card: Card) -> unit { /* Call contract omitted. */ }
+}
+// endregion
+
+// region: lifetime-environment
+package tutorial::lifetime version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+}
+// endregion
+
+// region: lifetime-resource
+package tutorial::lifetime version "1" {
+  resource Card {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy_card);
+    sharing(transferable);
+    isolation(none);
+  }
+  // create_card and destroy_card are sibling declarations, omitted here.
+}
+// endregion
+
+// region: lifetime-outcomes
+fn create_card() -> nullable<Card> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  outcome allocation_failed {
+    when(returned, null($result));
+    meaning(failure);
+    state($result, valid);
+    give($result, owned);
+  }
+}
+// endregion
+
+// region: lifetime-consume
+fn destroy_card(card: Card) -> unit {
+  input($card, consume);
+  retain($card, none);
+  outcome done {
+    when(returned, any);
+    meaning(success);
+  }
+}
+// endregion
+
+// region: lifetime-effects-access
+fn create_card() -> nullable<Card> {
+  available([test]);
+  deprecated(no);
+  execution(sync);
+  completions([returned]);
+  executor(any);
+  concurrency(parallel);
+  reentrancy(allowed);
+  mutation(none);
+  variadic(false);
+  // Outcomes omitted.
+  access direct in [test] {
+    abi(native, "c");
+    via(fixture, "symbol", "fixture_create_card");
+    mapping(identity);
+    compatibility(stable);
+  }
+}
+// endregion
+
+// region: lending-lifecycle
+package tutorial::lending version "1" {
+  resource Label {
+    implements([]);
+    lifecycle(unique, @destroy_label);
+    sharing(transferable);
+    isolation(none);
+  }
+  fn destroy_label(label: Label) -> unit {
+    input($label, consume);
+    retain($label, none);
+    // Remaining call contract omitted.
+  }
+}
+// endregion
+
+// region: lending-input
+fn current_label(card: Card) -> Label {
+  input($card, borrow);
+  retain($card, none);
+  valid($card, call);
+}
+// endregion
+
+// region: lending-result
+fn current_label(card: Card) -> Label {
+  outcome lent {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($card)));
+    invalidated_by($result, [@refresh_card]);
+  }
+}
+// endregion
+
+// region: lending-refresh
+fn refresh_card(card: Card) -> unit {
+  mutation(arguments);
+  input($card, borrow);
+  retain($card, none);
+  valid($card, call);
+}
+// endregion
+
+// region: lending-publication
+package tutorial::lending version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending and refresh; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card]);
+}
+// endregion
+
+// region: storage-enum
+package tutorial::storage version "1" {
+  enum CopyStatus: i32 {
+    available([test]);
+    deprecated(no);
+    values(closed);
+    sharing(value);
+    isolation(none);
+    case copied = 0;
+    case unavailable = 1;
+  }
+}
+// endregion
+
+// region: storage-input
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  input($label, borrow);
+  retain($label, none);
+  valid($label, call);
+  input($destination, borrow);
+  retain($destination, none);
+  valid($destination, call);
+}
+// endregion
+
+// region: storage-buffer
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  mutation(arguments);
+  direction($destination, out);
+  aliasing($destination, disjoint);
+  extent($destination, buffer(7, 8, elements));
+  contents($destination, text("utf-8", nul));
+}
+// endregion
+
+// region: storage-outcomes
+fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
+  outcome copied {
+    when(returned, equal($result, 0));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  outcome unavailable {
+    when(returned, equal($result, 1));
+    meaning(failure);
+    state($result, valid);
+    state($destination[], invalid);
+  }
+}
+// endregion
+
+// region: storage-publication
+package tutorial::storage version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending, refresh and text copying; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card, @CopyStatus, @copy_text]);
+}
+// endregion
+
+// region: callback-invocation
+callback LabelChanged(change: u64) -> unit {
+  execution(sync);
+  completions([returned]);
+  executor(any);
+  concurrency(serial);
+  reentrancy(forbidden);
+  mutation(none);
+  variadic(false);
+  outcome handled {
+    when(returned, any);
+    meaning(success);
+  }
+}
+// endregion
+
+// region: callback-sharing
+callback LabelChanged(change: u64) -> unit {
+  sharing(shared);
+  isolation(none);
+  executor(any);
+  concurrency(serial);
+  reentrancy(forbidden);
+}
+// endregion
+
+// region: callback-representation
+callback LabelChanged(change: u64) -> unit {
+  callback_abi(native, "c");
+  representation(fixture, "closure");
+}
+// endregion
+
+// region: callback-owner
+package tutorial::callbacks version "1" {
+  resource Watch {
+    lifecycle(unique, @destroy_watch);
+    sharing(transferable);
+    isolation(none);
+    // Common resource clauses omitted.
+  }
+  fn watch_labels(handler: LabelChanged) -> Watch {
+    outcome registered {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    // Input, schedule, effects and access omitted.
+  }
+}
+// endregion
+
+// region: callback-retention
+fn watch_labels(handler: LabelChanged) -> Watch {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+}
+// endregion
+
+// region: callback-schedule
+fn watch_labels(handler: LabelChanged) -> Watch {
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@destroy_watch);
+  }
+}
+// endregion
+
+// region: callback-destroy
+fn destroy_watch(subscription: Watch) -> unit {
+  input($subscription, consume);
+  retain($subscription, none);
+  outcome stopped {
+    when(returned, any);
+    meaning(success);
+  }
+}
+// endregion
+
+// region: callback-slot-reference
+package tutorial::callbacks version "1" {
+  fn watch_labels(handler: LabelChanged) -> Watch {
+    // Callback use and remaining contract omitted.
+  }
+  fn destroy_watch(subscription: Watch) -> unit {
+    requires(outside_callback(@watch_labels::handler));
+    // Remaining call contract omitted.
+  }
+}
+// endregion
+
+// region: callback-publication
+package tutorial::callbacks version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending, refresh, text copying and independent label-change notifications; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card, @CopyStatus, @copy_text, @Watch, @LabelChanged, @watch_labels, @destroy_watch]);
+}
+// endregion
+
+// region: access-path
+package tutorial::finished version "1" {
+  fn current_label(card: Card) -> Label {
+    // Input, effects and outcomes omitted.
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_current_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}
+// endregion
+
+// region: access-dependencies
+package tutorial::finished version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+}
+// endregion
+
+// region: access-callback
+callback LabelChanged(change: u64) -> unit {
+  callback_abi(native, "c");
+  representation(fixture, "closure");
+}
+// endregion
+
+// region: owned-shell
+language "0.1";
+package tutorial::owned version "1" {
+  surface("Synthetic label-card API owned-snapshot variant release 1: Card lifetime, owned label snapshots, refresh, text copying and independent label-change notifications; other operations excluded.");
+  resource Label {
+    lifecycle(unique, @destroy_label);
+    // Other nominal contracts omitted.
+  }
+  fn destroy_label(label: Label) -> unit {
+    input($label, consume);
+    // Remaining call contract omitted.
+  }
+  // Other declarations omitted.
+}
+// endregion
+
+// region: change-borrow
+fn current_label(card: Card) -> Label {
+  outcome lent {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($card)));
+    invalidated_by($result, [@refresh_card]);
+  }
+}
+// endregion
+
+// region: change-owned
+fn current_label(card: Card) -> Label {
+  outcome supplied {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+}
+// endregion
+
+// region: owned-access
+fn current_label(card: Card) -> Label {
+  access direct in [test] {
+    abi(native, "c");
+    via(fixture, "symbol", "fixture_current_label_owned");
+    mapping(identity);
+    compatibility(stable);
+  }
+}
+// endregion
+
+// region: index-shell
+language "0.1";
+package tutorial::lifetime version "1" {
+  resource Card { /* Resource contract omitted. */ }
+  fn create_card() -> nullable<Card> { /* Call contract omitted. */ }
+  fn destroy_card(card: Card) -> unit { /* Call contract omitted. */ }
+}
+// endregion
+

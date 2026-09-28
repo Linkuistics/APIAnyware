@@ -31,6 +31,35 @@ and finishes all callback use before returning from watch destruction
 
 ### 1. Describe one notification invocation
 
+Start with the callable type that the program's handler will satisfy.
+It is a package-level declaration alongside the resources and functions.
+
+Fragment — shows one callback invocation in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies availability,
+sharing, isolation, representation and the surrounding package declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-invocation -->
+```ail
+callback LabelChanged(change: u64) -> unit {
+  execution(sync);
+  completions([returned]);
+  executor(any);
+  concurrency(serial);
+  reentrancy(forbidden);
+  mutation(none);
+  variadic(false);
+  outcome handled {
+    when(returned, any);
+    meaning(success);
+  }
+}
+```
+
+The `callback` keyword introduces a named callable type. Its parameter
+`change` has type `u64`, and its `unit` result contains no value. Like a
+function, it contains clauses and outcomes describing one invocation
+([`L4`](../language.md#l4), [`C3`](../contracts.md#c3)).
+
 Declare `callback LabelChanged(change: u64) -> unit`. The library invokes
 this function with a scalar change number. For that invocation, the library
 is the [caller](../glossary.md#caller-and-callee) and the program's handler
@@ -52,6 +81,26 @@ a handler could read immutable saved state and return. A different handler
 could require state usable only on the main thread. The permitted execution
 context determines which of these can satisfy the callback type.
 
+Fragment — shows the callback value's sharing rules and its invocation
+restrictions in `tutorial::callbacks`. The [complete checkpoint](#checkpoint-package)
+also supplies common clauses, the remaining effects, representation,
+outcome and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-sharing -->
+```ail
+callback LabelChanged(change: u64) -> unit {
+  sharing(shared);
+  isolation(none);
+  executor(any);
+  concurrency(serial);
+  reentrancy(forbidden);
+}
+```
+
+These clauses belong to the declaration of `LabelChanged`. They govern
+every value of that callback type, including a handler the program supplies
+to more than one registration ([`C2–C3`](../contracts.md#c2)).
+
 For this example, add `sharing(shared)`, `isolation(none)` and
 `executor(any)`. [Shared](../glossary.md#shared) allows references to the
 callback to cross [executors](../glossary.md#executor), and `executor(any)`
@@ -70,6 +119,25 @@ the same callback value is registered more than once
 
 ### 3. Select the callback's synthetic representation
 
+The callback declaration also names how its values cross the call boundary.
+
+Fragment — shows callback representation in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies the two provider
+dependencies, common clauses and the callback's invocation contract.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-representation -->
+```ail
+callback LabelChanged(change: u64) -> unit {
+  callback_abi(native, "c");
+  representation(fixture, "closure");
+}
+```
+
+`native` and `fixture` refer to package-level `use abi` and `use profile`
+aliases, as in [part 1](01-lifetime.md#3-select-the-synthetic-definitions-and-configuration).
+The strings select the convention and representation within those definitions
+([`A1–A2`](../profiles.md#a1)).
+
 Add `callback_abi(native, "c")` and `representation(fixture, "closure")`.
 These select the [calling convention](../glossary.md#calling-convention) and
 the way the fixture stores the callback with its captures, its
@@ -84,6 +152,38 @@ these two declaration clauses instead tell the library how to hold and
 invoke it ([`A2`](../profiles.md#a2)).
 
 ### 4. Return a watch for the subscription
+
+The watch type and registration function are siblings in the package.
+Registration's result makes the program responsible for that watch.
+
+Fragment — shows the watch lifecycle and registration result. The
+[complete checkpoint](#checkpoint-package) also supplies the destructor,
+handler contracts, common clauses, effects, access and package dependencies.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-owner -->
+```ail
+package tutorial::callbacks version "1" {
+  resource Watch {
+    lifecycle(unique, @destroy_watch);
+    sharing(transferable);
+    isolation(none);
+    // Common resource clauses omitted.
+  }
+  fn watch_labels(handler: LabelChanged) -> Watch {
+    outcome registered {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    // Input, schedule, effects and access omitted.
+  }
+}
+```
+
+`LabelChanged` in the parameter type position refers to the callback
+declaration. `$result` inside `registered` selects `watch_labels`'s
+returned `Watch` ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 
 Declare `resource Watch` with `lifecycle(unique, @destroy_watch)`,
 `sharing(transferable)`, `isolation(none)` and the common clauses shown in
@@ -103,6 +203,27 @@ delivers only the `u64` change number.
 
 ### 5. Keep the handler for later notifications
 
+Registration describes what happens to the handler input as well as the watch
+result. Their lifetime relationship is visible in the retention clause.
+
+Fragment — shows handler retention in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies the owned result,
+schedule, effects, access and surrounding declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-retention -->
+```ail
+fn watch_labels(handler: LabelChanged) -> Watch {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+}
+```
+
+`$handler` selects the callback passed to registration. In the same function,
+`$result` selects the watch that registration returns. Read
+`strong(owner($result))` as a stored strong reference bounded by that watch's
+lifetime ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)).
+
 On `watch_labels`, write `input($handler, borrow)` and
 `valid($handler, call)`. The program supplies a callback valid during
 registration and keeps its existing ownership. This is a
@@ -121,6 +242,48 @@ callback and its captures. This stored reference is what keeps the handler
 available for later notifications ([`C2–C3`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
 ### 6. Specify when this registration may invoke the handler
+
+The schedule is a block inside the registration function. Its `$handler`
+selects that function's input, giving this particular use of the callback
+its own invocation rules.
+
+Fragment — shows a callback-use block in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies retention, the
+owned watch result, effects, access and surrounding declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-schedule -->
+```ail
+fn watch_labels(handler: LabelChanged) -> Watch {
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@destroy_watch);
+  }
+}
+```
+
+Compare `callback LabelChanged(change: u64) -> unit` in step 1 with
+`callback $handler` here. The first declares a callable type with its own
+signature. The second addresses a value in the enclosing function and
+describes when the library may invoke it. `$result` here is still the
+registration's watch result ([`C1`](../contracts.md#c1), [`C6`](../contracts.md#c6)).
+
+![Callback-use railroad shows callback followed by a place, then braces enclosing repeated clauses.](../figures/g10-callback-use.svg)
+
+Trace `callback`, substitute `$handler` for `place`, then follow the braced
+clause loop for the seven schedule clauses. **Reading key:** start at the
+open circle and follow arrowheads to the filled circle. Square boxes show
+literals; rounded boxes name productions. The bypass permits no clauses
+syntactically, and the return track permits repetition. The
+[`callback_use` production](../grammar.ebnf) gives this shape;
+[`C6`](../contracts.md#c6) requires the schedule's actual facts.
+
+[Callback-use diagram source](../figures/g10-callback-use.puml) ·
+[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
 
 Inside `watch_labels`, add a `callback $handler` block. Write
 `timing(after_return)` so notifications can start only after registration
@@ -148,6 +311,30 @@ call ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 
 ### 7. End the subscription through its destructor
 
+The schedule names a separate function as the watch's destructor. This is
+the function that takes over the program's obligation to finish with a watch.
+
+Fragment — shows watch consumption in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies the teardown
+precondition, effects, access and surrounding declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-destroy -->
+```ail
+fn destroy_watch(subscription: Watch) -> unit {
+  input($subscription, consume);
+  retain($subscription, none);
+  outcome stopped {
+    when(returned, any);
+    meaning(success);
+  }
+}
+```
+
+`subscription` names this function's input. Its `$subscription` place selects
+the watch that was the result of an earlier registration. The link between
+the schedule and this function is the declaration reference
+`@destroy_watch` ([`L2`](../language.md#l2), [`C6`](../contracts.md#c6)).
+
 Define `destroy_watch(subscription: Watch) -> unit`. Write
 `input($subscription, consume)`, `retain($subscription, none)` and one
 successful returned outcome. At entry the destructor
@@ -161,6 +348,33 @@ running or can begin for that subscription. This is
 the caller can rely on quiescence at return ([`C6`](../contracts.md#c6)).
 
 ### 8. Require teardown from outside the callback
+
+Teardown's precondition refers back to the handler use in registration.
+The two declarations below locate both ends of that reference.
+
+Fragment — shows a reference to another function's parameter in
+`tutorial::callbacks`. The [complete checkpoint](#checkpoint-package) also
+supplies the callback-use block, input and output contracts, effects, access
+and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-slot-reference -->
+```ail
+package tutorial::callbacks version "1" {
+  fn watch_labels(handler: LabelChanged) -> Watch {
+    // Callback use and remaining contract omitted.
+  }
+  fn destroy_watch(subscription: Watch) -> unit {
+    requires(outside_callback(@watch_labels::handler));
+    // Remaining call contract omitted.
+  }
+}
+```
+
+`@watch_labels::handler` identifies the parameter by its function and local
+name. Inside `watch_labels`, the place `$handler` addresses that input.
+Inside `destroy_watch`, the longer reference is needed to identify the
+other function's callback use; that destructor's own input is
+`$subscription` ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
 In `destroy_watch`, add
 `requires(outside_callback(@watch_labels::handler))`. This reference names
@@ -180,6 +394,22 @@ Whether a handler or destructor eventually finishes remains outside these
 contracts ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
 
 ### 9. Include the subscription in the package
+
+The package's public roots now include the watch, callback type, registration
+and destructor. The callback type appears in the same export list as the
+other declarations.
+
+Fragment — shows publication in `tutorial::callbacks`. The
+[complete checkpoint](#checkpoint-package) also supplies the header,
+dependencies, environment and all declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=callback-publication -->
+```ail
+package tutorial::callbacks version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending, refresh, text copying and independent label-change notifications; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card, @CopyStatus, @copy_text, @Watch, @LabelChanged, @watch_labels, @destroy_watch]);
+}
+```
 
 Use the checkpoint's package identity, expand `surface` and `exports` with
 the four declarations, and keep the earlier declarations. Complete both new

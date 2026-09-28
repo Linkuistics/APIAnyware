@@ -55,6 +55,35 @@ the returned borrow ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 ### 2. Describe `Label` and its destructor
 
+Place the label and its destructor beside the card declarations. This is the
+same relationship you used for `Card`, with its own type and operation names.
+
+Fragment — shows the label's lifecycle in `tutorial::lending`. The
+[complete checkpoint](#checkpoint-package) also supplies publication and
+provider context, common declaration clauses and the destructor's effects,
+outcome and access path.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lending-lifecycle -->
+```ail
+package tutorial::lending version "1" {
+  resource Label {
+    implements([]);
+    lifecycle(unique, @destroy_label);
+    sharing(transferable);
+    isolation(none);
+  }
+  fn destroy_label(label: Label) -> unit {
+    input($label, consume);
+    retain($label, none);
+    // Remaining call contract omitted.
+  }
+}
+```
+
+`@destroy_label` finds the local function declaration. In its signature,
+`Label` names the type without `@`; inside its body, `$label` selects the
+parameter value ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+
 Declare `Label` as a resource. Like `Card`, its value is an opaque
 [handle](../glossary.md#handle); the library keeps the layout private.
 Give it `lifecycle(unique, @destroy_label)`, `implements([])`,
@@ -76,6 +105,27 @@ that agreement; it implies no Rust-style static checking or exclusivity.
 
 ### 3. Keep the input card usable during the call
 
+The getter names a card input and a label result. Read the clauses about
+the input before adding the result's separate lifetime.
+
+Fragment — shows the getter's input in `tutorial::lending`. The
+[complete checkpoint](#checkpoint-package) also supplies outcomes, effects,
+access and the surrounding resource and package declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lending-input -->
+```ail
+fn current_label(card: Card) -> Label {
+  input($card, borrow);
+  retain($card, none);
+  valid($card, call);
+}
+```
+
+The colon assigns `Card` as the type of `card`, and the arrow introduces
+the result type `Label`. All three `$card` places select that same input.
+`call` names the period during which this invocation runs
+([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+
 For `current_label(card: Card) -> Label`, write `input($card, borrow)`.
 The caller keeps ownership while the library uses the card. Write
 `retain($card, none)` to promise that the call stores no card reference for
@@ -87,6 +137,33 @@ label needs its own promise because the caller will use it after that call
 has finished.
 
 ### 4. Tie the returned label to the card's lifetime
+
+The result's contract belongs inside an outcome. Read its owner relationship
+first; the following step explains the additional refresh cutoff shown here.
+
+Fragment — shows the getter's returned borrow in `tutorial::lending`. The
+[complete checkpoint](#checkpoint-package) also supplies input clauses,
+effects, access and the declarations named by this fragment.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lending-result -->
+```ail
+fn current_label(card: Card) -> Label {
+  outcome lent {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($card)));
+    invalidated_by($result, [@refresh_card]);
+  }
+}
+```
+
+`$result` selects the returned label; `$card` still selects the enclosing
+function's input. Read the nested value from inside out: `owner($card)`
+names a lifetime, `borrow(...)` describes access for that lifetime, and
+`give` associates that access with the result. These are declarative values,
+with no expression evaluation ([`L1`](../language.md#l1),
+[`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 In the successful `lent` [outcome](../glossary.md#outcome), write
 `state($result, valid)` and `give($result, borrow(owner($card)))`.
@@ -101,6 +178,28 @@ in the previous step: `call` bounds the input's use during `current_label`;
 the cost of finding these related facts in separate places.
 
 ### 5. End earlier borrows when refresh begins
+
+The preceding outcome points to the refresh operation using `@refresh_card`.
+Here is the relevant part of that sibling function.
+
+Fragment — shows refresh's input and mutation in `tutorial::lending`. The
+[complete checkpoint](#checkpoint-package) also supplies its remaining
+effects, successful outcome, access path and package context.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lending-refresh -->
+```ail
+fn refresh_card(card: Card) -> unit {
+  mutation(arguments);
+  input($card, borrow);
+  retain($card, none);
+  valid($card, call);
+}
+```
+
+Each function has its own parameter named `card`. `$card` addresses the
+parameter in the enclosing function; `@refresh_card` identifies the other
+declaration from the getter's outcome ([`L2`](../language.md#l2),
+[`C1`](../contracts.md#c1)).
 
 In `lent`, add `invalidated_by($result, [@refresh_card])`. This tells the
 caller to stop using that label at entry to `refresh_card` involving its
@@ -118,6 +217,21 @@ changes the card's contents, as the invalidation contract requires
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 ### 6. Include the new declarations in the package
+
+The expanded publication clauses stay at package level. Each `@` entry
+selects a local declaration included in this checkpoint.
+
+Fragment — shows publication in `tutorial::lending`. The
+[complete checkpoint](#checkpoint-package) also supplies the header,
+dependencies, environment and all declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=lending-publication -->
+```ail
+package tutorial::lending version "1" {
+  surface("Synthetic label-card API release 1: Card lifetime, label lending and refresh; other operations excluded.");
+  exports([@Card, @create_card, @destroy_card, @Label, @destroy_label, @current_label, @refresh_card]);
+}
+```
 
 Use the checkpoint's new package name and expand its [surface](../glossary.md#surface)
 to include lending and refresh. Add the new declarations to

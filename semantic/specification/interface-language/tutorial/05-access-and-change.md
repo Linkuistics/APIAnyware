@@ -38,6 +38,47 @@ whole contract, including who destroys a returned value
 
 ### 1. Identify the operation and its implementation
 
+Here is the access block in its containing function and package. Follow the
+package and declaration names first, then the nested path to its symbol.
+
+Fragment — shows `current_label`'s access path. The
+[complete checkpoint](#checkpoint-package) also supplies publication,
+provider and environment declarations, resources and the function's contract.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=access-path -->
+```ail
+package tutorial::finished version "1" {
+  fn current_label(card: Card) -> Label {
+    // Input, effects and outcomes omitted.
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_current_label");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}
+```
+
+The outer braces contain the function declaration. Its braces contain the
+contract and access path; the innermost braces contain facts about that path.
+`Card` and `Label` name local resource types without `@`
+([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
+
+![Access railroad shows a path name, in, a nonempty list of environment names and a braced sequence of clauses.](../figures/g10-access.svg)
+
+Read the track using `direct` as the first identifier and `test` as the first
+environment identifier. The comma loop admits further environments; the
+clause loop contains the four clauses shown above. **Reading key:** start
+at the open circle and follow arrows to the filled circle. Square boxes
+show literal tokens and rounded boxes name productions or lexical tokens.
+Forks select a path, bypasses permit omission, and return tracks repeat it.
+The [`access` grammar](../grammar.ebnf) describes this shape;
+[`A2`](../profiles.md#a2) supplies the required clauses and coverage rules.
+
+[Access diagram source](../figures/g10-access.puml) ·
+[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
+
 Find `current_label` in the [finished file](../examples/tutorial/05-finished.ail)
 or [checkpoint below](#checkpoint-package). A tool identifies this operation
 by package name `tutorial::finished`, version `"1"` and declaration name
@@ -52,6 +93,22 @@ The tool uses one name to identify the contract and another to locate its
 implementation ([`A2`](../profiles.md#a2)).
 
 ### 2. Follow the definitions that govern the call
+
+The aliases used by the path are introduced at package level. They identify
+catalogues of calling and representation rules.
+
+Fragment — shows provider selections in `tutorial::finished`. The
+[complete checkpoint](#checkpoint-package) also supplies the environment,
+publication clauses and declarations. These are synthetic pins from
+[`F1`](../profiles.md#f1).
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=access-dependencies -->
+```ail
+package tutorial::finished version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+}
+```
 
 Follow `fixture` and `native` to their `use` declarations at the top of
 the package. `fixture` selects the profile defining the `symbol` mechanism.
@@ -107,6 +164,21 @@ synthetic example (non-normative; [`A2–A4`](../profiles.md#a2),
 | `compatibility(stable)` | Rely on the provider's representation guarantee within its stated domain. |
 
 ### 4. Check the other declarations' access facts
+
+The callback carries its representation facts directly in its declaration.
+Compare their location with the function's nested access block in step 1.
+
+Fragment — shows the callback's calling facts in `tutorial::finished`.
+The [complete checkpoint](#checkpoint-package) also supplies the callback's
+contracts and the surrounding package and provider declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=access-callback -->
+```ail
+callback LabelChanged(change: u64) -> unit {
+  callback_abi(native, "c");
+  representation(fixture, "closure");
+}
+```
 
 For every function, find a path covering `test` and read its four clauses:
 `abi`, `via`, `mapping` and `compatibility`. Each function had these clauses
@@ -473,6 +545,30 @@ continuing responsibility.
 
 #### 2. Give the changed API a separate package
 
+The variant has its own package identity and keeps the declarations needed
+to describe the label's lifetime.
+
+Fragment — shows the owned variant's package context. The
+[complete owned package](../examples/tutorial/05-owned.ail) also supplies
+exports, dependencies, the environment and every declaration contract.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=owned-shell -->
+```ail
+language "0.1";
+package tutorial::owned version "1" {
+  surface("Synthetic label-card API owned-snapshot variant release 1: Card lifetime, owned label snapshots, refresh, text copying and independent label-change notifications; other operations excluded.");
+  resource Label {
+    lifecycle(unique, @destroy_label);
+    // Other nominal contracts omitted.
+  }
+  fn destroy_label(label: Label) -> unit {
+    input($label, consume);
+    // Remaining call contract omitted.
+  }
+  // Other declarations omitted.
+}
+```
+
 Copy the finished checkpoint and use `package tutorial::owned version "1"`.
 Describe the owned-snapshot variant in [surface](../glossary.md#surface).
 Keep the [exports](../glossary.md#exports): the package already contains
@@ -485,6 +581,48 @@ to that package, even though the other uses the same local spelling
 ([`L2`](../language.md#l2)).
 
 #### 3. Give the caller ownership of the `current_label` result
+
+Read the result clauses in their containing operation before changing them.
+The first fragment is the existing contract; the second is the exercise's
+replacement.
+
+Fragment — shows the borrowed result in `tutorial::finished`. The
+[complete finished package](../examples/tutorial/05-finished.ail) also
+supplies input clauses, effects, access and surrounding declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=change-borrow -->
+```ail
+fn current_label(card: Card) -> Label {
+  outcome lent {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($card)));
+    invalidated_by($result, [@refresh_card]);
+  }
+}
+```
+
+Fragment — shows the owned result in `tutorial::owned`. The
+[complete owned package](../examples/tutorial/05-owned.ail) also supplies
+input clauses, effects, access and surrounding declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=change-owned -->
+```ail
+fn current_label(card: Card) -> Label {
+  outcome supplied {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+}
+```
+
+In each fragment `$result` selects that function's returned label.
+The borrow uses `$card` to name its owner and `@refresh_card` to name the
+operation that ends access early. The owned result carries its own
+destruction obligation ([`C1–C2`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 In the returned [outcome](../glossary.md#outcome), replace
 `give($result, borrow(owner($card)))` with `give($result, owned)`.
@@ -504,6 +642,24 @@ after return; the caller still satisfies the existing input conditions
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 #### 4. Select the implementation that supplies the snapshot
+
+The changed symbol stays inside `current_label`'s access path.
+
+Fragment — shows the owned variant's access block in `tutorial::owned`.
+The [complete owned package](../examples/tutorial/05-owned.ail) also supplies
+the function contract and its package, provider and environment declarations.
+
+<!-- ail-example: ../examples/tutorial/reading-fragments.ail region=owned-access -->
+```ail
+fn current_label(card: Card) -> Label {
+  access direct in [test] {
+    abi(native, "c");
+    via(fixture, "symbol", "fixture_current_label_owned");
+    mapping(identity);
+    compatibility(stable);
+  }
+}
+```
 
 In `via`, replace `fixture_current_label` with
 `fixture_current_label_owned`. The new synthetic symbol identifies the
