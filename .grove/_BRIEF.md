@@ -69,8 +69,8 @@ The 2026-09-28 follow-up read (`first-path-reading-k48`) requests examples and
 language-model/railroad diagrams as constructs are introduced, applied generally
 before another review. `rule-reading-k49` now precedes orientation and adds
 labelled teaching material beside the existing canonical rules (plan §9.7).
-The orientation and concepts second corrections, orientation-k52–k55 and
-concepts-k56–k59, have been proofed. Next run tutorial-k60–k63. `first-path-reading-k64` follows those
+The second corrections for orientation (k52–k55), concepts (k56–k59) and
+tutorial (k60–k63) have been proofed. `first-path-reading-k64` follows those
 corrections and precedes reference and review-guide drafting. Each existing
 document gets one further ordered draft/copy-edit/art/proof run; the escalation
 and its bound are recorded in its brief. Further automatic re-runs are not
@@ -358,6 +358,26 @@ and whether the local routes resolve P7's difficulty finding new material,
 especially the ownership exercise. These are editorial observations, not evidence
 of human comprehension or the effectiveness of a stage. Preserve that distinction
 in any later Grove issue update; this proof establishes no new process remedy.
+
+The second tutorial correction is complete (`tutorial-k63`, closing
+`tutorial-k7`). All six pages introduce notation through located fragments;
+part 1's label-card model shows Card and its two functions as package siblings,
+with a separate lifecycle reference. The linked L2 geometry/canvas model supplies
+the imported/member comparison. Declaration/slot/place tables distinguish
+`@` references from each callable's local values, including the teardown reference
+to `@watch_labels::handler`. Four G10 views accompany shell, place, callback-use
+and access syntax. Preserve these scopes and the existing synthetic boundaries
+in later reference and review material.
+
+Whole-document proof found no actionable defect or outstanding handoff.
+`task docs:check` passed, including reproduction of all 24 SVGs. The six complete
+tutorial packages and the three canonical rule files plus grammar remain
+byte-identical to pre-correction commit 0bd4c22b. The nine embedded figures,
+five tables, first-time route and direct entries into parts 2, 4 and 5 agree
+with the prose and contracts. The index and part 5 retain early routes to the
+owned-snapshot exercise. These checks establish consistency, not comprehension;
+first-path-reading-k64 owns the human assessment of the combined corrections.
+No new process remedy or stage-effectiveness claim follows from this proof.
 
 The rule-reading pipeline completed (`rule-reading-k67`, closing
 `rule-reading-k49`). `language.md`, `contracts.md` and `profiles.md` now place
