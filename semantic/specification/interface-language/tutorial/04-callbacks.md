@@ -277,10 +277,8 @@ registration's watch result ([`C1`](../contracts.md#c1), [`C6`](../contracts.md#
 ![Callback-use railroad shows callback followed by a place, then braces enclosing repeated clauses.](../figures/g10-callback-use.svg)
 
 Trace `callback`, substitute `$handler` for `place`, then follow the braced
-clause loop for the seven schedule clauses. **Reading key:** start at the
-open circle and follow arrowheads to the filled circle. Square boxes show
-literals; rounded boxes name productions. The bypass permits no clauses
-syntactically, and the return track permits repetition. The
+clause loop for the seven schedule clauses. The grammar permits an empty
+callback-use body. The
 [`callback_use` production](../grammar.ebnf) gives this shape;
 [`C6`](../contracts.md#c6) requires the schedule's actual facts.
 

@@ -1,6 +1,0 @@
-legend bottom
-  Read from the open circle to the filled circle; follow arrows around loops.
-  Square box = literal token; rounded box = named production or lexical token.
-  Fork = choice; bypass = optional; return track = repetition.
-  Non-normative syntax view of grammar.ebnf. Rules and types determine validity.
-endlegend

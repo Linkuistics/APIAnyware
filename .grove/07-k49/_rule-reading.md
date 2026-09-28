@@ -58,11 +58,13 @@ omitted context. No new language feature or runtime test seam is in scope.
 The first draft's additions in `language.md` use paired HTML comments:
 `<!-- reading-aid: ID -->` and `<!-- /reading-aid -->`. The closing marker
 includes the blank line following it. Removing each full block recovers the
-pre-edit normative file byte for byte. Each body has a visible non-normative
-heading and “End of reading aid.” boundary (the page-one block is separate).
-The second draft uses this convention in contracts/profiles and preserves it
-through later stages. Compare canonical content against the pre-draft revision,
-not a stripped text reconstructed from an already modified rule.
+pre-edit normative file byte for byte. At first-path-reading-k64, the human
+requested a visual boundary: each body now has a blockquote's left border,
+bold non-normative labels and explicit anchors preserving its former heading
+links. The visible end marker is removed (the page-one block is separate).
+This convention applies to all three canonical pages. Compare canonical content
+against the pre-draft revision, not a stripped text reconstructed from an already
+modified rule.
 
 Checked sources live in
 `semantic/specification/interface-language/examples/rule-reading/`:
@@ -118,10 +120,12 @@ Art supplied G9 at `figures/g9-model.{puml,svg}` and G10 at
 under `semantic/specification/interface-language/`. The model uses the existing
 Geometry/Canvas/position/Filter examples. Its callable compartments own the
 slots; Canvas and position remain sibling declarations. The syntax figures use
-exact productions from `grammar.ebnf`, the shared style and `railroad-key.puml`.
+exact productions from `grammar.ebnf`, the shared style and the unboxed status
+caption in `railroad-caption.puml`. The human's railroad fluency makes
+instructional legend boxes unnecessary.
 All required and optional slots are resolved; there is no outstanding art handoff.
 
-L2 and C1 reuse the same place figure with local keys and examples. C5, C6 and
+L2 and C1 reuse the same place figure with local examples. C5, C6 and
 A2 link the callable overview and supply their own nested-block detail. The
 existing G3 provider and G7 timing explanations remain linked rather than
 being duplicated. Environment and pattern details were retained because the

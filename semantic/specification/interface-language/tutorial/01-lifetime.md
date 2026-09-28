@@ -105,10 +105,7 @@ Now trace the syntax that puts these declarations inside the package.
 
 Trace the first track with `"0.1"`, `tutorial::lifetime` and `"1"` from the
 fragment. The repeated `item` path admits the declarations and clauses inside
-the braces. **Reading key:** start at an open circle and follow arrowheads to
-the filled circle. Square boxes show literal tokens; rounded boxes name
-grammar productions or lexical tokens. A fork selects an alternative, a
-bypass permits omission, and a return track repeats a part. This is the
+the braces. This is the
 [`document`, `item` and `clause` syntax](../grammar.ebnf); completeness also
 depends on [`L3`](../language.md#l3).
 

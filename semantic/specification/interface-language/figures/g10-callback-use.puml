@@ -2,5 +2,5 @@
 !include style/ail.puml
 title G10 · Select the callback value whose schedule follows
 callback_use = "callback", place, "{", { clause }, "}" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

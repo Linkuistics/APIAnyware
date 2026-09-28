@@ -15,8 +15,17 @@ its syntax, semantics, rule identifiers, fixtures or supported boundary.
 ## 1. Readers and outcomes
 
 **Primary reader.** A language designer who knows language design, notation
-aesthetics and developer expectations, and who is new to API binding. They
-read in order to evaluate AIL and give specific feedback.
+aesthetics and developer expectations, is familiar with railroad diagrams,
+and is new to API binding. They read in order to evaluate AIL and give specific
+feedback. Railroad familiarity is the human's explicit clarification at
+first-path-reading-k64.
+
+**Purpose of the language.** The human's 2026-09-29 direction makes explaining
+the conceptual model the priority. Teach the entities, relationships and
+binding obligations that the reader needs to describe; then show how AIL
+expresses them. The language is a tool for this job. Evaluate its choices by
+how well they serve the model and its users. The learning route develops that
+account, while the reference supplies exact syntax lookup.
 
 **Secondary readers.** API authors and tool implementers, who need exact
 lookup. The reference serves them without being written for them first.
@@ -37,8 +46,9 @@ After the relevant documents, the primary reader can:
    syntax, operands, applicability, requiredness, constraints and rejection
    conditions.
 
-**Not taught.** General programming, EBNF, type systems and closed
-vocabularies. The reader knows these (survey §4.1, expertise reversal).
+**Not taught.** General programming, EBNF, type systems, closed vocabularies
+and how to read railroad diagrams. The reader knows these (survey §4.1,
+expertise reversal; human clarification at first-path-reading-k64).
 
 ## 2. Page set and homes
 
@@ -83,6 +93,12 @@ one question at one level. A definition does not get its own page unless it is
 a reference entry.
 
 ## 3. Reader journeys
+
+The organizing priority is the model and its use. Establish a coherent overview
+of API behavior and binding obligations, then teach each concept through a
+concrete case before showing the AIL that expresses it. Connect notation back
+to the named model concept. `model-first-documentation-k68` revises the detailed
+route and structure briefs under this requirement before further drafting.
 
 **The guided route:** landing page, then *Using an API across languages*,
 then the three concept pages, then the tutorial, then the review guide. The
@@ -208,10 +224,18 @@ metrics (survey §6).
   parameter, and how a type name is written without `@`. Give the syntax a
   visible containing context and explain its use, rather than listing tokens.
 - **Use figures to teach the relevant structure.** A language-model diagram
-  shows containment and named relations; a railroad diagram shows how to read
-  a selected grammar production. Pair both with the same small examples and
-  explain their reading order. A railroad does not establish name resolution,
-  applicability or semantic validity. Follow §6 for sources, SVGs and keys.
+  shows containment and named relations; a railroad diagram shows a selected
+  grammar production. Pair both with the same small examples. Explain the
+  language model's relationships and connect AIL spellings to the productions.
+  Assume the reader can read railroads; omit generic lessons on tracks,
+  branches, optional paths and repetition. Explain name resolution,
+  applicability and semantic validity through the examples and rules. Follow
+  §6 for sources, SVGs and drawing conventions.
+- **Make the model the main thread.** Explain what needs to be described and
+  the relationships involved, then connect language constructs to that account.
+  Choose the next learning step by the model concept or reader task it enables.
+  Use syntax examples to express those ideas and reference entries for exact
+  lookup. This is the human's explicit priority at first-path-reading-k64.
 - **Two cases, then the principle.** Teach a concept by comparing two
   contrasting cases, then state the principle, then say where the comparison
   breaks down (survey D7).
@@ -240,6 +264,14 @@ metrics (survey §6).
   score or grade-level target is used (survey §5).
 
 ## 5. Page-one block and example labels
+
+On canonical pages, delimit non-normative reading aids with a blockquote's left
+border. Use a bold label and explicit anchors preserving incoming links;
+remove heading-based delimiters and visible end markers. An HTML `<blockquote>`
+wrapper with blank lines permits the existing Markdown, tables, figures and
+fenced examples to render inside it. Keep the paired `reading-aid` comments as
+source boundaries for canonical-text preservation, and the rule text outside
+the visible border. This is the human's 2026-09-29 presentation direction.
 
 Every page except the normative files opens with this block. The normative
 Markdown files get it in the rule-reading increment, with their rule text
@@ -281,9 +313,14 @@ The human's 2026-09-28 reading adds two figure purposes: a language-model view
 and syntax/railroad views. Keep them within these admitted notations and the
 source-plus-generated-SVG workflow. A selected production can be drawn with
 the existing tools; no new diagram service or parser implementation is needed.
-Label literal tokens, nonterminals, alternatives, optional parts and repetition,
-with a key explaining how to follow the path. Check every path against the
-named EBNF production. Keep semantic constraints in prose with rule links.
+Distinguish literal tokens and nonterminals, and represent alternatives,
+optional parts and repetition accurately. Assume familiarity with railroad
+diagrams (human clarification at first-path-reading-k64). Omit the instructional
+legend boxes; a plain caption identifies the non-normative syntax view.
+Accompanying prose explains AIL's productions and examples, without teaching
+how to follow a railroad. Check every
+path against the named EBNF production. Keep semantic constraints in prose with
+rule links.
 
 **Visual vocabulary.** All three notations render the same vocabulary. The
 first `art` session defines it once, as shared style files under
@@ -294,7 +331,8 @@ first `art` session defines it once, as shared style files under
 - one line style per relation: ownership transfer (solid), borrow (dashed),
   invalidation (a marked end) and callback entry (dotted);
 - colour only as a redundant cue, never the only one;
-- the prose's names on every element, and a key on every diagram.
+- the prose's names on every element, with keys for domain and language-model
+  diagrams; railroad diagrams assume notation fluency and omit instructional keys.
 
 The shared vocabulary is now defined in
 [`figures/style/vocabulary.txt`](../../specification/interface-language/figures/style/vocabulary.txt),
@@ -481,6 +519,17 @@ that read at L2's repaired introductions and their model/notation aids, then
 follow the connected explanations and tutorial as the human proceeds. Record
 what was actually read and said; neither editorial checks nor a proxy supplies
 human comprehension evidence.
+
+At first-path-reading-k64 the human clarified, "I mean your improvement is
+good," and established fluency in language design and railroad diagrams.
+They asked to remove the railroad-reading boxes, visually delimit the
+non-normative reading aids, and prioritize explaining the model before
+describing the language by reference to it. Their rationale is that the language
+serves as a tool. The bounded presentation changes land in that checkpoint;
+model-first-documentation-k68 owns revising the detailed route and cutting the
+document work. The human did not report a page-by-page reading extent, so this
+records a positive assessment and new direction without inferring a full-path
+comprehension result.
 
 ## 9. Structure briefs
 
@@ -989,10 +1038,13 @@ reader to wait for the indexed reference.
 1. Add the page-one context and an explicit convention distinguishing the
    preserved normative rule paragraphs from labelled reading aids. Keep
    additions bounded by identifiable markers so the original rule text can
-   be recovered and compared with the pre-edit file.
+   be recovered and compared with the pre-edit file. The visible boundary is
+   a blockquote's left border, with a bold label and explicit stable anchors;
+   the aid has no visible end marker.
 2. At L1, introduce a small document/package shell, distinguish declarations
    from clauses, and show a selected railroad view tied to `document`, `item`
-   and `clause`. Explain the diagram's path and the purpose of the code.
+   and `clause`. Relate the code's AIL tokens to those productions and explain
+   the purpose of the code, assuming the reader knows how to read a railroad.
 3. At L2, place G9 before notation depending on it. Use named packages and
    versions, a declaration in each, an import alias and reference uses. Explain
    local/imported relative to the package being read. Show the declaration

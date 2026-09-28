@@ -5,5 +5,5 @@ document = "language", string, ";", "package", name, "version", string,
                  "{", { item }, "}" ;
 item = import | dependency | environment | declaration | clause ;
 clause = name, "(", [ arguments ], ")", ";" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

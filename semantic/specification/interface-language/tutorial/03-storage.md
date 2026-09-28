@@ -218,9 +218,7 @@ buffer elements whose extent step 4 described. The empty brackets are a
 
 Trace `$destination[]` through `$`, the identifier `destination`, then the
 `[` and `]` branch. For `$result`, take the bypass after the identifier.
-**Reading key:** open and filled circles mark start and end; square boxes
-are literal tokens and rounded boxes name lexical tokens. Follow one branch
-at a fork and the return arrow to repeat a selector. The track describes
+The track describes
 [`place` syntax](../grammar.ebnf); [`C1`](../contracts.md#c1) decides whether
 the selected value has the required type and extent.
 

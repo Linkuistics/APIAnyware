@@ -134,9 +134,6 @@ parentheses; only the outer clause ends with a semicolon.
 
 ![Clause railroads show a name, parenthesized arguments and a final semicolon; arguments can contain places, lists and nested constructors.](../figures/g10-clause.svg)
 
-**Reading key:** read from open to filled circle; square boxes are literal
-tokens and rounded boxes name productions or lexical tokens. Forks choose
-alternatives, bypasses permit omission, and return arrows repeat a path.
 These are grammar shapes; the cited contract rules determine which arguments
 and locations each clause accepts. [Railroad source](../figures/g10-clause.puml).
 
@@ -213,8 +210,7 @@ a different extent from selecting buffer elements with `[]`
 
 ![The place railroad starts with a dollar sign and identifier, then permits field, single-pointee or buffer-element selectors.](../figures/g10-places.svg)
 
-**Reading key:** follow open to filled circle. Square boxes spell literal
-tokens; rounded boxes name lexical tokens. The bypass permits `$length` with
+The bypass permits `$length` with
 no selector. Take `.*` for `$length.*`, or the adjacent `[` and `]` boxes for
 `$destination[]`; the brackets contain no index. The return path allows further
 selections. Types and extent clauses determine which paths are meaningful

@@ -7,5 +7,5 @@ value = string | integer | "true" | "false" | reference | place | list
                | constructor | name ;
 constructor = name, "(", [ arguments ], ")" ;
 list = "[", [ arguments ], "]" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

@@ -3,5 +3,5 @@
 title G10 · Name a path, its environments and its clauses
 access = "access", identifier, "in", "[", identifier,
                  { ",", identifier }, "]", "{", { clause }, "}" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

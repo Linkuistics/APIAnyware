@@ -2,5 +2,5 @@
 !include style/ail.puml
 title G10 · Name a configuration and supply its clauses
 environment = "environment", identifier, "{", { clause }, "}" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

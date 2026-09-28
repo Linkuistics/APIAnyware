@@ -9,8 +9,8 @@
 > are future work.
 > **Rules:** [L1](#l1), [L2](#l2), [L3](#l3), [L4](#l4), [L5](#l5) and [L6](#l6) below, together with the [grammar](grammar.ebnf), are canonical.
 
-Each **Reading aid (non-normative)** explains an example. Its end is marked
-visibly; the remaining rule text states the requirements. The examples describe
+Each bordered **Reading aid (non-normative)** explains an example. The rule
+text outside the border states the requirements. The examples describe
 invented APIs. Fragments show selected facts and name their missing context;
 [conformance examples](conformance.md#positive-specifications) supply complete
 contracts within the synthetic fixture's scope. For a progressive exercise,
@@ -26,7 +26,11 @@ Rules have stable identifiers for diagnostics; wording can change during review.
 ## L1. Text and syntax
 
 <!-- reading-aid: l1-shell -->
-### Reading aid (non-normative): a document contains a package
+<blockquote>
+
+<a id="reading-aid-non-normative-a-document-contains-a-package"></a>
+
+**Reading aid (non-normative): a document contains a package**
 
 An AIL document describes an API through a named, versioned
 [package](glossary.md#package). In this fragment, `example::geometry` is the
@@ -62,10 +66,6 @@ the declaration named inside that list. [L2](#l2) locates such references and
 ![Railroads for document, item and clause: the package body repeats items, and each clause ends with a semicolon.](figures/g10-shell.svg)
 
 Use this view to locate the fragment's header, package braces and clauses.
-**Reading key:** start at an open circle and finish at the filled circle.
-Square boxes show literal tokens; rounded boxes name grammar productions or
-lexical tokens such as `string`. Forks offer choices, empty bypasses permit
-omission, and return tracks repeat the enclosed path. Follow their arrowheads.
 The first `string` is `"0.1"` in this example; L1 fixes that version value.
 The [values view below](#reading-aid-non-normative-clauses-contain-values)
 expands the arguments used by `surface` and `exports`.
@@ -76,7 +76,7 @@ braces. Each item can be an import, provider dependency, environment,
 declaration or clause. This syntactic permission to repeat or omit items is
 separate from the requirements for a complete package in [L3](#l3).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A document MUST be valid UTF-8 without a byte-order mark. Identifiers contain
@@ -90,7 +90,11 @@ Whitespace is space, tab, CR or LF. `//` comments end at a line break or EOF;
 match. Punctuation in [the grammar](grammar.ebnf) is literal.
 
 <!-- reading-aid: l1-tokens -->
-### Reading aid (non-normative): read tokens before their meaning
+<blockquote>
+
+<a id="reading-aid-non-normative-read-tokens-before-their-meaning"></a>
+
+**Reading aid (non-normative): read tokens before their meaning**
 
 In the shell, `Point` and `point` would be different identifiers; `point_2`
 is also an identifier, while `2point` cannot be one. The integer spellings `0`
@@ -105,7 +109,7 @@ It explains an omission to the reader and supplies no contract. By contrast,
 A contextual keyword such as `record` can still be a name where the grammar
 expects an identifier, subject to L2's reserved core type names.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Grammar keywords are contextual: their production determines their meaning;
@@ -115,7 +119,11 @@ value are distinguished by the following `(`. No evaluation, interpolation,
 conditional compilation, includes or executable annotations occur during parsing.
 
 <!-- reading-aid: l1-clauses -->
-### Reading aid (non-normative): clauses contain values
+<blockquote>
+
+<a id="reading-aid-non-normative-clauses-contain-values"></a>
+
+**Reading aid (non-normative): clauses contain values**
 
 A clause ends with a semicolon. Within its arguments, a constructor groups
 values without ending the clause. Here `deprecated` is the clause and
@@ -149,13 +157,10 @@ Trace `deprecated` along `clause`, then its first argument through `value` to
 string. The semicolon occurs only after the clause's closing parenthesis.
 For `deprecated(no);`, choose the bare `name` branch of `value` instead.
 For the earlier `exports([@Point]);`, choose `list`, then `reference` for its
-element. **Reading key:** square boxes are literal tokens and rounded boxes
-name productions or lexical tokens; take one branch at a fork, bypass an
-optional part or follow the return arrow to repeat. Read each track from its
-open circle to its filled circle. These paths show nesting; L1 and L5 decide
+element. These paths show nesting; L1 and L5 decide
 which values the clause admits.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 The header MUST be `language "0.1";`. A parser may accept the general grammar
@@ -170,7 +175,11 @@ namespace. A profile's vocabulary MUST be equally closed and typed.
 ## L2. Identity and dependencies
 
 <!-- reading-aid: l2-model -->
-### Reading aid (non-normative): locate the declarations first
+<blockquote>
+
+<a id="reading-aid-non-normative-locate-the-declarations-first"></a>
+
+**Reading aid (non-normative): locate the declarations first**
 
 Consider two invented API descriptions. `example::geometry` defines a `Point`
 record containing coordinates. `example::canvas` defines a `Canvas` resource
@@ -263,7 +272,7 @@ local declaration names ([L2](#l2)).
 
 For the larger package picture, see [Packages, environments and access paths](explanation/packages.md).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A package has a qualified name and an opaque, nonempty version string. Its
@@ -273,7 +282,11 @@ inside a nominal type. All local declaration names are unique, including
 overloads. External/source names do not determine identity.
 
 <!-- reading-aid: l2-references -->
-### Reading aid (non-normative): names, references and callable slots
+<blockquote>
+
+<a id="reading-aid-non-normative-names-references-and-callable-slots"></a>
+
+**Reading aid (non-normative): names, references and callable slots**
 
 The `position` signature gives its parameter the bare type name `Canvas` and
 its result the imported type name `Geometry::Point`. The `@Canvas` in its
@@ -345,9 +358,6 @@ and `Geometry` fills the alias `identifier`. In `reference`, `@Canvas` takes
 the shortest `name` path. `@Geometry::Point`, `@position::canvas`,
 `@position::result`, `@Filter::point` and `@Filter::result` each take one
 `::` repetition. The [model above](#l2) supplies their different referents.
-**Reading key:** square boxes are literal tokens; rounded boxes name
-productions or lexical tokens. Read from open to filled circle and follow
-return arrows to repeat. Name resolution comes from L2.
 
 ![Railroads for callable, parameters and parameter: fn or callback, a named signature, an optional throws type, and repeated body items.](figures/g10-callable.svg)
 
@@ -357,10 +367,7 @@ parameter path once: `canvas: Canvas` or `point: Geometry::Point`. The result
 `type` follows `->`; these examples bypass `throws`. A bare type name has no
 `@`. The loop inside the braces admits clauses, outcomes, callback-use blocks
 and access blocks syntactically; the rules determine their applicability.
-**Reading key:** forks offer alternatives, an empty bypass permits omission,
-and a return arrow repeats a path. Square boxes are literal tokens; rounded
-boxes name productions or lexical tokens. Follow each track from open circle
-to filled circle. [C5](contracts.md#c5), [C6](contracts.md#c6) and
+[C5](contracts.md#c5), [C6](contracts.md#c6) and
 [A2](profiles.md#a2) expand the three nested block forms.
 
 ![Place railroad: a dollar sign and slot identifier followed by zero or more field, single-pointee or element selections.](figures/g10-places.svg)
@@ -368,10 +375,7 @@ to filled circle. [C5](contracts.md#c5), [C6](contracts.md#c6) and
 Use the short path for `$canvas` inside `position`. For `$result.x`, start
 with `result` and take the dot-plus-identifier branch with `x`. The square
 boxes for `[` and `]` are adjacent: the element selector contains no index.
-**Reading key:** follow the track from open to filled circle; the bypass
-allows no selections and the return track permits more. Square boxes are
-literal tokens and rounded boxes name lexical tokens. [C1's located
-examples](contracts.md#c1) show what each selection addresses.
+[C1's located examples](contracts.md#c1) show what each selection addresses.
 
 In the [grammar](grammar.ebnf), `reference` is `@` followed by `name`, and
 `name` is one identifier followed by any number of `::`-separated identifiers.
@@ -379,7 +383,7 @@ The grammar admits both `@Geometry::Point` and `@position::result`; L2 and the
 containing context determine what they resolve to. A `place` starts with `$`
 and a local identifier, with optional field, pointee or element selections.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 An import pins a package name, version and digest and introduces an alias.
@@ -395,7 +399,11 @@ reserved against declaration/import/environment/provider aliases. They cannot be
 shadowed; `u8` always denotes the core unsigned eight-bit type.
 
 <!-- reading-aid: l2-scope-pins -->
-### Reading aid (non-normative): check each name in its scope
+<blockquote>
+
+<a id="reading-aid-non-normative-check-each-name-in-its-scope"></a>
+
+**Reading aid (non-normative): check each name in its scope**
 
 In the canvas fragment, `Geometry` names an import and `Canvas` names a local
 declaration. Those distinct names can coexist. Reusing `Geometry` for the
@@ -439,7 +447,9 @@ would try to shadow the core type and is rejected (N04). Imports, environments
 and provider aliases share the declaration namespace and its core-name
 restriction ([L2](#l2)).
 
-### Reading aid (non-normative): supply the exact dependencies
+<a id="reading-aid-non-normative-supply-the-exact-dependencies"></a>
+
+**Reading aid (non-normative): supply the exact dependencies**
 
 To turn the canvas model into a resolvable description, its author would first
 finish the geometry document, compute SHA-256 over that document's exact bytes,
@@ -455,7 +465,7 @@ digest, the conflict is rejected before resolving names. A second alias cannot
 hide it. The one-way canvas-to-geometry dependency is acyclic; adding a geometry
 dependency back to canvas would create a forbidden cycle ([L1](#l1), [L2](#l2)).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Digests use `sha256:` followed by 64 lowercase hexadecimal digits. Package
@@ -470,7 +480,11 @@ identifier/version. Conflicting pins are an error before name resolution, even
 when different import aliases are used.
 
 <!-- reading-aid: l2-providers -->
-### Reading aid (non-normative): keep provider and API names distinct
+<blockquote>
+
+<a id="reading-aid-non-normative-keep-provider-and-api-names-distinct"></a>
+
+**Reading aid (non-normative): keep provider and API names distinct**
 
 A package can also name definitions supplied by tooling. A
 [profile](glossary.md#profile) defines extra vocabulary or ways to reach an
@@ -526,7 +540,7 @@ name. Neither that name nor either string replaces the declaration's identity.
 in their place would not select a provider ([L2](#l2), [A2](profiles.md#a2)).
 See [Four identities](explanation/packages.md#four-identities).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 `use profile` and `use abi` introduce distinct catalogue aliases with pinned
@@ -539,7 +553,11 @@ declared alias; an arbitrary string cannot masquerade as an installed provider.
 ## L3. Publication and environments
 
 <!-- reading-aid: l3-publication -->
-### Reading aid (non-normative): state what the package covers
+<blockquote>
+
+<a id="reading-aid-non-normative-state-what-the-package-covers"></a>
+
+**Reading aid (non-normative): state what the package covers**
 
 Suppose the invented canvas library also has drawing operations. An author can
 publish a description covering only its position API. `surface` states that
@@ -610,13 +628,11 @@ description; evidence that a library honours it comes from elsewhere
 ![Environment railroad: the environment keyword, its identifier and a braced sequence of clauses.](figures/g10-environment.svg)
 
 Use this view to locate `test` and its `target` and `platform` clauses in
-the fragment. **Reading key:** square boxes are literal tokens, rounded boxes
-name productions or lexical tokens, and the return arrow repeats `clause`.
-Read from open to filled circle; the empty bypass is a grammar path. L3
-separately requires the target and platform facts. The [clause view](#reading-aid-non-normative-clauses-contain-values)
+the fragment. The grammar permits an empty environment body; L3 requires
+the target and platform facts. The [clause view](#reading-aid-non-normative-clauses-contain-values)
 expands each clause's parentheses and values.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Exactly one package clause `surface("description")` MUST describe what API
@@ -655,7 +671,11 @@ the author's assertions.
 ## L4. Type expressions
 
 <!-- reading-aid: l4-values -->
-### Reading aid (non-normative): give a value its shape
+<blockquote>
+
+<a id="reading-aid-non-normative-give-a-value-its-shape"></a>
+
+**Reading aid (non-normative): give a value its shape**
 
 A record groups fields in a stated order. The `Point` record in [L2](#l2) has
 two signed 32-bit coordinates. This next record combines other values: a
@@ -694,7 +714,9 @@ allowing a linked structure. A field containing that same record by value
 would create forbidden by-value recursion. Similarly, aliases can expand to
 other types, but an alias cycle cannot yield a type ([L4](#l4)).
 
-### Reading aid (non-normative): distinguish a handle from its storage
+<a id="reading-aid-non-normative-distinguish-a-handle-from-its-storage"></a>
+
+**Reading aid (non-normative): distinguish a handle from its storage**
 
 `Canvas` in the model is a resource handle. In `inspect`, the caller passes
 that handle alongside two pointers to byte storage. The `ptr` permits reading
@@ -737,7 +759,7 @@ aggregation does not remove ownership obligations ([L4](#l4), [C1](contracts.md#
 
 See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 These are the core types. Type constructors have exactly the listed arity.
@@ -767,7 +789,11 @@ resource exposes no dereferenceable layout. An unrecorded pointer pointee MUST
 NOT be converted into an opaque resource without authority for that contract.
 
 <!-- reading-aid: l4-domains -->
-### Reading aid (non-normative): say which integer values are allowed
+<blockquote>
+
+<a id="reading-aid-non-normative-say-which-integer-values-are-allowed"></a>
+
+**Reading aid (non-normative): say which integer values are allowed**
 
 `Axis` below permits two values. `Edges` permits combinations of two bits.
 Both use `u8` as their underlying integer type, but their domains differ
@@ -807,7 +833,7 @@ the core rejects that duplication. An empty closed enum permits no values and
 is invalid. These constraints go beyond the grammar's general `case name =
 integer;` shape ([L4](#l4)).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 An enum/flags underlying type MUST be a core integer type. Cases have distinct
@@ -819,7 +845,11 @@ zero; each case must have exactly one bit set. Open enum/flags permit any value
 of the underlying type, including unnamed values. Empty closed enums are invalid.
 
 <!-- reading-aid: l4-profile-types -->
-### Reading aid (non-normative): recognise a type defined by a profile
+<blockquote>
+
+<a id="reading-aid-non-normative-recognise-a-type-defined-by-a-profile"></a>
+
+**Reading aid (non-normative): recognise a type defined by a profile**
 
 `Geometry::Point` in the canvas signature resolves to an imported declaration.
 A qualified type can also name a type supplied by a profile. Which meaning
@@ -847,7 +877,7 @@ a provider-defined sequence would get its meaning from that provider.
 Following the grammar's angle-bracket syntax alone establishes neither the
 meaning nor the support of `Sequence` ([L4](#l4), [A1](profiles.md#a1)).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Profile types use `profileAlias::Type<...>` and require a provider-defined type
@@ -860,7 +890,11 @@ selectors and other source constructs; no such type has an implicit core meaning
 ## L5. Declarations and common clauses
 
 <!-- reading-aid: l5-repetition -->
-### Reading aid (non-normative): attach each clause to its subject
+<blockquote>
+
+<a id="reading-aid-non-normative-attach-each-clause-to-its-subject"></a>
+
+**Reading aid (non-normative): attach each clause to its subject**
 
 The [L2 member function](#l2) uses `input($canvas, borrow)` once for its handle
 parameter. A two-handle operation can state that input obligation once for
@@ -896,7 +930,7 @@ Other slot clauses address the exact reference leaf, so stating an obligation
 for an aggregate does not also state its children's obligations ([L5](#l5)).
 The role-name and law-tuple repetition rules become concrete in [L6](#l6).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Unless marked repeatable, clauses are singular in their stated scope. A duplicate
@@ -915,7 +949,11 @@ and `source` follow their explicit repeatability rules below. Environment
 `feature` is repeatable by feature name. No other core clause is repeatable.
 
 <!-- reading-aid: l5-navigation -->
-### Reading aid (non-normative): separate description from required facts
+<blockquote>
+
+<a id="reading-aid-non-normative-separate-description-from-required-facts"></a>
+
+**Reading aid (non-normative): separate description from required facts**
 
 An author can explain a package and its declarations with `doc` and add
 navigation with `link`. The record below also records a source identity under
@@ -953,7 +991,7 @@ These advisory messages leave actual availability to the environment contract.
 repeat as navigation. A second `doc` in the same scope would violate the usual
 singular-clause rule ([L5](#l5)).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 | Clause | Scope and meaning |
@@ -976,7 +1014,11 @@ singular-clause rule ([L5](#l5)).
 | `mutable(true\|false)` | Required on globals. A global is storage, even when immutable; a constant denotes a value. |
 
 <!-- reading-aid: l5-declarations -->
-### Reading aid (non-normative): relate types and their members
+<blockquote>
+
+<a id="reading-aid-non-normative-relate-types-and-their-members"></a>
+
+**Reading aid (non-normative): relate types and their members**
 
 An object can name a base object and the interfaces it conforms to. An
 interface lists the interfaces it extends. Empty lists and `base(none)` make
@@ -1042,7 +1084,9 @@ exceed the supplied fixture profile's capabilities ([C3](contracts.md#c3),
 because its owner is an object, not an interface. Base and interface-extension
 relations also need to remain acyclic ([L5](#l5)).
 
-### Reading aid (non-normative): choose a member kind explicitly
+<a id="reading-aid-non-normative-choose-a-member-kind-explicitly"></a>
+
+**Reading aid (non-normative): choose a member kind explicitly**
 
 The model's `position` is an instance member using the `canvas` receiver.
 A static member names its owner but has no receiver. An initializer member
@@ -1096,7 +1140,9 @@ package example::canvas_extras version "1" {
 }
 ```
 
-### Reading aid (non-normative): properties name their accessor functions
+<a id="reading-aid-non-normative-properties-name-their-accessor-functions"></a>
+
+**Reading aid (non-normative): properties name their accessor functions**
 
 In the complete synthetic objects example, `Counter` has a property called
 `count`. Its getter `read_count` and setter `write_count` are full functions
@@ -1126,7 +1172,9 @@ asserts consistency with these scalar accessors; reference-property storage
 forms such as `strong` and `weak` must agree with the accessor contracts
 ([L5](#l5), [C3](contracts.md#c3)).
 
-### Reading aid (non-normative): distinguish a value from global storage
+<a id="reading-aid-non-normative-distinguish-a-value-from-global-storage"></a>
+
+**Reading aid (non-normative): distinguish a value from global storage**
 
 A constant supplies a value. A global describes a storage location whose value
 can be read, even when that storage is immutable. Here the default limit is
@@ -1164,7 +1212,7 @@ only the nominal type appears in `exports`. A tool may display them beneath
 signatures in the package remain their source of truth ([L5](#l5)).
 See [How AIL states a contract](explanation/contracts.md).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Every public root and every member associated with a public nominal type counts
@@ -1180,7 +1228,11 @@ spelling alone does not establish conformance.
 ## L6. Patterns
 
 <!-- reading-aid: l6-roles -->
-### Reading aid (non-normative): bind roles to participants
+<blockquote>
+
+<a id="reading-aid-non-normative-bind-roles-to-participants"></a>
+
+**Reading aid (non-normative): bind roles to participants**
 
 An author can group the four slots of `position` and `Filter` under the name
 `samples`. In the example below, `inspection` describes what may belong to
@@ -1288,14 +1340,11 @@ In the first fragment, `inspection` fills the pattern's `identifier`;
 uses `canvas_slots` as its own name and `inspection` as the pattern `name`.
 Its `bind(...)` is a clause inside the instance. In the Store extract,
 `law(...)` follows the pattern body's `clause` branch beside its roles.
-**Reading key:** square boxes are literal tokens; rounded boxes name
-productions or lexical tokens. Choose one branch at each fork, take the
-bypass for zero body items or follow the return arrow for more. Read from
-open to filled circle. The two role choices spell the kind and cardinality;
+The two role choices spell the kind and cardinality;
 L6 checks that the bound participants satisfy them. The
 [L2 model](#l2) locates the callable slots used by `canvas_slots`.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A pattern declares typed roles with cardinalities `one` (1), `optional` (0..1),
@@ -1307,7 +1356,11 @@ pattern participant references a pattern instance, not a pattern declaration.
 Slot identity includes its operation, avoiding ambiguous parameter names.
 
 <!-- reading-aid: l6-ordering -->
-### Reading aid (non-normative): connect an ordering law to the same resource
+<blockquote>
+
+<a id="reading-aid-non-normative-connect-an-ordering-law-to-the-same-resource"></a>
+
+**Reading aid (non-normative): connect an ordering law to the same resource**
 
 Imagine an API requiring successful preparation before a session can be read.
 A `before` law names the two operation roles. Its instance then identifies the
@@ -1358,7 +1411,7 @@ cannot supply that definition.
 
 See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 The core law forms inside a pattern are `law(before, roleA, roleB)` and

@@ -2,11 +2,12 @@
 
 ## Goal
 
-Make the proposed API Interface Language understandable and assessable by
-reviewers who know language design, language aesthetics and developer audience
-expectations, but do not know the API binding domain. Deliver a tutorial, guide,
-explanations and precise reference so those reviewers can give informed,
-specific feedback on the language itself.
+Make the model of API behavior and binding obligations understandable and
+assessable by reviewers who know language design, language aesthetics and
+developer audience expectations, but do not know the API binding domain.
+Introduce the proposed API Interface Language as a tool for expressing that
+model. Deliver a tutorial, guide, explanations and precise reference so those
+reviewers can judge how well the tool serves that purpose.
 
 The human's diagnosis is that the current documentation has too little context
 and explanation and is too dense for that review. Improving sentences alone
@@ -14,6 +15,8 @@ will not satisfy this workstream.
 
 ## Done when
 
+- The reader understands the model's entities and relationships and can explain
+  which part of that model each introduced AIL construct expresses.
 - A newcomer to the domain can explain the problem AIL addresses, who would
   produce and consume it, and why declarations alone do not describe an API's
   binding-relevant contract.
@@ -77,14 +80,38 @@ and its bound are recorded in its brief. Further automatic re-runs are not
 authorized. This is the direction supplied by the human at the escalation
 boundary, not a reset of the documents' correction history.
 
+At `first-path-reading-k64`, the human positively assessed the improvement and
+clarified the teaching priority: explain the model, then describe AIL by
+reference to it, because the language serves as a tool. The 2026-09-29 direction
+also removes railroad-reading boxes and asks for visual boundaries around
+non-normative aids. This checkpoint applies those bounded presentation changes.
+`model-first-documentation-k68` precedes reference and review-guide drafting;
+it revises the learning route and cuts the bounded document work needed for the
+model-first account. The existing correction history remains visible; this new
+human direction supplies the scope, not an automatic repetition policy.
+
 ## Reader and structure brief
 
-The primary reader knows language design but is new to API binding concepts.
+The primary reader knows language design and is familiar with railroad diagrams,
+but is new to API binding concepts. Assume that familiarity when using syntax
+views: explain AIL's productions and examples. Railroad figures use an unboxed
+status caption and omit instructional keys. Omit generic instruction on
+following railroad tracks, branches, optional paths and repetition (human
+clarification, first-path-reading-k64).
 Do not spend pages teaching general programming or assume knowledge of FFI,
 ABI, ownership transfer, borrow validity, quiescence, projections or profiles.
 Define each domain concept before it becomes necessary and illustrate the
 failure it prevents. API authors and tool implementers are secondary readers;
 the reference still needs to serve them.
+
+Explain the conceptual model first and describe the language by reference to
+that model (human direction, 2026-09-29). Organize the learning path around
+describing API behavior and binding obligations: what the entities are, how
+they relate, and what a caller or tool needs to know. Then introduce AIL syntax
+where it helps express or inspect that account. Judge language choices by
+their usefulness for the model and the reader's task. Exact syntax remains a
+reference concern. A diagram of package/declaration containment supports this
+account where needed; the organizing purpose is the API model and its use.
 
 At each substantive introduction of language structure or notation, show a
 small explained snippet with its enclosing context. Establish the package,
@@ -170,6 +197,12 @@ Work in repository Markdown, with tables and accessible diagrams when a
 relationship needs them. Provide adjacent explanatory text and do not require a
 new publishing site or graphical tool to read the core content. No deployment
 or website redesign is requested.
+
+Non-normative reading aids on canonical pages have a visible left border, a
+bold non-normative label and stable explicit anchors. Use a blockquote wrapper
+with blank lines so embedded Markdown, tables and examples continue to render.
+The border delimits the whole aid; there is no visible end-heading or end marker.
+Keep the paired source comments used for canonical-text preservation checks.
 
 Diagrams (human decision, 2026-09-23): PlantUML, D2 and Mermaid are equal
 notations, alongside fenced text. Each diagram commits its source and a
@@ -404,8 +437,8 @@ landed resources under `semantic/specification/interface-language/`:
   are sibling declarations connected by `member`; each callable owns its
   named parameter and result slots. Preserve that containment distinction.
 - `figures/g10-{shell,clause,names,callable,places,environment,pattern,outcome,callback-use,dependency,access}.{puml,svg}`
-  supplies exact grammar-production views, with the shared key at
-  `figures/style/railroad-key.puml`. L2/C1 share the place view; C5/C6/A2 link
+  supplies exact grammar-production views, with the shared unboxed caption at
+  `figures/style/railroad-caption.puml`. L2/C1 share the place view; C5/C6/A2 link
   the callable overview before their nested-block details. Environment and
   pattern views expose structure the shell leaves opaque. Existing G3 access
   and G7 callback-timing explanations remain linked for their distinct jobs.

@@ -6,5 +6,5 @@ callable = ("fn" | "callback"), identifier, "(", [ parameters ], ")",
                  "{", { clause | outcome | callback_use | access }, "}" ;
 parameters = parameter, { ",", parameter } ;
 parameter = identifier, ":", type ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

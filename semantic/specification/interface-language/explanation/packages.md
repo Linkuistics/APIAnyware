@@ -134,9 +134,7 @@ The railroad below shows the shared spelling; L2 supplies name resolution.
 
 ![Railroads for import, reference and name: imports select a package and pin before introducing an alias; a reference starts with an at sign and a qualified name.](../figures/g10-names.svg)
 
-**Reading key:** read from open to filled circle. Square boxes are literal
-tokens, rounded boxes are productions or lexical tokens, and return arrows
-repeat a path. In `import`, use `example::geometry` for `name` and `Geometry`
+In `import`, use `example::geometry` for `name` and `Geometry`
 for the alias. In `reference`, `@Canvas` uses a single identifier;
 `@Geometry::Point` and `@position::result` each take one `::` repetition.
 The grammar gives both references the same shape; their different meanings
@@ -573,9 +571,7 @@ first environment identifier inside brackets. The braced body then repeats
 
 ![The access railroad shows a path name, a nonempty environment list and a braced sequence of clauses.](../figures/g10-access.svg)
 
-**Reading key:** square boxes are literal tokens; rounded boxes name
-productions or lexical tokens. Follow open to filled circle; return arrows
-repeat environments or clauses. The syntax track permits a sequence of
+The syntax track permits a sequence of
 clauses; A2 requires the four particular clauses shown above and determines
 where a path applies. [Railroad source](../figures/g10-access.puml).
 

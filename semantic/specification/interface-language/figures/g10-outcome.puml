@@ -2,5 +2,5 @@
 !include style/ail.puml
 title G10 · Name an outcome inside the callable body
 outcome = "outcome", identifier, "{", { clause }, "}" ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

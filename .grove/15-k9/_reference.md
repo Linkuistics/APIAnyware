@@ -27,6 +27,19 @@ add links to the new reference. Normative wording and grammar stay unchanged.
 The next human checkpoint, first-path-reading-k64, precedes this node; read and
 incorporate its decisions before drafting.
 
+The reader is familiar with railroad diagrams (first-path-reading-k64).
+Explain the AIL productions and their example spellings; omit generic lessons
+on reading tracks, alternatives, optional paths and repetition. Use the syntax
+figures without instructional legend boxes. Preserve the language-model context
+and the explanations of AIL's name resolution and semantic constraints.
+
+The human's 2026-09-29 priority is to explain the model and describe AIL by
+reference to it, because the language serves as a tool. Give each entry a
+clear connection to the model concept and task it expresses. The new
+model-first-documentation-k68 precedes this node and reconciles the detailed
+structure briefs before drafting. Preserve the bordered non-normative aids,
+their bold labels and explicit anchors when adding lookup routes.
+
 ## Pipeline
 
 `draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act

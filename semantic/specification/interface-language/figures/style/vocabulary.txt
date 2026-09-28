@@ -23,7 +23,9 @@ ownership transfer = solid (->); borrow = dashed (-->);
 invalidation = marked end (->x); callback entry = dotted (-[dotted]>).
 A contract diagram reserves these line styles for these meanings. Context and
 structure diagrams label each relation and state its meaning in their own key.
-Every diagram includes a key and has adjacent prose explaining its takeaway.
+Context and contract diagrams include a key. Railroad views assume fluency in
+the notation and have no instructional key. Every diagram has adjacent prose
+explaining its takeaway.
 Keep context before detail; read time downward within a sequence case.
 
 One source (.puml or .d2) and one generated .svg per diagram, with matching stems.
@@ -43,8 +45,7 @@ Labelled solid arrows are import/member relations, not ownership transfers.
 G10 uses PlantUML's native EBNF layout with productions from grammar.ebnf.
 Square boxes contain literal tokens, shown without EBNF's quoting delimiters;
 rounded boxes name productions or lexical tokens (string, identifier, etc.).
-Read from the open circle to the filled circle, following arrows around loops.
-A fork selects a path; an empty bypass permits omission; a return track repeats.
-railroad-key.puml supplies the key on every syntax view. Syntax views retain
+railroad-caption.puml supplies an unboxed non-normative status caption.
+Syntax views retain
 all alternatives, including provider-dependent forms; semantic constraints
 remain in the adjacent prose and canonical rules.

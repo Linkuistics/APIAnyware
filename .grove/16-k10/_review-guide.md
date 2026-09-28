@@ -23,6 +23,17 @@ questions and expected observations by inspection. The next checkpoint,
 first-path-reading-k64, precedes this node; read its actual assessment and
 incorporate its decisions before drafting.
 
+Assume familiarity with railroad diagrams (first-path-reading-k64). Use syntax
+views to support the AIL task and explain its names, relationships and contract;
+omit generic instruction on how to follow railroad tracks and branches and
+the associated legend boxes.
+
+The human's 2026-09-29 priority is the model and how AIL serves it. Ground
+review tasks in describing API behavior and binding obligations, then ask how
+the language expresses those concepts and supports the task. Read the revised
+structure brief from model-first-documentation-k68 before drafting. Preserve
+the visually bordered non-normative aids and their stable anchors.
+
 ## Pipeline
 
 `draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act

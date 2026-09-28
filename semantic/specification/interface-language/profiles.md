@@ -9,8 +9,8 @@
 > are future work.
 > **Rules:** [A1](#a1), [A2](#a2), [A3](#a3), [A4](#a4) and [A5](#a5) below are canonical; [F1](#f1) defines the synthetic fixture catalogue.
 
-Each **Reading aid (non-normative)** explains an example and has a visible end
-marker. The surrounding paragraphs state the requirements. The examples use
+Each bordered **Reading aid (non-normative)** explains an example. The paragraphs
+outside the border state the requirements. The examples use
 invented APIs and F1's abstract test providers. Fragments name their missing
 context; the [conformance examples](conformance.md#positive-specifications)
 supply complete contracts. [Packages, environments and access paths](explanation/packages.md)
@@ -26,7 +26,11 @@ is implemented by these documents.
 ## A1. Provider manifests
 
 <!-- reading-aid: a1-dependencies -->
-### Reading aid (non-normative): name the definitions the package depends on
+<blockquote>
+
+<a id="reading-aid-non-normative-name-the-definitions-the-package-depends-on"></a>
+
+**Reading aid (non-normative): name the definitions the package depends on**
 
 A tool needs definitions for how to reach an API and how its values cross the
 machine boundary. An AIL package selects those definitions by name, version and
@@ -76,9 +80,7 @@ mechanism's meaning as well as its spelling ([A1](#a1)).
 Use the `profile` branch for `fixture` and the `abi` branch for `native` in
 the fragment. In each path, the first `identifier` is the local alias; the
 three `string` positions supply the external identifier, version and digest.
-**Reading key:** square boxes are literal tokens and rounded boxes name
-lexical tokens. Start at the open circle, choose one branch and follow the
-track to the filled circle. The [package shell](language.md#l1) places each
+The [package shell](language.md#l1) places each
 dependency among the package's items. F1 defines the special digest tokens
 used here; the path alone cannot establish a valid pin.
 
@@ -87,7 +89,7 @@ The [grammar](grammar.ebnf)'s `dependency` production starts with `use`, selects
 It describes a reference to an external definition; it does not embed the
 manifest's schema. See [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A profile is a versioned, digest-pinned definition of additional source types,
@@ -108,7 +110,11 @@ a new language version. Pure navigation goes in `doc`/`link`, not an unknown
 extension whose meaning consumers might accidentally ignore.
 
 <!-- reading-aid: a1-namespace -->
-### Reading aid (non-normative): recognise a profile clause at its declaration
+<blockquote>
+
+<a id="reading-aid-non-normative-recognise-a-profile-clause-at-its-declaration"></a>
+
+**Reading aid (non-normative): recognise a profile clause at its declaration**
 
 A profile can add a fact using its alias as a namespace. Counter's description
 includes a synthetic compiler-conformance fact alongside its core sharing and
@@ -144,7 +150,7 @@ form and its provider-support boundary. F1 defines no extra types, so a new
 `fixture::SomeType` spelling would fail its vocabulary check. See the
 [profile glossary entry](glossary.md#profile).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 An ABI entry is a tooling-owned, versioned definition of calling conventions and
@@ -164,7 +170,11 @@ unsupported package as text, but MUST NOT label it a validated authoritative mod
 ## A2. Access paths
 
 <!-- reading-aid: a2-paths -->
-### Reading aid (non-normative): read one declaration with two ways to reach it
+<blockquote>
+
+<a id="reading-aid-non-normative-read-one-declaration-with-two-ways-to-reach-it"></a>
+
+**Reading aid (non-normative): read one declaration with two ways to reach it**
 
 Counter has a member function that reads its count. A consumer can reach that
 same operation by sending a message or by compiling a source call. Each
@@ -240,9 +250,7 @@ for each of `read_count`'s two paths. The first `identifier` here is
 has no bypass, so the list cannot be empty. The return track adds a comma
 and another environment. Inside the braces, the clause track carries `abi`,
 `via`, `mapping` and `compatibility` from the example.
-**Reading key:** square boxes are literal tokens, rounded boxes name
-productions or lexical tokens, and return arrows repeat. Read from open to
-filled circle. The clause bypass and loop are generic syntax; A2 requires
+The grammar permits any number of clauses; A2 requires
 exactly one of each core access clause and checks the environment coverage.
 
 The [grammar](grammar.ebnf)'s `access` production gives a local path name,
@@ -250,7 +258,7 @@ The [grammar](grammar.ebnf)'s `access` production gives a local path name,
 shows the Counter paths and provider relationships; the syntax view locates
 their braces and clauses.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Every function requires one or more `access` blocks; each global and non-literal
@@ -259,7 +267,11 @@ and `representation(profileAlias, "kind")` in their declaration. A callable's
 source spelling does not create an access path.
 
 <!-- reading-aid: a2-callback -->
-### Reading aid (non-normative): supply the representation of a callable value
+<blockquote>
+
+<a id="reading-aid-non-normative-supply-the-representation-of-a-callable-value"></a>
+
+**Reading aid (non-normative): supply the representation of a callable value**
 
 An API can receive a callable value for later invocation. Its callback
 declaration describes how that value is represented and entered. The synthetic
@@ -302,7 +314,7 @@ uses this type and describes the registration's schedule. The callback's
 own declaration describes one invocation; its representation tells the tool
 how to carry and call the value. See [Callback captures](glossary.md#callback-captures).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Each access has a distinct local name and lists environments in which it applies.
@@ -339,7 +351,11 @@ The same applies to managed projections and wire protocols.
 ## A3. Type representations and data access
 
 <!-- reading-aid: a3-data -->
-### Reading aid (non-normative): distinguish a stored pointer from an address of storage
+<blockquote>
+
+<a id="reading-aid-non-normative-distinguish-a-stored-pointer-from-an-address-of-storage"></a>
+
+**Reading aid (non-normative): distinguish a stored pointer from an address of storage**
 
 To pass a `Geometry::Point` between caller and callee, a tool needs to know
 where its `x` and `y` fields are stored. The record in [L2](language.md#l2)
@@ -396,7 +412,7 @@ supply an arbitrary data-expression mechanism. Likewise, a value requiring
 runtime metadata still needs a complete representation recipe even when its
 native offsets are hidden ([A3](#a3), [F1](#f1)). See [Reaching the code](explanation/packages.md#reaching-the-code).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A type needed at an access boundary must be representable by the selected provider
@@ -426,7 +442,11 @@ effectful evaluations require explicit profile semantics.
 ## A4. Representation and compatibility
 
 <!-- reading-aid: a4-compatibility -->
-### Reading aid (non-normative): state which definitions can be used together
+<blockquote>
+
+<a id="reading-aid-non-normative-state-which-definitions-can-be-used-together"></a>
+
+**Reading aid (non-normative): state which definitions can be used together**
 
 The two `read_count` paths at [A2](#a2) state different conditions for using
 their representations. The message path's `compatibility(stable)` uses the
@@ -455,7 +475,7 @@ domain; a `source` claim needs the complete recipe; an `artifact` claim needs
 the identified artifact set. [The design choices explanation](explanation/choices.md)
 discusses why native representations need this explicit boundary.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 `stable` claims compatibility across the ABI entry's specified domain; the
@@ -487,7 +507,11 @@ its qualification are in the [survey](../../docs/research/2026-09-22-interface-l
 ## A5. Consumer agreement
 
 <!-- reading-aid: a5-views -->
-### Reading aid (non-normative): keep the same API facts in different presentations
+<blockquote>
+
+<a id="reading-aid-non-normative-keep-the-same-api-facts-in-different-presentations"></a>
+
+**Reading aid (non-normative): keep the same API facts in different presentations**
 
 A documentation renderer can explain the Store view as “the bytes remain usable
 until Store destruction.” A binding generator needs the same fact when it
@@ -518,7 +542,7 @@ limitation separately from malformed AIL and explains any extra restrictions
 it imposes. See [Consumer](glossary.md#consumer) and
 [Validation](glossary.md#validation).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 The authoritative view includes declaration identity, full types, per-environment
@@ -546,7 +570,11 @@ contract. It must report that limitation separately from malformed/incomplete AI
 ## F1. Synthetic fixture catalogue
 
 <!-- reading-aid: f1-fixture -->
-### Reading aid (non-normative): read examples within their supplied provider boundary
+<blockquote>
+
+<a id="reading-aid-non-normative-read-examples-within-their-supplied-provider-boundary"></a>
+
+**Reading aid (non-normative): read examples within their supplied provider boundary**
 
 The example packages use an invented provider so their contracts can be
 inspected without assuming an operating-system implementation. The dependency
@@ -580,7 +608,7 @@ facts within F1's supported scope. Optional members, generic families or thrown
 completion would require capabilities this catalogue does not supply; the
 language's ability to spell them does not extend the catalogue.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 The examples use profile `example.fixture` version `1` and ABI `example.fixture-abi`

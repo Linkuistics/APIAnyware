@@ -5,5 +5,5 @@ import = "import", name, "version", string, "digest", string,
                  "as", identifier, ";" ;
 reference = "@", name ;
 name = identifier, { "::", identifier } ;
-!include style/railroad-key.puml
+!include style/railroad-caption.puml
 @endebnf

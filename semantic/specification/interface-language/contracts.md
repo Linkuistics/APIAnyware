@@ -9,8 +9,8 @@
 > are future work.
 > **Rules:** [C1](#c1), [C2](#c2), [C3](#c3), [C4](#c4), [C5](#c5), [C6](#c6), [C7](#c7) and [C8](#c8) below are canonical.
 
-Each **Reading aid (non-normative)** explains an invented example and has a
-visible end marker. The surrounding rule paragraphs state the requirements.
+Each bordered **Reading aid (non-normative)** explains an invented example.
+The rule paragraphs outside the border state the requirements.
 Fragments name their omitted context; the [conformance examples](conformance.md#positive-specifications)
 supply complete synthetic contracts. For a connected explanation, see
 [How AIL states a contract](explanation/contracts.md).
@@ -26,7 +26,11 @@ that it has not established. All clauses below are closed, typed vocabulary.
 ## C1. Slots and regions
 
 <!-- reading-aid: c1-places -->
-### Reading aid (non-normative): address a value inside its callable
+<blockquote>
+
+<a id="reading-aid-non-normative-address-a-value-inside-its-callable"></a>
+
+**Reading aid (non-normative): address a value inside its callable**
 
 The invented canvas model has a `Canvas` resource and imports the record
 `Geometry::Point`, with integer fields `x` and `y` ([L2](language.md#l2)).
@@ -83,10 +87,7 @@ selects it locally ([L2](language.md#l2)).
 ![Place railroad: a slot identifier after a dollar sign, then repeated field, single-pointee or element selections.](figures/g10-places.svg)
 
 Use the same track as the [L2 place view](language.md#reading-aid-non-normative-names-references-and-callable-slots)
-to build each selection in the example. **Reading key:** square boxes are
-literal tokens; rounded boxes name lexical tokens. Start at the open circle,
-choose a selection or its empty bypass, and follow return arrows for more
-selections before reaching the filled circle. The examples take these paths:
+to build each selection in the example. The examples take these paths:
 
 | Place | Slot identifier | Selection path, in order |
 |---|---|---|
@@ -104,7 +105,7 @@ repeats field, `.*` or `[]` selections. A syntax path only spells a place;
 C1 checks that each selection fits the type. The [glossary's place entry](glossary.md#place)
 provides a shorter reminder of that distinction.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 `$p` names a parameter of the enclosing callable; `$result` and `$exception`
@@ -125,7 +126,11 @@ Null carries no ownership obligation. `nullable` permits null; it does not imply
 failure, termination or optional invocation.
 
 <!-- reading-aid: c1-regions -->
-### Reading aid (non-normative): connect a borrow to the period it remains usable
+<blockquote>
+
+<a id="reading-aid-non-normative-connect-a-borrow-to-the-period-it-remains-usable"></a>
+
+**Reading aid (non-normative): connect a borrow to the period it remains usable**
 
 In the synthetic Store API, each `Store` owns sixteen immutable bytes. A caller
 can ask for a view of those bytes while keeping ownership of the `Store`.
@@ -176,7 +181,7 @@ is suitable for an input used during the call; a returned borrow needs a region
 that survives its delivery. See [Borrow validity](glossary.md#borrow-validity)
 for the caller's practical obligation.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 The region constructors are `call`, `static` and `owner($slot)`. `call` lasts from
@@ -195,7 +200,11 @@ recipient. A shorter mutation lifetime is expressed by
 ## C2. Nominal lifetime and concurrency
 
 <!-- reading-aid: c2-lifetime -->
-### Reading aid (non-normative): name who releases a handle and where it can be used
+<blockquote>
+
+<a id="reading-aid-non-normative-name-who-releases-a-handle-and-where-it-can-be-used"></a>
+
+**Reading aid (non-normative): name who releases a handle and where it can be used**
 
 The caller who receives an [owned](glossary.md#owned) `Store` handle becomes
 responsible for destroying it. The `Store` declaration names `destroy` as the
@@ -272,7 +281,7 @@ reference needs a policy that accounts for that reference. A callback's
 [callback captures](glossary.md#callback-captures); [C6](#c6) separately
 shows when the API may invoke it. See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Resources, objects and interfaces require `lifecycle`. Nominal declarations
@@ -304,7 +313,11 @@ executor, unless a profile defines a specific legal transfer protocol.
 ## C3. Callable effects and input obligations
 
 <!-- reading-aid: c3-effects -->
-### Reading aid (non-normative): read the call conditions before its inputs
+<blockquote>
+
+<a id="reading-aid-non-normative-read-the-call-conditions-before-its-inputs"></a>
+
+**Reading aid (non-normative): read the call conditions before its inputs**
 
 When calling `view`, the caller supplies a Store and receives a pointer to its
 bytes. The author also describes when the call finishes, where it may enter,
@@ -361,7 +374,7 @@ A scalar argument such as an integer coordinate needs no ownership transfer
 clause. [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value)
 explains the distinction in domain terms.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Every `fn` and `callback` MUST state `execution`, `completions`, `executor`,
@@ -387,7 +400,11 @@ invocation; a callback-use block describes when the API invokes that callable.
 | `requires(outside_callback(@operation::parameter))` | Repeatable precondition. This call must not occur from within an invocation of the specified callback use; needed for some blocking teardown contracts. |
 
 <!-- reading-aid: c3-retention -->
-### Reading aid (non-normative): distinguish transfer from retained storage
+<blockquote>
+
+<a id="reading-aid-non-normative-distinguish-transfer-from-retained-storage"></a>
+
+**Reading aid (non-normative): distinguish transfer from retained storage**
 
 A registration operation may borrow a callback at entry and retain another
 reference for later invocations. Keeping that reference beyond immediate use
@@ -434,7 +451,7 @@ that the subscription fixture implements those alternatives. The selected
 provider and companion clauses would have to support the chosen policy.
 See [Retention](glossary.md#retention) and [C2](#c2) for the lifetime constraints.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 `input(consume)` and `retain(strong)` are different events: transfer at entry and
@@ -447,7 +464,11 @@ Property `storage` must agree with actual setter retention and getter ownership;
 `weak` requires zeroing and hence nullable reads after referent death.
 
 <!-- reading-aid: c3-pointers -->
-### Reading aid (non-normative): separate the pointer input from the output storage
+<blockquote>
+
+<a id="reading-aid-non-normative-separate-the-pointer-input-from-the-output-storage"></a>
+
+**Reading aid (non-normative): separate the pointer input from the output storage**
 
 `copy_bytes` receives a writable pointer supplied by the caller. The pointer
 itself is borrowed for the call; the memory it addresses receives output.
@@ -490,7 +511,7 @@ reference written there has an output obligation. [C5](#c5) shows the two sides
 of replacement with `$value.*`. With `out` storage, there is no initialized old
 reference to consume. See [Output state](glossary.md#output-state).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Input contracts also apply to reference leaves read from `in`/`inout` pointee
@@ -506,7 +527,11 @@ call-scoped temporary storage and must discharge temporary retained/copied
 references before completion. This does not undo any `consume` at entry.
 
 <!-- reading-aid: c3-requires -->
-### Reading aid (non-normative): locate a precondition at the call it restricts
+<blockquote>
+
+<a id="reading-aid-non-normative-locate-a-precondition-at-the-call-it-restricts"></a>
+
+**Reading aid (non-normative): locate a precondition at the call it restricts**
 
 Some operations need a fact about this particular receiver before entry.
 Suppose a provider offers an interface with an optional `redraw` member.
@@ -548,7 +573,7 @@ A teardown operation can instead require
 The [availability glossary entry](glossary.md#availability) revisits the
 platform/receiver distinction.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 <a id="c4"></a>
@@ -556,7 +581,11 @@ platform/receiver distinction.
 ## C4. Buffers and strings
 
 <!-- reading-aid: c4-buffers -->
-### Reading aid (non-normative): count initialized data and allocated space separately
+<blockquote>
+
+<a id="reading-aid-non-normative-count-initialized-data-and-allocated-space-separately"></a>
+
+**Reading aid (non-normative): count initialized data and allocated space separately**
 
 The preceding `copy_bytes` example describes sixteen writable bytes with
 `extent($destination, buffer(16, 16, elements))`. The first number is the
@@ -608,7 +637,7 @@ pointee instead of a buffer. Native field offsets and array stride come from the
 selected representation provider ([A3](profiles.md#a3)). See [How many bytes exist,
 and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-do-they-contain).
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Every pointer leaf, including returned pointers and nested pointer leaves, requires
@@ -646,7 +675,11 @@ representation facts supplied by an access provider under [A4](profiles.md#a4-re
 ## C5. Outcomes and returned obligations
 
 <!-- reading-aid: c5-outcomes -->
-### Reading aid (non-normative): use an observable result to choose the output contract
+<blockquote>
+
+<a id="reading-aid-non-normative-use-an-observable-result-to-choose-the-output-contract"></a>
+
+**Reading aid (non-normative): use an observable result to choose the output contract**
 
 The Store copy operation returns a Boolean. On `true`, its destination contains
 sixteen initialized bytes; on `false`, the destination cannot be read as output.
@@ -699,10 +732,8 @@ discriminator throughout ([C5](#c5)).
 
 Take the `outcome` branch of the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
 once for `copied` and again for `failed`. This detail shows where their
-`when`, `meaning` and `state` clauses belong. **Reading key:** square boxes
-are literal tokens; rounded boxes name productions or lexical tokens. Read
-from open to filled circle, using the return arrow for more clauses. The
-empty bypass is syntactic; C5 requires the applicable clauses.
+`when`, `meaning` and `state` clauses belong. The grammar permits an empty
+outcome body; C5 requires the applicable clauses.
 The [values track](language.md#reading-aid-non-normative-clauses-contain-values)
 shows how `equal($result, true)` nests inside `when(...)`.
 
@@ -711,7 +742,7 @@ inside the outcome's braces. The generic syntax permits several outcomes;
 C5 checks their coverage and exclusivity. [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end)
 explains why a caller needs this complete partition.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Each callable MUST have at least one named outcome. Each outcome requires exactly
@@ -744,7 +775,11 @@ tested for null or used as a discriminator. An invalid output buffer conveys no
 initialized elements. Partially initialized buffers need an explicit valid length.
 
 <!-- reading-aid: c5-outputs -->
-### Reading aid (non-normative): track the obligation delivered with a valid output
+<blockquote>
+
+<a id="reading-aid-non-normative-track-the-obligation-delivered-with-a-valid-output"></a>
+
+**Reading aid (non-normative): track the obligation delivered with a valid output**
 
 When a caller receives an owned reference, it becomes responsible for releasing
 or destroying the value according to its lifecycle. When it receives a borrowed
@@ -803,7 +838,7 @@ empty list asserts no such earlier invalidator. The tutorial's
 [borrowed-to-owned change](tutorial/05-access-and-change.md) develops a mutable
 owner and an independent owned snapshot in complete synthetic packages.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 | Outcome clause | Meaning |
@@ -829,7 +864,11 @@ an access profile, not an interchangeable path to the same operation.
 ## C6. Callback schedules and teardown
 
 <!-- reading-aid: c6-schedule -->
-### Reading aid (non-normative): separate one callback invocation from its registration
+<blockquote>
+
+<a id="reading-aid-non-normative-separate-one-callback-invocation-from-its-registration"></a>
+
+**Reading aid (non-normative): separate one callback invocation from its registration**
 
 The synthetic notification API receives a Handler value and returns a
 Subscription that keeps it registered. First read the Handler declaration:
@@ -933,10 +972,8 @@ See [Callbacks](explanation/contracts.md#callbacks).
 
 Follow the `callback_use` branch inside the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
 for `subscribe`, then substitute `$handler` for this detail's `place`.
-Its repeated clauses describe the registration schedule. **Reading key:**
-square boxes are literal tokens; rounded boxes name productions or lexical
-tokens. Read from open to filled circle; the return arrow repeats clauses
-and the empty bypass omits them syntactically. C6 supplies the required facts.
+Its repeated clauses describe the registration schedule. The grammar permits
+an empty callback-use body; C6 supplies the required facts.
 
 Use this comparison to keep the two occurrences of `callback` attached to
 their own subjects:
@@ -954,7 +991,7 @@ The [grammar](grammar.ebnf) distinguishes `callback` followed by an identifier
 and signature from `callback` followed by a `place` and clause block.
 The syntax view can show that nesting; C6 supplies the schedule constraints.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Each callback-typed parameter MUST have one `callback $parameter { ... }` block,
@@ -991,7 +1028,11 @@ a profile with explicit events and ordering. Such APIs MUST NOT be flattened int
 ## C7. Global storage
 
 <!-- reading-aid: c7-storage -->
-### Reading aid (non-normative): describe the value a global read supplies
+<blockquote>
+
+<a id="reading-aid-non-normative-describe-the-value-a-global-read-supplies"></a>
+
+**Reading aid (non-normative): describe the value a global read supplies**
 
 A global declaration describes accessible storage. In the synthetic Counter
 package, `pointer_value` stores a pointer to four bytes that remain usable
@@ -1037,7 +1078,7 @@ reference global requires a provider contract or explicit accessor operations.
 The [global storage rule](#c7) below defines that boundary, and the
 [region glossary entry](glossary.md#region) explains the lifetime vocabulary.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 A global requires `sharing`, `isolation`, `extent`/`contents` if pointer-typed,
@@ -1054,7 +1095,11 @@ and have no mutation contract. Literal scalar constants need no ownership clause
 ## C8. Obligation checking
 
 <!-- reading-aid: c8-checking -->
-### Reading aid (non-normative): check a stated fact against its rule
+<blockquote>
+
+<a id="reading-aid-non-normative-check-a-stated-fact-against-its-rule"></a>
+
+**Reading aid (non-normative): check a stated fact against its rule**
 
 A tool can check whether the description is internally consistent before a
 binding generator decides how to use it. For example, the Store view declares
@@ -1090,7 +1135,7 @@ as its own restriction and retains the API's `reentrancy(allowed)` fact
 [conformance record](conformance.md) for the distinction between specification
 checks and an implemented validator.
 
-**End of reading aid.**
+</blockquote>
 <!-- /reading-aid -->
 
 Validators MUST reject missing applicable facts, contradictory clauses, unknown

@@ -69,10 +69,7 @@ contract and access path; the innermost braces contain facts about that path.
 
 Read the track using `direct` as the first identifier and `test` as the first
 environment identifier. The comma loop admits further environments; the
-clause loop contains the four clauses shown above. **Reading key:** start
-at the open circle and follow arrows to the filled circle. Square boxes
-show literal tokens and rounded boxes name productions or lexical tokens.
-Forks select a path, bypasses permit omission, and return tracks repeat it.
+clause loop contains the four clauses shown above.
 The [`access` grammar](../grammar.ebnf) describes this shape;
 [`A2`](../profiles.md#a2) supplies the required clauses and coverage rules.
 

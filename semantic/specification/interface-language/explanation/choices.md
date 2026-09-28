@@ -446,9 +446,7 @@ argument. Its commas and parentheses sit inside the outer clause.
 
 ![Railroads for clauses and their values show the same outer name-and-arguments form for core and profile clauses.](../figures/g10-clause.svg)
 
-**Reading key:** read open to filled circle. Square boxes spell literal tokens;
-rounded boxes name productions or lexical tokens. Bypasses permit omission,
-forks choose alternatives and return arrows repeat a path. The diagram admits
+The diagram admits
 `fixture::invented(true);` as a shape too; the fixture's closed vocabulary
 rejects it. [Railroad source](../figures/g10-clause.puml).
 
