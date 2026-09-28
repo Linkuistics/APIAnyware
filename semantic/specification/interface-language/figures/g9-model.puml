@@ -33,7 +33,7 @@ legend bottom
   position and Canvas are package-level siblings; the labelled arrow associates them.
   Geometry::Point resolves through the import to Point in example::geometry.
   Read each callable's parameter and result within that callable's box.
-  Filter is introduced in the next fragment. Contracts and other package items are omitted.
+  Filter is a callback with its own slots. Contracts and other package items are omitted.
   Non-normative model: L2, L4–L5, C1. The example import digest is a placeholder.
 endlegend
 @enduml

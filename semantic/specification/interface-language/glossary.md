@@ -602,6 +602,24 @@ its association and receiver, and [Place](#place) explains the `$canvas` clauses
 
 Local here means declared in this package, rather than a variable inside a
 function. Importing `Point` preserves its [canonical identity](#canonical-identity).
+
+Use the model to distinguish where a declaration lives from the declarations
+it refers to. Start with each package folder and its declaration boxes, then
+follow the labelled arrows: the canvas package imports geometry as `Geometry`,
+and `position` is associated with its sibling `Canvas` by `member`. Inside
+`Point`, the entries are fields; inside a callable, they are parameters and
+results. The model also includes `Filter` from the separate
+[callback fragment](language.md#reading-aid-non-normative-names-references-and-callable-slots):
+it accepts a `Geometry::Point` and returns a Boolean. Its slots belong to that
+callback, while `position` has its own `canvas` parameter and Point result.
+Both packages have version `"1"`; their other items and contracts are omitted,
+and the example import digest remains a placeholder.
+
+![The canvas package contains Canvas, position and Filter as sibling declarations. Its import arrow leads to the geometry package containing Point and its x and y fields. A member arrow associates position with Canvas. Each callable box contains its own parameter and result slots.](figures/g9-model.svg)
+
+[Diagram source](figures/g9-model.puml) ·
+[How tools use these API descriptions](README.md#who-writes-and-uses-an-ail-description)
+
 See [the model and import/reference railroads](language.md#l2) and
 [What it depends on](explanation/packages.md#what-it-depends-on).
 Rule: [`L2`](language.md#l2).
@@ -1002,6 +1020,17 @@ its own invocation. Inside `position`, `$canvas` and `$result` address those
 values locally. A [place](#place) starts from a slot and can select a field,
 pointee or buffer elements within it, letting a clause describe a specific
 part of a larger value.
+
+Compare the complete slot reference with the place used inside its callable.
+The containing callable gives each `$result` its meaning, even though the
+local spelling is the same.
+
+| Slot reference in `example::canvas` | Place inside the named callable | Value addressed |
+|---|---|---|
+| `@position::canvas` | `$canvas` inside `position` | The `Canvas` parameter designated as receiver |
+| `@position::result` | `$result` inside `position` | The returned `Geometry::Point` |
+| `@Filter::point` | `$point` inside `Filter` | The callback's `Geometry::Point` parameter |
+| `@Filter::result` | `$result` inside `Filter` | The callback's Boolean result |
 
 See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
 Rules: [`C1`](contracts.md#c1), [`L2`](language.md#l2).
