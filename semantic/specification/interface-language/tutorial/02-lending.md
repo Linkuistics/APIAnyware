@@ -122,7 +122,8 @@ fn current_label(card: Card) -> Label {
 ```
 
 The colon assigns `Card` as the type of `card`, and the arrow introduces
-the result type `Label`. All three `$card` places select that same input.
+the result type `Label`. All three `$card` [places](../glossary.md#place)
+select that same input.
 `call` names the period during which this invocation runs
 ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 
@@ -159,10 +160,11 @@ fn current_label(card: Card) -> Label {
 ```
 
 `$result` selects the returned label; `$card` still selects the enclosing
-function's input. Read the nested value from inside out: `owner($card)`
-names a lifetime, `borrow(...)` describes access for that lifetime, and
-`give` associates that access with the result. These are declarative values,
-with no expression evaluation ([`L1`](../language.md#l1),
+function's input. Read `borrow(owner($card))` from inside out.
+`owner($card)` names the card's lifetime, and `borrow(...)` describes
+access bounded by that lifetime. The `give` clause associates that access
+with the result. These values describe the contract; tools do not evaluate
+them as executable expressions ([`L1`](../language.md#l1),
 [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 In the successful `lent` [outcome](../glossary.md#outcome), write

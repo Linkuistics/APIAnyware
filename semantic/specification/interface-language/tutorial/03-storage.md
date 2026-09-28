@@ -82,7 +82,7 @@ clause determines whether unnamed values are admitted
 
 Declare `enum CopyStatus: i32` with `values(closed)` and cases `copied = 0`
 and `unavailable = 1`. Add `sharing(value)`, `isolation(none)`,
-[availability](../glossary.md#availability) and deprecation as shown below.
+[availability](../glossary.md#availability) and deprecation as shown in the fragment.
 The closed enum permits exactly these two values. An open enum would admit
 every value of its underlying `i32`, including unnamed values
 ([`L4`](../language.md#l4), [`C2`](../contracts.md#c2)).
@@ -210,8 +210,9 @@ fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
 
 `$result` selects the status. `$destination[]` follows the pointer to the
 buffer elements whose extent step 4 described. The empty brackets are a
-place selector here; the brackets in `exports([@Card, ...])` instead delimit
-a list of references ([`C1`](../contracts.md#c1), [`L1`](../language.md#l1)).
+[place](../glossary.md#place) selector here; the brackets in
+`exports([@Card, ...])` instead delimit a list of references
+([`C1`](../contracts.md#c1), [`L1`](../language.md#l1)).
 
 ![Place railroad: a dollar sign and identifier followed by optional repeated field, pointee or buffer-element selectors.](../figures/g10-places.svg)
 
@@ -234,11 +235,11 @@ In both outcomes, mark `$result` valid so the caller can read the status
 that decides which case occurred ([`C5`](../contracts.md#c5)).
 
 For success, write `state($destination[], valid)`. For failure, write
-`state($destination[], invalid)`. The parameter `$destination` is a
-[slot](../glossary.md#slot); adding `[]` makes a
-[place](../glossary.md#place) selecting its buffer elements. These clauses
-therefore describe the written bytes. The caller continues to own the
-allocation in both cases ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
+`state($destination[], invalid)`. The parameter named `destination` is a
+[slot](../glossary.md#slot). The place `$destination` selects its pointer
+value; adding `[]` selects the buffer elements reached through that pointer.
+These state clauses therefore describe the written bytes. The caller continues
+to own the allocation in both cases ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
 [`C5`](../contracts.md#c5)).
 
 On failure, the caller leaves the buffer unread. Searching for a terminator

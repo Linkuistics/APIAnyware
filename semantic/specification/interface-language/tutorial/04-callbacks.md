@@ -31,8 +31,9 @@ and finishes all callback use before returning from watch destruction
 
 ### 1. Describe one notification invocation
 
-Start with the callable type that the program's handler will satisfy.
-It is a package-level declaration alongside the resources and functions.
+Start with the [callable](../glossary.md#callable) type that the program's
+handler will satisfy. It is a package-level declaration alongside the resources
+and functions.
 
 Fragment — shows one callback invocation in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies availability,
@@ -119,7 +120,8 @@ the same callback value is registered more than once
 
 ### 3. Select the callback's synthetic representation
 
-The callback declaration also names how its values cross the call boundary.
+The callback declaration also names how the program passes the handler to
+the library and how the library invokes it.
 
 Fragment — shows callback representation in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the two provider
@@ -311,8 +313,9 @@ call ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 
 ### 7. End the subscription through its destructor
 
-The schedule names a separate function as the watch's destructor. This is
-the function that takes over the program's obligation to finish with a watch.
+The schedule's `quiescence` clause names `destroy_watch`, the destructor from
+the watch's lifecycle. This function takes over the program's obligation to
+destroy the watch.
 
 Fragment — shows watch consumption in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the teardown
@@ -330,7 +333,7 @@ fn destroy_watch(subscription: Watch) -> unit {
 }
 ```
 
-`subscription` names this function's input. Its `$subscription` place selects
+`subscription` names this function's input. Its `$subscription` [place](../glossary.md#place) selects
 the watch that was the result of an earlier registration. The link between
 the schedule and this function is the declaration reference
 `@destroy_watch` ([`L2`](../language.md#l2), [`C6`](../contracts.md#c6)).
@@ -370,8 +373,9 @@ package tutorial::callbacks version "1" {
 }
 ```
 
-`@watch_labels::handler` identifies the parameter by its function and local
-name. Inside `watch_labels`, the place `$handler` addresses that input.
+`@watch_labels::handler` identifies the parameter [slot](../glossary.md#slot)
+by its function and parameter name. Inside `watch_labels`, the
+place `$handler` addresses that input.
 Inside `destroy_watch`, the longer reference is needed to identify the
 other function's callback use; that destructor's own input is
 `$subscription` ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
@@ -395,9 +399,9 @@ contracts ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
 
 ### 9. Include the subscription in the package
 
-The package's public roots now include the watch, callback type, registration
-and destructor. The callback type appears in the same export list as the
-other declarations.
+The package's [exports](../glossary.md#exports) now include the watch,
+callback type, registration and destructor. List them alongside the earlier
+public declarations.
 
 Fragment — shows publication in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the header,

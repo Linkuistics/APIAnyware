@@ -132,9 +132,11 @@ the synthetic catalogue.
 
 ### 3. Check how the path preserves the contract
 
-Read `mapping(identity)` next. A [mapping](../glossary.md#mapping) accounts
-for how the declaration's parameters, result and completion modes become
-the selected call. The fixture defines faithful identity mapping for its
+Read `mapping(identity)` next. A [mapping](../glossary.md#mapping) describes
+how the consumer passes the declared inputs through the selected path. It
+also accounts for the results and the ways the call can finish, its
+[completions](../glossary.md#completion).
+The fixture defines faithful identity mapping for its
 symbol mechanism and `c` convention. The consumer can pass the `Card` and
 receive the `Label` according to that definition ([`A2`](../profiles.md#a2),
 [`F1`](../profiles.md#f1)).
@@ -667,8 +669,8 @@ implementation specified to produce an independent owned result. The
 original symbol's borrowing behaviour would leave the new contract
 unfulfilled, despite having the same signature ([`A2`](../profiles.md#a2)).
 
-Keep `abi`, `mapping` and `compatibility`. The fixture still represents the
-same types and uses the same parameter and result types. The implementation
+Keep `abi`, `mapping` and `compatibility`. The parameter and result types
+still use the fixture's resource-handle representation. The implementation
 reached by the changed symbol supplies the independently owned snapshot
 ([`A2–A4`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 

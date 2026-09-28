@@ -70,8 +70,8 @@ package tutorial::lifetime version "1" {
 ```
 
 The outer braces contain package items. `resource` and `fn` introduce
-declarations; each has its own braced body. `surface` and `exports` are
-[clauses](../glossary.md#clause), whose parentheses hold arguments and whose
+[declarations](../glossary.md#declaration); each has its own braced body.
+`surface` and `exports` are [clauses](../glossary.md#clause), whose parentheses hold arguments and whose
 semicolons end the statements. The brackets in `exports` contain a list.
 `@Card` selects a declaration in this package, while `card: Card` gives a
 parameter its type, written without `@` ([`L1–L2`](../language.md#l1)).
@@ -95,11 +95,13 @@ depends on [`L3`](../language.md#l3).
 [Shell diagram source](../figures/g10-shell.puml) ·
 [Language model with imports and members](../language.md#reading-aid-non-normative-locate-the-declarations-first)
 
-Here all three declarations are local to `tutorial::lifetime`. The tutorial
-uses free functions with explicit parameters. For a comparison with an imported
-type and a function associated with a nominal owner by `member`, follow the
-language model above: its geometry/canvas examples show those additional
-relationships ([`L2`](../language.md#l2), [`L5`](../language.md#l5)).
+Here all three declarations are [local](../glossary.md#local-and-imported-declaration)
+to `tutorial::lifetime`: their definitions occur inside this package. The
+tutorial uses free functions with explicit parameters. For an imported type
+and a [member](../glossary.md#member) function associated with an owning type,
+follow the language-model link above. Its geometry/canvas examples show
+where those declarations live and how they refer to one another
+([`L2`](../language.md#l2), [`L5`](../language.md#l5)).
 
 Write `language "0.1";` and the package header shown in the checkpoint.
 `tutorial::lifetime` names this description and `"1"` is its version.
@@ -115,7 +117,8 @@ card can be described fully on their own ([`L3`](../language.md#l3)).
 ### 3. Select the synthetic definitions and configuration
 
 The package also identifies the definitions used to interpret its calls.
-Here are those selections and the configuration they support.
+Here are those selections and the configuration they support, called an
+[environment](../glossary.md#environment).
 
 Fragment — shows package dependencies and an environment. The
 [complete checkpoint](#checkpoint-package) also supplies publication clauses
@@ -152,7 +155,7 @@ the chosen definition. Here the repeated `a` and `b` digits are synthetic
 test tokens specified by [`F1`](../profiles.md#f1). They belong to the
 fixture catalogue, rather than identifying a production library.
 
-The [environment](../glossary.md#environment) names target `fixture64` and
+The environment names target `fixture64` and
 platform `fixture` version `1`. The local name `test` lets declarations say
 where they apply with `available([test])`. This describes that exact
 configuration; claims about other configurations require their own evidence
@@ -185,8 +188,7 @@ package tutorial::lifetime version "1" {
 ```
 
 `available([test])` refers to the environment just defined. `deprecated(no)`
-states that this public declaration is not deprecated. The empty list in
-`implements([])` records that there are no implemented interfaces
+states that this public declaration is not deprecated
 ([`L3`](../language.md#l3), [`L5`](../language.md#l5)).
 
 Use `Card` as the parameter type when passing its handle, as the shell's
@@ -237,8 +239,9 @@ fn create_card() -> nullable<Card> {
 `$result` selects this invocation's returned value, a
 [place](../glossary.md#place). The declaration reference `@create_card`
 instead selects the function itself; `@create_card::result` identifies its
-result slot from elsewhere. Inside this body, clauses use `$result` to
-describe that value ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+result [slot](../glossary.md#slot) from elsewhere. Inside this body, clauses
+use `$result` to describe that value
+([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 In `when(returned, nonnull($result));`, the inner parentheses belong to
 the predicate and the outer parentheses hold `when`'s two arguments.
 
@@ -361,8 +364,8 @@ these states so that transfer at entry and completed destruction remain
 visible as different events. The arrows describe changes of state.
 
 This is the invented API's card-lifetime view; part 2 adds label access.
-The contract describes what happens if a call returns and leaves eventual
-return unpromised (non-normative; [`C2–C3`](../contracts.md#c2),
+The contract describes what happens if a call returns; it supplies no guarantee
+that the call eventually finishes (non-normative; [`C2–C3`](../contracts.md#c2),
 [`C5`](../contracts.md#c5)).
 
 ![From the top state, null creation loops back to no Card. Successful creation makes the program responsible for destruction. destroy_card takes responsibility at entry, then the library destroys the Card before returning.](../figures/tutorial-lifetime.svg)

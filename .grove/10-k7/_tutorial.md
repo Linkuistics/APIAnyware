@@ -99,12 +99,6 @@ Keep the reported reading extent and proposed remedies distinct.
   use. Use the shared visual vocabulary, source plus generated SVG, and an
   adjacent reading key. Inspect the four reused G10 views in parts 1, 3, 4 and
   5 with their new captions; their grammar and sources are unchanged.
-- **copy-edit — six tutorial pages:** read each new short excerpt with its
-  surrounding instruction for repeated context and density. Preserve the
-  named containing scope, fragment omissions, complete checkpoints and the
-  early route to the owned-snapshot exercise. Technical checking of the new
-  excerpts belongs to tutorial-k60; this handoff asks for the sentence and
-  terminology charter.
 
 ## First human reading correction
 

@@ -132,9 +132,11 @@ package tutorial::lifetime version "1" {
 
 The `language` header selects AIL's version. The next line gives this API
 description its own name and version. Inside its braces, `resource` and `fn`
-introduce declarations. `card: Card` names an input and its type; the arrow
-introduces the result type. Creation may return null, while destruction's
-`unit` result has no value ([`L1–L2`](../language.md#l1),
+introduce [declarations](../glossary.md#declaration).
+
+Read the function signatures next. `card: Card` names an input and its type;
+the arrow introduces the result type. Creation may return null, while
+destruction's `unit` result has no value ([`L1–L2`](../language.md#l1),
 [`L4`](../language.md#l4)). Part 1 develops this shell with a
 [syntax diagram and located clauses](01-lifetime.md#2-name-the-package-and-the-api-it-covers).
 
