@@ -6,7 +6,7 @@
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
-> **Rules:** [`L4–L6`](../language.md#l4), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; the explanations here are non-normative.
+> **Rules:** [`L1–L6`](../language.md#l1), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; the explanations here are non-normative.
 
 Suppose a caller gets a view of a library's bytes. To use it safely, the caller
 needs to know which object keeps the bytes alive and when to stop reading them.
@@ -45,22 +45,37 @@ callee at entry. The `closed` block describes the successful return
 [`C5`](../contracts.md#c5)).
 
 Fragment — shows consumption and successful return for the invented watch.
-A complete package would also supply `Watch`,
+A complete package would also supply the watch lifetime and nominal contracts,
 [availability](../glossary.md#availability), the other effects,
 [retention](../glossary.md#retention) and an [access path](../glossary.md#access-path).
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=watch-close -->
 ```ail
-fn watch_close(watch: Watch) -> unit {
-  execution(sync);
-  completions([returned]);
-  input($watch, consume);
-  outcome closed {
-    when(returned, any);
-    meaning(success);
+package example::watch version "1" {
+  resource Watch {
+    // Lifetime and nominal contracts omitted.
   }
+  fn watch_close(watch: Watch) -> unit {
+    execution(sync);
+    completions([returned]);
+    input($watch, consume);
+    outcome closed {
+      when(returned, any);
+      meaning(success);
+    }
+  }
+  // Header and remaining package context omitted.
 }
 ```
+
+The package braces locate both the `Watch` type and `watch_close` operation.
+`watch: Watch` names a parameter and its type; `-> unit` says that the function
+returns no value. Inside the function, `$watch` addresses that parameter.
+A clause takes the form `name(arguments);`: parentheses group arguments,
+commas separate them, and the semicolon ends the clause. `outcome closed`
+opens a nested block describing one way this call finishes. Comments beginning
+with `//` explain omitted context ([`L1`](../language.md#l1),
+[`L2`](../language.md#l2), [`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
 
 Now consider a program that owns a store of bytes and calls `view` to read
 them. The program keeps responsibility for destroying the store. The call
@@ -74,7 +89,7 @@ Fragment — shows the input and returned [borrow](../glossary.md#borrow) of `vi
 [buffer package](../examples/buffers.ail) also supplies `Store`, availability,
 effects, retention, buffer facts and access paths.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=view-borrow -->
 ```ail
 fn view(store: Store) -> ptr<u8> {
   input($store, borrow);
@@ -88,6 +103,10 @@ fn view(store: Store) -> ptr<u8> {
   }
 }
 ```
+
+Here `ptr<u8>` is a non-null pointer to unsigned eight-bit values. The angle
+brackets supply the pointer's element type; `$result` addresses the returned
+pointer ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
 
 In the second body, `input($store, borrow)` lets the callee use the store while
 leaving ownership with the caller. `valid($store, call)` requires the caller to
@@ -105,6 +124,20 @@ caller can use afterwards. AIL writes these facts as `name(arguments);`
 clauses. The rule files define the permitted names and their meanings
 ([`L1`](../language.md#l1),
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+The clause railroad follows the same spelling. For `input($store, borrow);`,
+`input` fills `name`; the two arguments are a place and a bare name.
+In `give($result, borrow(owner($store)));`, the second argument contains
+nested constructors. Their parentheses stay inside the outer clause's
+parentheses; only the outer clause ends with a semicolon.
+
+![Clause railroads show a name, parenthesized arguments and a final semicolon; arguments can contain places, lists and nested constructors.](../figures/g10-clause.svg)
+
+**Reading key:** read from open to filled circle; square boxes are literal
+tokens and rounded boxes name productions or lexical tokens. Forks choose
+alternatives, bypasses permit omission, and return arrows repeat a path.
+These are grammar shapes; the cited contract rules determine which arguments
+and locations each clause accepts. [Railroad source](../figures/g10-clause.puml).
 
 Each clause lets the reader locate one obligation, at the cost of a longer
 body and several rule lookups. Putting ownership in types is an alternative;
@@ -128,14 +161,21 @@ the written integer on an outcome ([`C1`](../contracts.md#c1),
 [`C4–C5`](../contracts.md#c4)).
 
 Fragment — shows a pointer and its written integer. A complete package would
-place these clauses in a callable with `length: mutptr<u64>`, provide its
-other contracts, and put `state` inside a successful outcome.
+supply this constructed `read_length` operation's other contracts, including
+input, direction, aliasing, contents and access clauses. The successful outcome
+is shown inside its callable.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=pointee -->
 ```ail
-extent($length, one);
-// In an outcome:
-state($length.*, valid);
+fn read_length(length: mutptr<u64>) -> unit {
+  extent($length, one);
+  outcome written {
+    when(returned, any);
+    meaning(success);
+    state($length.*, valid);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 The synthetic `copy_bytes` writes a buffer instead of one integer. Its
@@ -145,13 +185,20 @@ elements readable ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 Fragment — shows the destination buffer and its successful output state. The
 complete [buffer package](../examples/buffers.ail) supplies `copy_bytes`, its
-other contracts and the enclosing `copied` outcome.
+other contracts and the failure outcome.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=buffer-place -->
 ```ail
-extent($destination, buffer(16, 16, elements));
-// In the copied outcome:
-state($destination[], valid);
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  extent($destination, buffer(16, 16, elements));
+  outcome copied {
+    when(returned, equal($result, true));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  // Failure outcome and other callable contracts omitted.
+}
 ```
 
 In the first case, `$length` is the pointer and `$length.*` is one integer.
@@ -162,6 +209,15 @@ and `.field` selects a record field. A validator checks each path against the
 type and extent it follows. Selecting one pointee with `.*` therefore requires
 a different extent from selecting buffer elements with `[]`
 ([`C1`](../contracts.md#c1)).
+
+![The place railroad starts with a dollar sign and identifier, then permits field, single-pointee or buffer-element selectors.](../figures/g10-places.svg)
+
+**Reading key:** follow open to filled circle. Square boxes spell literal
+tokens; rounded boxes name lexical tokens. The bypass permits `$length` with
+no selector. Take `.*` for `$length.*`, or the adjacent `[` and `]` boxes for
+`$destination[]`; the brackets contain no index. The return path allows further
+selections. Types and extent clauses determine which paths are meaningful
+([`C1`](../contracts.md#c1)). [Railroad source](../figures/g10-places.puml).
 
 The selector table keeps the pointer value distinct from the storage addressed
 through it.
@@ -178,6 +234,33 @@ tells the caller it can inspect the result. The caller still needs to know
 who destroys the resource in `handle`; `give($result.handle, owned)` supplies
 that obligation. The integer field has no release obligation to transfer.
 
+Fragment — locates the field selection in a constructed result record and
+its returning function. A complete package would supply `Store`, the record's
+nominal contracts, publication context and the function's other contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=record-leaf -->
+```ail
+record Created {
+  field code: u64;
+  field handle: Store;
+  // Nominal contracts omitted.
+}
+fn make_created() -> Created {
+  outcome created {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result.handle, owned);
+  }
+  // Other callable contracts omitted.
+}
+```
+
+The dot in `$result.handle` follows the record field. `state($result, valid)`
+covers the record's scalar contents and shape; `give` addresses the resource
+leaf's separate destruction obligation ([`C1`](../contracts.md#c1),
+[`C5`](../contracts.md#c5)).
+
 AIL calls a pointer, resource, object, interface or callback value a
 [reference leaf](../glossary.md#reference-leaf), including when it occurs inside
 an aggregate. Each such leaf needs its applicable contracts. A clause about a
@@ -187,8 +270,8 @@ pointer addresses that pointer unless its place explicitly follows the pointer
 AIL chooses typed paths rather than implicitly applying every clause throughout
 an aggregate. This makes container and element obligations distinguishable, but
 makes nested contracts longer. It also uses two naming contexts: local
-`$handler` and external `@subscribe::handler`. The latter includes the operation
-identity ([`L2`](../language.md#l2)); [Q4](choices.md#q4) asks about the cost of
+`$store` inside `view` and external `@view::store`. The latter includes the
+operation identity ([`L2`](../language.md#l2)); [Q4](choices.md#q4) asks about the cost of
 learning these two spellings.
 
 ## Who owns what
@@ -213,16 +296,20 @@ Fragment — compares borrowing and consuming a store at entry. The complete
 [buffer package](../examples/buffers.ail) supplies the containing declarations
 and their remaining clauses.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=entry-transfer -->
 ```ail
-// view entry
-input($store, borrow);
-retain($store, none);
-valid($store, call);
+fn view(store: Store) -> ptr<u8> {
+  input($store, borrow);
+  retain($store, none);
+  valid($store, call);
+  // Other callable contracts omitted.
+}
 
-// destroy entry
-input($store, consume);
-retain($store, none);
+fn destroy(store: Store) -> unit {
+  input($store, consume);
+  retain($store, none);
+  // Other callable contracts omitted.
+}
 ```
 
 The caller remains responsible for destroying the store after `view`. With
@@ -235,19 +322,30 @@ Now compare delivery of a new store with delivery of a view into an existing
 store. These are exit facts, separate from entry transfer.
 
 Fragment — compares receiving a store with receiving its bytes. The complete
-[buffer package](../examples/buffers.ail) supplies both enclosing outcomes and
-their other clauses.
+[buffer package](../examples/buffers.ail) supplies both functions' remaining clauses and `create`'s null outcome.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=output-transfer -->
 ```ail
-// create.created
-state($result, valid);
-give($result, owned);
+fn create() -> nullable<Store> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  // Null outcome and other callable contracts omitted.
+}
 
-// view.viewed
-state($result, valid);
-give($result, borrow(owner($store)));
-invalidated_by($result, []);
+fn view(store: Store) -> ptr<u8> {
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 The first gives the caller one destruction obligation for a non-null store.
@@ -267,11 +365,14 @@ Fragment — shows `subscribe` retaining a handler. The complete
 [callback package](../examples/callbacks.ail) supplies the declaration,
 schedule, outcomes and remaining clauses.
 
-<!-- ail-example: ../examples/callbacks.ail lines=48-50 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=retention -->
 ```ail
-    input($handler, borrow);
-    retain($handler, strong(owner($result)));
-    valid($handler, call);
+fn subscribe(handler: Handler) -> Subscription {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+  // Other callable contracts omitted.
+}
 ```
 
 Here `$result` is the returned subscription. `strong(owner($result))` ties the
@@ -329,22 +430,42 @@ Fragment — shows call validity and the immutable view's lifetime. The complete
 [buffer package](../examples/buffers.ail) supplies `view` and its enclosing
 outcome.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=owner-borrow -->
 ```ail
-valid($store, call);
-// In the viewed outcome:
-give($result, borrow(owner($store)));
-invalidated_by($result, []);
+fn view(store: Store) -> ptr<u8> {
+  valid($store, call);
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows the constructed mutable view's earlier invalidator. A complete
-package would also supply the mutable-store declarations, enclosing outcome
-and a `replace` contract naming the owner parameter and appropriate mutation.
+package would also supply the mutable `Store` declaration and the remaining contracts for `view`
+and `replace`. The owner parameter and mutation clause locate the invalidator.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=mutable-borrow -->
 ```ail
-give($result, borrow(owner($store)));
-invalidated_by($result, [@replace]);
+fn view(store: Store) -> ptr<u8> {
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, [@replace]);
+  }
+  // Other callable contracts omitted.
+}
+
+fn replace(store: Store) -> unit {
+  mutation(arguments);
+  // Other callable contracts omitted.
+}
 ```
 
 Read the first fragment in two stages. During `view`, the caller keeps `store`
@@ -382,6 +503,22 @@ to the loaded API instance. A caller can use them while that instance remains
 loaded. The synthetic provider requires callers to stop using borrows before
 unload. AIL calls that region `static`; its end is defined by the provider
 ([`C1`](../contracts.md#c1), [`F1`](../profiles.md#f1)).
+
+Fragment — locates the static borrow on the synthetic constant. The complete
+[object package](../examples/objects.ail) supplies extent, contents, access and
+the remaining constant and package clauses.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=static-borrow -->
+```ail
+constant fixed_bytes: ptr<u8> {
+  give($result, borrow(static));
+  invalidated_by($result, []);
+  // Extent, contents, access and other constant clauses omitted.
+}
+```
+
+Here `$result` addresses the constant's obtained value. A constant's output
+clauses occur directly in its body ([`C7`](../contracts.md#c7)).
 
 The three regions therefore name different boundaries (non-normative summary):
 
@@ -423,40 +560,46 @@ Fragment — shows `create` succeeding or failing. The complete
 [buffer package](../examples/buffers.ail) supplies the containing declaration
 and its other contracts.
 
-<!-- ail-example: ../examples/buffers.ail lines=30-41 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=null-outcomes -->
 ```ail
-    outcome created {
-      when(returned, nonnull($result));
-      meaning(success);
-      state($result, valid);
-      give($result, owned);
-    }
-    outcome allocation_failed {
-      when(returned, null($result));
-      meaning(failure);
-      state($result, valid);
-      give($result, owned);
-    }
+fn create() -> nullable<Store> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  outcome allocation_failed {
+    when(returned, null($result));
+    meaning(failure);
+    state($result, valid);
+    give($result, owned);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows `copy_bytes` succeeding or failing. The complete
 [buffer package](../examples/buffers.ail) supplies the containing declaration
 and its other contracts.
 
-<!-- ail-example: ../examples/buffers.ail lines=121-132 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=status-outcomes -->
 ```ail
-    outcome copied {
-      when(returned, equal($result, true));
-      meaning(success);
-      state($result, valid);
-      state($destination[], valid);
-    }
-    outcome failed {
-      when(returned, equal($result, false));
-      meaning(failure);
-      state($result, valid);
-      state($destination[], invalid);
-    }
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  outcome copied {
+    when(returned, equal($result, true));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  outcome failed {
+    when(returned, equal($result, false));
+    meaning(failure);
+    state($result, valid);
+    state($destination[], invalid);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 The constructor's null is a valid, observable result representing failure. It
@@ -524,20 +667,26 @@ Fragment — shows the extent and contents of `view`'s bytes. The complete
 [buffer package](../examples/buffers.ail) supplies the declaration and its
 other contracts.
 
-<!-- ail-example: ../examples/buffers.ail lines=85-86 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=binary-buffer -->
 ```ail
-    extent($result, buffer(16, 16, elements));
-    contents($result, binary);
+fn view(store: Store) -> ptr<u8> {
+  extent($result, buffer(16, 16, elements));
+  contents($result, binary);
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows bounded UTF-8 text in a constructed example. A complete
-package would supply a callable returning `ptr<u8>`, its ownership and outcomes,
+package would supply `greeting`'s ownership and outcomes,
 and the synthetic fixture profile, catalogue and digest tokens supplying UTF-8.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=text-buffer -->
 ```ail
-extent($result, buffer(3, 4, elements));
-contents($result, text("utf-8", nul));
+fn greeting() -> ptr<u8> {
+  extent($result, buffer(3, 4, elements));
+  contents($result, text("utf-8", nul));
+  // Other callable contracts omitted.
+}
 ```
 
 The binary view has sixteen readable elements and no terminator convention.
@@ -573,6 +722,26 @@ contents, and `aliasing($destination, disjoint)` to prohibit overlap with other
 accessed memory. Its `mutptr<u8>` and `mutation(arguments)` agree with writing
 the buffer ([`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)).
 
+Fragment — locates writable storage facts in `copy_bytes`. The complete
+[buffer package](../examples/buffers.ail) supplies input obligations, the
+success/failure outcomes shown above and the remaining callable contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=output-storage -->
+```ail
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  mutation(arguments);
+  direction($destination, out);
+  aliasing($destination, disjoint);
+  extent($destination, buffer(16, 16, elements));
+  contents($destination, binary);
+  // Input, other effects, outcomes and access omitted.
+}
+```
+
+The type follows `destination:` in the signature; each `$destination` in the
+body addresses that same pointer parameter. Its `[]` output place, shown in
+the outcomes above, addresses the elements written through it.
+
 AIL separates storage bounds from how the caller interprets the bytes. That
 requires authors to supply length and capacity even for a familiar byte-pointer
 type. An alternative string contract could determine length by scanning for
@@ -598,6 +767,26 @@ whenever the API can invoke the handler. This is why AIL describes both an
 individual invocation and the schedule for using that callback
 ([`C2–C3`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
 
+Fragment — locates the signature and invocation clauses of the synthetic
+callback type. The complete [callback package](../examples/callbacks.ail)
+supplies `Handler`'s nominal, representation and remaining invocation contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=handler -->
+```ail
+callback Handler(value: u64) -> unit {
+  execution(sync);
+  concurrency(serial);
+  reentrancy(forbidden);
+  // Nominal, representation and remaining invocation contracts omitted.
+}
+```
+
+`callback Handler(...)` declares a type with a callable signature. The `value`
+parameter belongs to an invocation of that type. In `subscribe(handler: Handler)`
+below, `handler` is instead the function's parameter holding such a callback.
+`callback $handler { ... }` attaches a use schedule to that parameter; it
+introduces no new callback type ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+
 The synthetic `Handler` declaration describes one invocation. Its
 `execution(sync)` says that invocation completes before returning to its caller;
 its [`concurrency(serial)`](../glossary.md#concurrency) and
@@ -610,36 +799,42 @@ Fragment — shows the subscription's notification schedule. The complete
 [callback package](../examples/callbacks.ail) supplies `subscribe`, including
 its retention and outcome clauses.
 
-<!-- ail-example: ../examples/callbacks.ail lines=51-59 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=subscription-schedule -->
 ```ail
-    callback $handler {
-      timing(after_return);
-      count(0, many);
-      scope(owner($result));
-      executor(any);
-      concurrency(serial);
-      reentrancy(forbidden);
-      quiescence(@unsubscribe);
-    }
+fn subscribe(handler: Handler) -> Subscription {
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@unsubscribe);
+  }
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows a constructed call that invokes a handler within its own
-scope. A complete package would supply a synchronous callable with parameter
-`handler: Handler`, its other effects, outcome and access clauses.
+scope. A complete package would supply `Handler`, the operation's other effects, outcome and access clauses.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=call-schedule -->
 ```ail
-input($handler, borrow);
-retain($handler, none);
-valid($handler, call);
-callback $handler {
-  timing(during_call);
-  count(1, 1);
-  scope(call);
-  executor(any);
-  concurrency(serial);
-  reentrancy(forbidden);
-  quiescence(return);
+fn notify(handler: Handler) -> unit {
+  execution(sync);
+  input($handler, borrow);
+  retain($handler, none);
+  valid($handler, call);
+  callback $handler {
+    timing(during_call);
+    count(1, 1);
+    scope(call);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(return);
+  }
+  // Other callable contracts omitted.
 }
 ```
 
@@ -670,6 +865,23 @@ The retained handler belongs to the subscription's owner region. The
 are stored — their [representation](../glossary.md#representation) — and how
 that stored value is released ([`C3`](../contracts.md#c3),
 [`C6`](../contracts.md#c6), [`F1`](../profiles.md#f1)).
+
+Fragment — locates the teardown precondition. The complete
+[callback package](../examples/callbacks.ail) supplies the consuming input,
+outcome and other contracts of `unsubscribe`.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=outside-callback -->
+```ail
+fn unsubscribe(subscription: Subscription) -> unit {
+  requires(outside_callback(@subscribe::handler));
+  // Input, effects, outcome and access omitted.
+}
+```
+
+`@subscribe::handler` names the slot of the registration function from outside
+that function. Inside `subscribe`, `$handler` addresses the same parameter
+locally. `requires` takes the `outside_callback` constructor as its argument
+([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
 Use the callback timelines to find the point where the program knows the API
 has finished using the handler. In the constructed case, registration completes
@@ -727,31 +939,46 @@ Fragment — shows where callers can move and use a store. The complete
 [buffer package](../examples/buffers.ail) supplies `Store`, `view` and their
 other contracts.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=store-threads -->
 ```ail
-// Store
-sharing(transferable);
-isolation(none);
-// view
-executor(any);
-concurrency(serial);
-reentrancy(allowed);
+resource Store {
+  sharing(transferable);
+  isolation(none);
+  // Lifetime and other nominal contracts omitted.
+}
+fn view(store: Store) -> ptr<u8> {
+  executor(any);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows the counter's main-thread restriction. The complete
 [object package](../examples/objects.ail) supplies `Counter`, `read_count` and
 their other contracts.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=counter-threads -->
 ```ail
-// Counter
-sharing(confined);
-isolation(main);
-// read_count
-executor(main);
-concurrency(serial);
-reentrancy(allowed);
+object Counter {
+  sharing(confined);
+  isolation(main);
+  // Lifetime and other nominal contracts omitted.
+}
+fn read_count(receiver: Counter) -> u64 {
+  member(@Counter, instance);
+  receiver($receiver);
+  executor(main);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
 ```
+
+`Counter` and `read_count` are declarations at the same package level.
+`member(@Counter, instance)` associates the function with that object type;
+`receiver($receiver)` selects its ordinary named parameter as the receiver
+([`L2`](../language.md#l2), [`L5`](../language.md#l5)).
 
 In the first case, callers may enter on any executor but serialize independent
 calls using the same store. In the second, callers serialize independent calls
@@ -798,6 +1025,23 @@ That fixture fact describes a synthetic conformance state; a real Swift
 provider would need evidence from the actual source language and compiler
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
+Fragment — locates the synthetic source-conformance clause. The complete
+[object package](../examples/objects.ail) selects `fixture` and supplies the
+other nominal and package contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=sendability -->
+```ail
+object Counter {
+  fixture::sendability(nonconforming);
+  // Lifetime, sharing, isolation and other nominal contracts omitted.
+}
+```
+
+The `fixture::` prefix selects the profile's vocabulary; `sendability` is
+its clause name. The provider selection is introduced in
+[What it depends on](packages.md#what-it-depends-on)
+([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
+
 ## Lifecycles and patterns
 
 After obtaining an owned value, the caller needs to know how to release it.
@@ -811,15 +1055,21 @@ references.
 
 Fragment — compares unique destruction and reference counting. The complete
 [buffer](../examples/buffers.ail) and [object](../examples/objects.ail) packages
-supply the enclosing types and other contracts. `fixture` selects their
+supply the types' other contracts and the referenced destructor. `fixture` selects their
 synthetic profile, whose catalogue and digest tokens appear in those files.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=lifecycles -->
 ```ail
-// Store
-lifecycle(unique, @destroy);
-// Counter
-lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
+// In example::buffers:
+resource Store {
+  lifecycle(unique, @destroy);
+  // Other nominal contracts omitted.
+}
+// In example::objects:
+object Counter {
+  lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
+  // Other nominal contracts omitted.
+}
 ```
 
 The store's owned handle carries one destruction obligation. The counter can
@@ -858,8 +1108,9 @@ Fragment — connects `Store` to its destructor. The complete
 [buffer package](../examples/buffers.ail) supplies the participant declarations
 and their contracts.
 
-<!-- ail-example: ../examples/buffers.ail lines=140-148 -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=lifetime-pattern -->
 ```ail
+package example::buffers version "1" {
   pattern lifetime {
     role resource_type: type one;
     role release: operation one;
@@ -869,27 +1120,41 @@ and their contracts.
     bind(resource_type, [@Store]);
     bind(release, [@destroy]);
   }
+  // Header and remaining package context omitted.
+}
 ```
 
 A constructed ordering pattern instead requires a successful `prepare` before
 entry into `read_prepared`, on the same resource instance.
 
 Fragment — shows a constructed preparation-before-use relationship. A complete
-package would supply the resource and operation declarations with their
-contracts.
+package would supply `Store` and the operation contracts establishing
+successful preparation and restricting subsequent use. The signatures locate
+the subject slots; their comments are explanatory, not contract clauses.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=ordering-pattern -->
 ```ail
-pattern prepared_use {
-  role preparation: operation one;
-  role use: operation one;
-  law(before, preparation, use);
-}
-instance prepared_read: prepared_use {
-  bind(preparation, [@prepare]);
-  bind(use, [@read_prepared]);
-  subject(preparation, @prepare::store);
-  subject(use, @read_prepared::store);
+package example::prepared version "1" {
+  fn prepare(store: Store) -> unit {
+    // Successful preparation establishes the ordering precondition.
+    // Other callable contracts omitted.
+  }
+  fn read_prepared(store: Store) -> unit {
+    // Requires successful preparation of this same store.
+    // Other callable contracts omitted.
+  }
+  pattern prepared_use {
+    role preparation: operation one;
+    role use: operation one;
+    law(before, preparation, use);
+  }
+  instance prepared_read: prepared_use {
+    bind(preparation, [@prepare]);
+    bind(use, [@read_prepared]);
+    subject(preparation, @prepare::store);
+    subject(use, @read_prepared::store);
+  }
+  // Header and remaining package context omitted.
 }
 ```
 
@@ -947,20 +1212,26 @@ Fragment — shows synchronous execution with returned completion. A complete
 package supplies the containing callable and its other contracts, as in
 [`view`](../examples/buffers.ail).
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=sync -->
 ```ail
-execution(sync);
-completions([returned]);
+fn view(store: Store) -> ptr<u8> {
+  execution(sync);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
 ```
 
 Fragment — shows the asynchronous form. A complete package would need a
 profile defining suspension, scheduling and completion delivery, along with
 the callable's other contracts. Those semantics exceed the synthetic fixture.
 
-<!-- ail-fragment -->
+<!-- ail-example: ../examples/concepts/contracts.ail region=async -->
 ```ail
-execution(async);
-completions([returned]);
+fn fetch(store: Store) -> ptr<u8> {
+  execution(async);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
 ```
 
 The first completes before returning control. The second needs a profile to say

@@ -1,0 +1,382 @@
+// Independent explanatory fragments, not complete or concatenable packages.
+// Existing fixture extracts retain their contracts; constructed alternatives are labelled on the page.
+
+// region: watch-close
+package example::watch version "1" {
+  resource Watch {
+    // Lifetime and nominal contracts omitted.
+  }
+  fn watch_close(watch: Watch) -> unit {
+    execution(sync);
+    completions([returned]);
+    input($watch, consume);
+    outcome closed {
+      when(returned, any);
+      meaning(success);
+    }
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: view-borrow
+fn view(store: Store) -> ptr<u8> {
+  input($store, borrow);
+  valid($store, call);
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+}
+// endregion
+
+// region: pointee
+fn read_length(length: mutptr<u64>) -> unit {
+  extent($length, one);
+  outcome written {
+    when(returned, any);
+    meaning(success);
+    state($length.*, valid);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: buffer-place
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  extent($destination, buffer(16, 16, elements));
+  outcome copied {
+    when(returned, equal($result, true));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  // Failure outcome and other callable contracts omitted.
+}
+// endregion
+
+// region: entry-transfer
+fn view(store: Store) -> ptr<u8> {
+  input($store, borrow);
+  retain($store, none);
+  valid($store, call);
+  // Other callable contracts omitted.
+}
+
+fn destroy(store: Store) -> unit {
+  input($store, consume);
+  retain($store, none);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: output-transfer
+fn create() -> nullable<Store> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  // Null outcome and other callable contracts omitted.
+}
+
+fn view(store: Store) -> ptr<u8> {
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: retention
+fn subscribe(handler: Handler) -> Subscription {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: owner-borrow
+fn view(store: Store) -> ptr<u8> {
+  valid($store, call);
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: mutable-borrow
+fn view(store: Store) -> ptr<u8> {
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, [@replace]);
+  }
+  // Other callable contracts omitted.
+}
+
+fn replace(store: Store) -> unit {
+  mutation(arguments);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: null-outcomes
+fn create() -> nullable<Store> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  outcome allocation_failed {
+    when(returned, null($result));
+    meaning(failure);
+    state($result, valid);
+    give($result, owned);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: status-outcomes
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  outcome copied {
+    when(returned, equal($result, true));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  outcome failed {
+    when(returned, equal($result, false));
+    meaning(failure);
+    state($result, valid);
+    state($destination[], invalid);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: binary-buffer
+fn view(store: Store) -> ptr<u8> {
+  extent($result, buffer(16, 16, elements));
+  contents($result, binary);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: text-buffer
+fn greeting() -> ptr<u8> {
+  extent($result, buffer(3, 4, elements));
+  contents($result, text("utf-8", nul));
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: subscription-schedule
+fn subscribe(handler: Handler) -> Subscription {
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@unsubscribe);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: call-schedule
+fn notify(handler: Handler) -> unit {
+  execution(sync);
+  input($handler, borrow);
+  retain($handler, none);
+  valid($handler, call);
+  callback $handler {
+    timing(during_call);
+    count(1, 1);
+    scope(call);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(return);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: store-threads
+resource Store {
+  sharing(transferable);
+  isolation(none);
+  // Lifetime and other nominal contracts omitted.
+}
+fn view(store: Store) -> ptr<u8> {
+  executor(any);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: counter-threads
+object Counter {
+  sharing(confined);
+  isolation(main);
+  // Lifetime and other nominal contracts omitted.
+}
+fn read_count(receiver: Counter) -> u64 {
+  member(@Counter, instance);
+  receiver($receiver);
+  executor(main);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: lifecycles
+// In example::buffers:
+resource Store {
+  lifecycle(unique, @destroy);
+  // Other nominal contracts omitted.
+}
+// In example::objects:
+object Counter {
+  lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
+  // Other nominal contracts omitted.
+}
+// endregion
+
+// region: lifetime-pattern
+package example::buffers version "1" {
+  pattern lifetime {
+    role resource_type: type one;
+    role release: operation one;
+    law(releases, release, resource_type);
+  }
+  instance store_lifetime: lifetime {
+    bind(resource_type, [@Store]);
+    bind(release, [@destroy]);
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: ordering-pattern
+package example::prepared version "1" {
+  fn prepare(store: Store) -> unit {
+    // Successful preparation establishes the ordering precondition.
+    // Other callable contracts omitted.
+  }
+  fn read_prepared(store: Store) -> unit {
+    // Requires successful preparation of this same store.
+    // Other callable contracts omitted.
+  }
+  pattern prepared_use {
+    role preparation: operation one;
+    role use: operation one;
+    law(before, preparation, use);
+  }
+  instance prepared_read: prepared_use {
+    bind(preparation, [@prepare]);
+    bind(use, [@read_prepared]);
+    subject(preparation, @prepare::store);
+    subject(use, @read_prepared::store);
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: sync
+fn view(store: Store) -> ptr<u8> {
+  execution(sync);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: async
+fn fetch(store: Store) -> ptr<u8> {
+  execution(async);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: record-leaf
+record Created {
+  field code: u64;
+  field handle: Store;
+  // Nominal contracts omitted.
+}
+fn make_created() -> Created {
+  outcome created {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result.handle, owned);
+  }
+  // Other callable contracts omitted.
+}
+// endregion
+
+// region: static-borrow
+constant fixed_bytes: ptr<u8> {
+  give($result, borrow(static));
+  invalidated_by($result, []);
+  // Extent, contents, access and other constant clauses omitted.
+}
+// endregion
+
+// region: handler
+callback Handler(value: u64) -> unit {
+  execution(sync);
+  concurrency(serial);
+  reentrancy(forbidden);
+  // Nominal, representation and remaining invocation contracts omitted.
+}
+// endregion
+
+// region: outside-callback
+fn unsubscribe(subscription: Subscription) -> unit {
+  requires(outside_callback(@subscribe::handler));
+  // Input, effects, outcome and access omitted.
+}
+// endregion
+
+// region: sendability
+object Counter {
+  fixture::sendability(nonconforming);
+  // Lifetime, sharing, isolation and other nominal contracts omitted.
+}
+// endregion
+
+// region: output-storage
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  mutation(arguments);
+  direction($destination, out);
+  aliasing($destination, disjoint);
+  extent($destination, buffer(16, 16, elements));
+  contents($destination, binary);
+  // Input, other effects, outcomes and access omitted.
+}
+// endregion

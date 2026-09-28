@@ -1,0 +1,87 @@
+// Independent explanatory fragments, not complete or concatenable packages.
+
+// region: buffers-3
+package example::buffers version "1" {
+  surface("A synthetic immutable sixteen-byte store and its complete lifetime API.");
+  exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: buffers-7
+package example::buffers version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Store {
+    available([test]);
+    // Other nominal contracts omitted.
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: objects-7
+package example::objects version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+    toolchain("fixture-compiler", "1");
+  }
+  object Counter {
+    available([test]);
+    // Other nominal contracts omitted.
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: objects-44
+package example::objects version "1" {
+  fn read_count(receiver: Counter) -> u64 {
+    member(@Counter, instance);
+    receiver($receiver);
+    access objc_like in [test] {
+      abi(native, "object-message");
+      via(fixture, "message", "currentCount");
+      mapping(identity);
+      compatibility(stable);
+    }
+    access swift_like in [test] {
+      abi(native, "source");
+      via(fixture, "source-call", "Outer.Counter.currentCount.get");
+      mapping(identity);
+      compatibility(source, "fixture-build");
+    }
+    // Input, effects and outcome omitted.
+  }
+  // Header and remaining package context omitted.
+}
+// endregion
+
+// region: providers
+package example::buffers version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  // Header, environment, declarations and publication clauses omitted.
+}
+// endregion
+
+// region: data-access
+constant fixed_bytes: ptr<u8> {
+  access direct in [test] {
+    via(fixture, "address", "fixture_fixed_bytes");
+    // ABI, mapping and compatibility omitted.
+  }
+  // Output and other constant clauses omitted.
+}
+global pointer_value: ptr<u8> {
+  mutable(false);
+  access direct in [test] {
+    via(fixture, "load", "fixture_pointer_value");
+    // ABI, mapping and compatibility omitted.
+  }
+  // Output and other global clauses omitted.
+}
+// endregion

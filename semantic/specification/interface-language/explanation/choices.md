@@ -23,12 +23,73 @@ store's lifetime. `invalidated_by` names operations that end access earlier.
 Those spellings, and the decision to separate the two facts, are language
 choices ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
+Fragment — locates that promise in the synthetic immutable store's `view`.
+The complete [buffer package](../examples/buffers.ail) supplies `Store`, its
+lifetime, package context, effects, pointer extent and access path. Its
+profile, ABI catalogue and digest tokens are synthetic ([`F1`](../profiles.md#f1)).
+
+<!-- ail-example: ../examples/concepts/choices.ail region=borrow -->
+```ail
+fn view(store: Store) -> ptr<u8> {
+  input($store, borrow);
+  valid($store, call);
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Retention, remaining effects, extent, contents and access omitted.
+}
+```
+
+The signature names a `Store` parameter and a pointer-to-byte result.
+Inside its braces, `$store` addresses the input and `$result` the return
+value. `outcome viewed` contains the returned obligations; `give` supplies
+borrowing within the owner's lifetime, and the empty `[]` list records no
+earlier invalidator. The full function later on this page shows the cost of
+stating all the other facts too ([`C1`](../contracts.md#c1),
+[`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
 The same distinction applies to a [callback](../glossary.md#callback). Its
 saved values, or [captures](../glossary.md#callback-captures), stay usable while
 an invocation can still need them. An API can promise that teardown waits for
 all callback use to finish. AIL expresses that particular promise with
 [`quiescence(@unsubscribe)`](../glossary.md#quiescence)
 ([`C6`](../contracts.md#c6)).
+
+Fragment — locates the callback schedule inside the synthetic registration
+operation. The complete [callback package](../examples/callbacks.ail) supplies
+`Handler`, `Subscription`, its destructor `unsubscribe`, and the remaining
+contracts, including retention in the same owner region.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=callback -->
+```ail
+fn subscribe(handler: Handler) -> Subscription {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@unsubscribe);
+  }
+  // Effects, outcome and access omitted.
+}
+```
+
+`callback $handler` locates the schedule on `subscribe`'s parameter.
+`@unsubscribe` names a separate declaration: the destructor that ends all
+callback use before returning. `scope(owner($result))` ties the schedule to
+the returned subscription. The `retain` clause keeps a strong reference to
+the handler for that same owner region. `count(0, many)` states a known permission for zero
+or more invocations, conditional on eventual scope end; it supplies no promise
+that a notification will arrive ([`C6`](../contracts.md#c6)).
 
 This page distinguishes the domain requirement, the API's promise and AIL's
 way of stating it. The benefits and costs below assess the published design.
@@ -116,6 +177,29 @@ The author supplies enough information to create, use and destroy that store.
 An unrelated storage API can remain outside the chosen surface
 ([`L3`](../language.md#l3)).
 
+Fragment — locates publication claims and a lifetime dependency at package
+level. The complete [buffer package](../examples/buffers.ail) supplies the
+exported declarations and their contracts, environment and synthetic providers.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=publication -->
+```ail
+package example::buffers version "1" {
+  surface("A synthetic immutable sixteen-byte store and its complete lifetime API.");
+  exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
+  resource Store {
+    lifecycle(unique, @destroy);
+    // Other nominal contracts omitted.
+  }
+  // Header, dependencies, environment and remaining declarations omitted.
+}
+```
+
+`surface` states the subset; `exports` lists public starting declarations.
+Each `@` reference selects a declaration in this package. Following
+`lifecycle(unique, @destroy)` leads from the resource to its destructor.
+The shorter extract leaves that declaration off the page, while the complete
+package includes it ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
+
 The returned view still needs a lifetime. If its ownership clause is missing,
 a reader cannot tell whether to release the bytes or how long to borrow them.
 That gap lies inside the promised description. Publishing a smaller surface
@@ -161,6 +245,29 @@ the author has established that use belongs on the main thread and writes
 `isolation(main)`. Both clauses answer the same question about
 [isolation](../glossary.md#isolation). Omitting a required clause leaves the
 question unanswered ([`L3`](../language.md#l3), [`C2`](../contracts.md#c2)).
+
+Fragment — locates the two isolation facts on their nominal declarations.
+The complete [buffer](../examples/buffers.ail) and [object](../examples/objects.ail)
+packages supply their other contracts and synthetic dependencies.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=isolation -->
+```ail
+resource Store {
+  sharing(transferable);
+  isolation(none);
+  // Lifetime and other nominal contracts omitted.
+}
+object Counter {
+  sharing(confined);
+  isolation(main);
+  // Lifetime and other nominal contracts omitted.
+}
+```
+
+The store's `sharing(transferable)` permits moving sole ownership between
+executors. The counter's `sharing(confined)` restricts use to its declared
+executor, here `main`; the operation contracts also respect that restriction
+([`C2–C3`](../contracts.md#c2)).
 
 The same distinction applies to [retention](../glossary.md#retention).
 `view` promises to store no reference for later use through
@@ -251,6 +358,19 @@ Consider two operations taking a store. `view` lets the caller keep ownership;
 `store: Store` in both signatures and distinguishes them with `input` clauses
 in their bodies ([`C3`](../contracts.md#c3)).
 
+Fragment — locates consumption in the synthetic store's destructor.
+The complete [buffer package](../examples/buffers.ail) supplies the remaining
+contracts; compare `view`'s located borrow above.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=consume -->
+```ail
+fn destroy(store: Store) -> unit {
+  input($store, consume);
+  retain($store, none);
+  // Effects, successful outcome and access omitted.
+}
+```
+
 An alternative notation could put `borrow` or `consume` next to the parameter
 type. It could also put `borrow` in the result type, as illustrated below.
 This example describes a hypothetical mutable store: `replace` can end an
@@ -319,6 +439,19 @@ In summary (non-normative), a parser can recognize the common clause shape.
 A validator also checks that the clause name is defined and that its arguments
 and location satisfy the rules ([`L1`](../language.md#l1), [`L5`](../language.md#l5)).
 
+The clause railroad makes this split visible. In `input($store, borrow);`,
+`input` fills `name` and the arguments are a place and a bare name. In
+`extent($result, buffer(16, 16, elements));`, `buffer(...)` is one constructor
+argument. Its commas and parentheses sit inside the outer clause.
+
+![Railroads for clauses and their values show the same outer name-and-arguments form for core and profile clauses.](../figures/g10-clause.svg)
+
+**Reading key:** read open to filled circle. Square boxes spell literal tokens;
+rounded boxes name productions or lexical tokens. Bypasses permit omission,
+forks choose alternatives and return arrows repeat a path. The diagram admits
+`fixture::invented(true);` as a shape too; the fixture's closed vocabulary
+rejects it. [Railroad source](../figures/g10-clause.puml).
+
 Clause-specific grammar productions are an alternative. The uniform form gives
 core and profile clauses one outer syntax, but costs discoverability: reading
 the grammar does not reveal required clauses, their scopes or companions.
@@ -336,6 +469,29 @@ version `1`. The object author adds `fixture-compiler` version `1`, needed for
 the source-call route. A tool uses these values to decide which described
 configuration it is examining ([`L3`](../language.md#l3),
 [environment examples](packages.md#where-it-holds)).
+
+Fragment — locates one exact environment and its use on a declaration.
+The complete [buffer package](../examples/buffers.ail) supplies publication,
+providers, the function's contract and the other declarations.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=environment -->
+```ail
+package example::buffers version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  fn view(store: Store) -> ptr<u8> {
+    available([test]);
+    // Other callable contracts omitted.
+  }
+  // Header, dependencies, publication and remaining declarations omitted.
+}
+```
+
+The braces under `environment test` contain its configuration clauses.
+`available([test])` selects that environment by its local name. The provider
+interprets the exact target and platform values ([`L3`](../language.md#l3)).
 
 Now consider a consumer running on platform version `2`. An exact claim for
 version `1` supplies no answer about that configuration. A range such as
@@ -368,10 +524,62 @@ A single “thread-safe” flag would leave the reader unable to distinguish
 permission to overlap calls from a source conformance state
 ([`C2–C3`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
+Fragment — locates the profile fact on the synthetic object and the core
+concurrency fact on its member function. The complete
+[object package](../examples/objects.ail) supplies the `fixture` selection,
+other nominal contracts, function effects, outcomes and access paths.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=profile -->
+```ail
+package example::objects version "1" {
+  object Counter {
+    fixture::sendability(nonconforming);
+    // Other nominal contracts omitted.
+  }
+  fn read_count(receiver: Counter) -> u64 {
+    member(@Counter, instance);
+    receiver($receiver);
+    concurrency(serial);
+    // Input, remaining effects, outcome and access omitted.
+  }
+  // Header, provider pins, environment and publication context omitted.
+}
+```
+
+`fixture::sendability` selects vocabulary from the named profile.
+`member(@Counter, instance)` associates the package-level function with
+`Counter`, and `receiver($receiver)` chooses its ordinary named parameter.
+The conformance fact belongs to the object; concurrency governs calls using
+that receiver ([`L5`](../language.md#l5), [`C2–C3`](../contracts.md#c2),
+[`F1`](../profiles.md#f1)).
+
 Similarly, `execution(sync)` has a core meaning, while `execution(async)` needs
 a profile defining suspension, scheduling and completion delivery. The latter
 is recognized vocabulary but exceeds the synthetic fixture's capabilities
 ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1)).
+
+Fragment — compares execution clauses inside two callable bodies. `view`
+is from the synthetic [buffer package](../examples/buffers.ail). The constructed
+`fetch` needs a different profile with asynchronous semantics; a complete
+package would also supply its input, output, access and other contracts.
+
+<!-- ail-example: ../examples/concepts/choices.ail region=execution -->
+```ail
+fn view(store: Store) -> ptr<u8> {
+  execution(sync);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
+fn fetch(store: Store) -> ptr<u8> {
+  execution(async);
+  completions([returned]);
+  // Requires an asynchronous profile and the remaining callable contracts.
+}
+```
+
+Both list a returned completion; the profile for `fetch` would define how
+that completion reaches the caller after suspension. This fragment asserts
+no delivery or termination guarantee ([`C3`](../contracts.md#c3)).
 
 In summary (non-normative), profiles add versioned, typed semantics and specify
 their validation and representation requirements. They cannot weaken the core.

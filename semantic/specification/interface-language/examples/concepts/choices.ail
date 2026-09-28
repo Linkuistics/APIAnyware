@@ -1,0 +1,110 @@
+// Independent explanatory fragments, not complete or concatenable packages.
+
+// region: borrow
+fn view(store: Store) -> ptr<u8> {
+  input($store, borrow);
+  valid($store, call);
+  outcome viewed {
+    when(returned, any);
+    meaning(success);
+    state($result, valid);
+    give($result, borrow(owner($store)));
+    invalidated_by($result, []);
+  }
+  // Retention, remaining effects, extent, contents and access omitted.
+}
+// endregion
+
+// region: callback
+fn subscribe(handler: Handler) -> Subscription {
+  input($handler, borrow);
+  retain($handler, strong(owner($result)));
+  valid($handler, call);
+  callback $handler {
+    timing(after_return);
+    count(0, many);
+    scope(owner($result));
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    quiescence(@unsubscribe);
+  }
+  // Effects, outcome and access omitted.
+}
+// endregion
+
+// region: publication
+package example::buffers version "1" {
+  surface("A synthetic immutable sixteen-byte store and its complete lifetime API.");
+  exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
+  resource Store {
+    lifecycle(unique, @destroy);
+    // Other nominal contracts omitted.
+  }
+  // Header, dependencies, environment and remaining declarations omitted.
+}
+// endregion
+
+// region: consume
+fn destroy(store: Store) -> unit {
+  input($store, consume);
+  retain($store, none);
+  // Effects, successful outcome and access omitted.
+}
+// endregion
+
+// region: environment
+package example::buffers version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  fn view(store: Store) -> ptr<u8> {
+    available([test]);
+    // Other callable contracts omitted.
+  }
+  // Header, dependencies, publication and remaining declarations omitted.
+}
+// endregion
+
+// region: profile
+package example::objects version "1" {
+  object Counter {
+    fixture::sendability(nonconforming);
+    // Other nominal contracts omitted.
+  }
+  fn read_count(receiver: Counter) -> u64 {
+    member(@Counter, instance);
+    receiver($receiver);
+    concurrency(serial);
+    // Input, remaining effects, outcome and access omitted.
+  }
+  // Header, provider pins, environment and publication context omitted.
+}
+// endregion
+
+// region: execution
+fn view(store: Store) -> ptr<u8> {
+  execution(sync);
+  completions([returned]);
+  // Other callable contracts omitted.
+}
+fn fetch(store: Store) -> ptr<u8> {
+  execution(async);
+  completions([returned]);
+  // Requires an asynchronous profile and the remaining callable contracts.
+}
+// endregion
+
+// region: isolation
+resource Store {
+  sharing(transferable);
+  isolation(none);
+  // Lifetime and other nominal contracts omitted.
+}
+object Counter {
+  sharing(confined);
+  isolation(main);
+  // Lifetime and other nominal contracts omitted.
+}
+// endregion

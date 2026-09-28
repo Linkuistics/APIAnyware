@@ -26,51 +26,184 @@ The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-descriptio
 shows how a package reaches the tools that use it. This page looks inside the
 package, then follows how a tool identifies and reaches an API operation.
 
-## Four identities
+## Packages contain declarations
 
-Suppose a binding generator is preparing a call to the synthetic counter's
-`read_count`. The contract tells it to [borrow](../glossary.md#borrow) a `Counter` receiver and return
-an unsigned integer. The generator identifies that operation by its package,
-version and declaration name. Together these form its
-[canonical declaration identity](../glossary.md#canonical-identity)
+Start with an invented geometry API that describes a point. The document's
+`language` header selects AIL's version; `package` names the API description
+and its version. Braces contain the package's declarations and clauses.
+Here `Point` is a record declaration, and its two `field` lines name the
+coordinates. The colon puts a type after each field name; `i32` is a signed
+32-bit integer ([`L1`](../language.md#l1), [`L4`](../language.md#l4)).
+
+Fragment — shows a package shell and record. Publication clauses, environments,
+availability and nominal contracts are omitted.
+
+<!-- ail-example: ../examples/rule-reading/geometry.ail -->
+```ail
+// Fragment: field structure only; no complete publication contract.
+language "0.1";
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Publication, environments and nominal contracts omitted.
+  }
+}
+```
+
+`Point` is local to `example::geometry`: that package contains its definition.
+A second package, `example::canvas`, needs points to describe a canvas's
+position. It imports geometry under the alias `Geometry`. When reading the
+canvas package, `Geometry::Point` therefore names an imported type
 ([`L2`](../language.md#l2)).
 
-To reach the implementation, the generator chooses one of two
-[access paths](../glossary.md#access-path). The path named `objc_like` asks the
-synthetic runtime to send the message `currentCount` to the receiver. The path
-named `swift_like` asks a source compiler to build a call to
-`Outer.Counter.currentCount.get`. Either path implements the same getter
-contract ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
+The model shows the packages first, then their declarations and callable
+slots. A [slot](../glossary.md#slot) is a parameter or result position in a callable's signature.
+`Canvas` is a resource, an opaque handle with its own lifetime contract.
+`position` receives that handle and returns a point. The diagram also shows
+`Filter`, a callback that receives a point and returns a Boolean; its
+[declaration example](../language.md#reading-aid-non-normative-names-references-and-callable-slots)
+uses the same import ([`L2`](../language.md#l2), [`L4`](../language.md#l4)).
 
-The package also records `Outer.Counter` as the type's
-[source identity](../glossary.md#source-identity). A source identity connects
-the AIL declaration to the declaration named in a source language. The access
-path supplies the further information needed to use its implementation.
-Finally, `fixture` and `native` select the definitions that tell tools how to
-interpret these names and arrange the call ([`L5`](../language.md#l5),
-[`A1–A2`](../profiles.md#a1)).
+![The canvas package contains Canvas, position and Filter; the geometry package contains Point. An import names geometry as Geometry. position and Canvas are sibling declarations joined by a member relation. Each callable contains its own parameter and result slots.](../figures/g9-model.svg)
 
-The getter separates four kinds of identity:
+**Reading key:** folders group declarations by package and version. Boxes
+contain fields or signature slots. Labelled arrows connect packages through
+imports and functions to their nominal owners through `member`.
+`position` and `Canvas` sit side by side in the package; the member arrow
+associates them. Follow the result type through `Geometry` to `Point`.
+[Model source](../figures/g9-model.puml).
 
-| Identity | What it identifies | Synthetic example |
+Fragment — shows the canvas import and member. The zero digest is a placeholder,
+not the geometry document's hash. A complete package needs actual dependency
+bytes and their digest, publication and environment clauses, the resource's
+lifetime and other contracts, and the function's remaining effects, outcomes
+and access paths.
+
+<!-- ail-example: ../examples/rule-reading/canvas.ail region=model -->
+```ail
+language "0.1";
+package example::canvas version "1" {
+  import example::geometry version "1"
+    digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    as Geometry;
+  resource Canvas {
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Effects, outcomes, access and publication context omitted.
+  }
+}
+```
+
+`fn` introduces the function, parentheses contain its named parameters, and
+`->` precedes its result type. The `member` clause associates `position` with
+the local declaration `Canvas`; `@Canvas` selects that declaration as a clause
+argument. `receiver($canvas)` chooses the ordinary parameter named `canvas`
+as the instance receiver. The remaining displayed clauses say that the caller
+lends it for the call and the callee retains nothing afterwards
+([`L5`](../language.md#l5), [`C3`](../contracts.md#c3)).
+
+Inside `position`, `$canvas` addresses its parameter value. From elsewhere in
+the package, `@position::canvas` identifies that parameter slot and
+`@position::result` identifies its returned point. Each spelling has a
+containing context ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)):
+
+| Spelling in the canvas package | Referent |
+|---|---|
+| `@Canvas`, `@position` | Local declarations |
+| `@Geometry::Point` | The declaration in the imported geometry package |
+| `@position::canvas`, `@position::result` | Parameter and result slots of `position` |
+| `$canvas`, `$result` inside `position` | Values addressed locally by that function's clauses |
+| `Canvas`, `Geometry::Point` in the signature | Types, written without `@` |
+
+The same `::` punctuation separates the parts of a package name, an import
+alias from a declaration name, or a callable name from a slot name. Follow
+the containing declaration and import to determine which relationship applies.
+The railroad below shows the shared spelling; L2 supplies name resolution.
+
+![Railroads for import, reference and name: imports select a package and pin before introducing an alias; a reference starts with an at sign and a qualified name.](../figures/g10-names.svg)
+
+**Reading key:** read from open to filled circle. Square boxes are literal
+tokens, rounded boxes are productions or lexical tokens, and return arrows
+repeat a path. In `import`, use `example::geometry` for `name` and `Geometry`
+for the alias. In `reference`, `@Canvas` uses a single identifier;
+`@Geometry::Point` and `@position::result` each take one `::` repetition.
+The grammar gives both references the same shape; their different meanings
+come from the model above. [Railroad source](../figures/g10-names.puml) ·
+[Package-shell railroad](../language.md#reading-aid-non-normative-a-document-contains-a-package).
+
+## Four identities
+
+The canvas member's [canonical declaration identity](../glossary.md#canonical-identity) is
+`(example::canvas, "1", position)`. The imported record's identity is
+`(example::geometry, "1", Point)`. Renaming the alias `Geometry` to `Geo`
+changes the canvas package's spelling for `Point`, while the record keeps its
+defining package, version and declaration name ([`L2`](../language.md#l2)).
+
+A binding generator also needs a way to reach code implementing `position`.
+In this constructed extension of the example, the source declaration is named
+`Canvas.position`, and a linker symbol named `canvas_position` exposes the call.
+AIL gives those names different jobs ([`L5`](../language.md#l5),
+[`A2`](../profiles.md#a2)).
+
+Fragment — locates source and access names on the same canvas function.
+The synthetic fixture profile and ABI catalogue interpret the displayed call.
+A complete package would supply their pins, the `test` environment, imports,
+`Canvas`, member and receiver clauses, and the remaining contracts. This is
+not an additional complete conformance example.
+
+<!-- ail-example: ../examples/rule-reading/canvas.ail region=spellings -->
+```ail
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    source(fixture, "Canvas.position");
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "canvas_position");
+      mapping(identity);
+      compatibility(stable);
+    }
+    // Member, receiver and callable contracts omitted.
+  }
+  // Header, imports, providers, environment and Canvas omitted.
+}
+```
+
+`source(fixture, "Canvas.position")` records the source declaration's name.
+`access direct in [test]` names one way to call it in environment `test`.
+Inside that block, `via` gives the profile's mechanism (`symbol`) and the
+linker identity (`canvas_position`). `abi` selects convention `c` within the
+ABI entry named `native`. The aliases `fixture` and `native` select versioned
+definitions, introduced under [dependencies](#what-it-depends-on).
+[Reaching the code](#reaching-the-code) explains the four access clauses and
+compares two paths for another API ([`A1–A2`](../profiles.md#a1)).
+
+The four identities answer different questions:
+
+| Identity | Question | Example |
 |---|---|---|
-| Semantic declaration | The operation or type in the contract | `example::objects`, version `1`, declaration `read_count` |
-| [Source declaration](../glossary.md#source-identity) | A declaration as a source profile names it | `source(fixture, "Outer.Counter")` on `Counter` |
-| [Access path](../glossary.md#access-path) | A named way to reach code, with its access identity | `objc_like` uses selector `currentCount`; `swift_like` uses source callable `Outer.Counter.currentCount.get` |
-| [ABI](../glossary.md#abi) or profile selection | The versioned definition that interprets a path or source fact | `native` selects `example.fixture-abi` version `1`; `fixture` selects `example.fixture` version `1`, each with a synthetic digest token |
+| Semantic declaration | Which contract is this? | `(example::canvas, "1", position)` |
+| [Source declaration](../glossary.md#source-identity) | Which source declaration does it describe? | `source(fixture, "Canvas.position")` |
+| [Access path](../glossary.md#access-path) | Which named route reaches its code? | `direct`, using symbol `canvas_position` |
+| [ABI](../glossary.md#abi) or profile selection | Which definitions interpret the names and call? | `native` selects the fixture ABI; `fixture` selects the fixture profile |
 
-The synthetic [buffer example](../examples/buffers.ail) has a simpler case:
-`view` has one path naming the linker symbol `fixture_store_view`. A tool can
-therefore identify the operation as `view` while using a different name to
-locate its code. In summary (non-normative), declaration identity tells tools
-which contract they are using; an access path tells them how to reach code
-that implements it ([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
+A source name identifies a declaration under a profile's rules. An access
+path supplies the mechanism for reaching its implementation. A different
+linker symbol could implement the same contract; it would be another access
+identity, while the package/version/declaration tuple stays the same
+([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
-These distinctions let two access mechanisms implement one contract without
-giving that contract two identities. AIL chooses explicit names over inferring
-identity and dispatch from source spelling. The cost is more names to author
-and relate. The synthetic getter illustrates the separation; its names do not
-establish actual Swift or Objective-C support ([`F1`](../profiles.md#f1)).
+AIL chooses explicit names over inferring identity and dispatch from source
+spelling. The cost is more names to author and relate. The complete synthetic
+[object example](../examples/objects.ail) illustrates the benefit with two
+paths to one counter getter. Its names resembling Swift and Objective-C remain
+synthetic; they establish no production support ([`F1`](../profiles.md#f1)).
 
 ## What a package claims
 
@@ -86,10 +219,13 @@ Fragment — shows the claimed surface and public declarations. The complete
 [environment](../glossary.md#environment), and the synthetic fixture profile,
 catalogue and digest tokens.
 
-<!-- ail-example: ../examples/buffers.ail lines=3-4 -->
+<!-- ail-example: ../examples/concepts/packages.ail region=buffers-3 -->
 ```ail
+package example::buffers version "1" {
   surface("A synthetic immutable sixteen-byte store and its complete lifetime API.");
   exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
+  // Header and remaining package context omitted.
+}
 ```
 
 The `exports` list names the declarations the package presents publicly.
@@ -154,25 +290,39 @@ Fragment — shows the buffer API's configuration. The complete
 [buffer package](../examples/buffers.ail) supplies its declarations and
 synthetic fixture dependencies.
 
-<!-- ail-example: ../examples/buffers.ail lines=7-10 -->
+<!-- ail-example: ../examples/concepts/packages.ail region=buffers-7 -->
 ```ail
+package example::buffers version "1" {
   environment test {
     target("fixture64");
     platform("fixture", "1");
   }
+  resource Store {
+    available([test]);
+    // Other nominal contracts omitted.
+  }
+  // Header and remaining package context omitted.
+}
 ```
 
 Fragment — shows the object API's configuration, including its compiler. The
 complete [object package](../examples/objects.ail) supplies its declarations
 and synthetic fixture dependencies.
 
-<!-- ail-example: ../examples/objects.ail lines=7-11 -->
+<!-- ail-example: ../examples/concepts/packages.ail region=objects-7 -->
 ```ail
+package example::objects version "1" {
   environment test {
     target("fixture64");
     platform("fixture", "1");
     toolchain("fixture-compiler", "1");
   }
+  object Counter {
+    available([test]);
+    // Other nominal contracts omitted.
+  }
+  // Header and remaining package context omitted.
+}
 ```
 
 Both authors used the local name `test`, but the second configuration includes
@@ -204,15 +354,36 @@ profile-defined capability test for the receiver ([`C3`](../contracts.md#c3)).
 
 Suppose an author puts the store declarations in one package and wants another
 package to use them. The second package can [import](../glossary.md#import)
-the first, selecting its package name, version and exact contents. An alias
-such as `StoreAPI` then lets the author refer to `StoreAPI::Store`. This is a
-constructed arrangement; the committed synthetic examples define their types
-locally ([`L2`](../language.md#l2)).
+the first, selecting its package name, version and exact contents. The canvas
+example uses the same arrangement for points:
+`import example::geometry ... as Geometry` gives it the spelling
+`Geometry::Point`. The store and counter conformance packages instead define
+their types locally ([`L2`](../language.md#l2)).
 
 The examples do share definitions for their extensions and machine-level
 calling rules. `use profile` selects the fixture profile under the alias
 `fixture`; `use abi` selects the ABI entry under `native`. These selections
 give a tool the rules it needs to interpret clauses and prepare calls
+([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
+
+Fragment — locates both provider selections inside the buffer package.
+The complete [buffer package](../examples/buffers.ail) supplies the environment,
+declarations and publication clauses. The repeated `a` and `b` digits are
+F1's synthetic test tokens, distinct from the canvas import's zero placeholder.
+
+<!-- ail-example: ../examples/concepts/packages.ail region=providers -->
+```ail
+package example::buffers version "1" {
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  // Header, environment, declarations and publication clauses omitted.
+}
+```
+
+In each selection, the alias before `=` is the local name used by later
+clauses. The quoted identifier, version and digest after it identify the
+external definition. `use profile` and `use abi` select different kinds of
+provider; `import` instead selects another API package
 ([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
 
 Version names alone leave room for different contents to appear under the same
@@ -237,7 +408,7 @@ dependency and which bytes its digest fixes.
 | Profile selection | Profile identifier and version | Profile provider manifest |
 | ABI selection | ABI identifier and version | ABI provider manifest |
 
-Two importing packages can use different aliases for the same store package
+Two importing packages can use `Geometry` and `Geo` for the same geometry package
 and select the same bytes. Their local spelling differs while their dependency
 agrees. If they instead select different digests for that same package name
 and version, a [consumer](../glossary.md#consumer) would receive two competing definitions of one
@@ -276,8 +447,12 @@ Fragment — shows the getter's two call paths. The complete
 [object package](../examples/objects.ail) supplies `read_count` and its contract,
 plus the synthetic fixture profile, catalogue and digest tokens.
 
-<!-- ail-example: ../examples/objects.ail lines=44-55 -->
+<!-- ail-example: ../examples/concepts/packages.ail region=objects-44 -->
 ```ail
+package example::objects version "1" {
+  fn read_count(receiver: Counter) -> u64 {
+    member(@Counter, instance);
+    receiver($receiver);
     access objc_like in [test] {
       abi(native, "object-message");
       via(fixture, "message", "currentCount");
@@ -290,6 +465,10 @@ plus the synthetic fixture profile, catalogue and digest tokens.
       mapping(identity);
       compatibility(source, "fixture-build");
     }
+    // Input, effects and outcome omitted.
+  }
+  // Header and remaining package context omitted.
+}
 ```
 
 Read the first block as instructions to the consumer about the call. `abi`
@@ -369,6 +548,19 @@ priority. Native calling algorithms are outside this view.
 [Package context](#what-a-package-claims) ·
 [How tools use a published package](../README.md#who-writes-and-uses-an-ail-description)
 
+The access railroad locates these clauses inside the function body. For the
+first path, `objc_like` fills the path-name `identifier`, and `test` fills the
+first environment identifier inside brackets. The braced body then repeats
+`clause`. Choose `swift_like` for the second path's name.
+
+![The access railroad shows a path name, a nonempty environment list and a braced sequence of clauses.](../figures/g10-access.svg)
+
+**Reading key:** square boxes are literal tokens; rounded boxes name
+productions or lexical tokens. Follow open to filled circle; return arrows
+repeat environments or clauses. The syntax track permits a sequence of
+clauses; A2 requires the four particular clauses shown above and determines
+where a path applies. [Railroad source](../figures/g10-access.puml).
+
 Data access needs an equally concrete action. The synthetic `fixed_bytes`
 names an array: a consumer obtains the address of that array's storage.
 `pointer_value` names a variable containing a pointer: a consumer reads the
@@ -377,7 +569,36 @@ different action at the symbol in each case
 ([`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1);
 [object example](../examples/objects.ail)).
 
-The access mechanism tells the consumer which of these actions to perform.
+Fragment — locates the two mechanisms on their data declarations. The complete
+[object package](../examples/objects.ail) supplies static-borrow, extent,
+contents and other output clauses, the three remaining clauses in each access
+block, and the package context with synthetic providers.
+
+<!-- ail-example: ../examples/concepts/packages.ail region=data-access -->
+```ail
+constant fixed_bytes: ptr<u8> {
+  access direct in [test] {
+    via(fixture, "address", "fixture_fixed_bytes");
+    // ABI, mapping and compatibility omitted.
+  }
+  // Output and other constant clauses omitted.
+}
+global pointer_value: ptr<u8> {
+  mutable(false);
+  access direct in [test] {
+    via(fixture, "load", "fixture_pointer_value");
+    // ABI, mapping and compatibility omitted.
+  }
+  // Output and other global clauses omitted.
+}
+```
+
+`constant` names a value; `global` names storage, even with `mutable(false)`.
+Here both types are pointers to bytes. `address` obtains the array storage's
+address, while `load` reads the pointer value held at its symbol. The chosen
+mechanism tells the consumer which action supplies the value
+([`L5`](../language.md#l5), [`C7`](../contracts.md#c7), [`A3`](../profiles.md#a3)).
+
 
 | Synthetic declaration | Access obtains | Result type |
 |---|---|---|
