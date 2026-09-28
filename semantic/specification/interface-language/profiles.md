@@ -71,7 +71,17 @@ an unsupported mechanism can still have recognisable syntax, but the
 cannot claim complete validation. The supplied definition must explain the
 mechanism's meaning as well as its spelling ([A1](#a1)).
 
-<!-- figure-slot: G10-dependency; dependency production, use profile versus use abi -->
+![Dependency railroad: use selects profile or abi, followed by an alias, identifier string, version string and digest string.](figures/g10-dependency.svg)
+
+Use the `profile` branch for `fixture` and the `abi` branch for `native` in
+the fragment. In each path, the first `identifier` is the local alias; the
+three `string` positions supply the external identifier, version and digest.
+**Reading key:** square boxes are literal tokens and rounded boxes name
+lexical tokens. Start at the open circle, choose one branch and follow the
+track to the filled circle. The [package shell](language.md#l1) places each
+dependency among the package's items. F1 defines the special digest tokens
+used here; the path alone cannot establish a valid pin.
+
 The [grammar](grammar.ebnf)'s `dependency` production starts with `use`, selects
 `profile` or `abi`, then gives an alias, identifier string, version and digest.
 It describes a reference to an external definition; it does not embed the
@@ -222,7 +232,19 @@ The path's local name `direct`, the source spelling and the declaration's
 identity each have their own role. Merely knowing the source name supplies
 none of these access clauses.
 
-<!-- figure-slot: G10-access; access nested in callable, environment list and clauses -->
+![Access railroad: a path name, in and a nonempty identifier list, then a braced sequence of clauses.](figures/g10-access.svg)
+
+Take the `access` branch inside the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+for each of `read_count`'s two paths. The first `identifier` here is
+`objc_like` or `swift_like`; the one after `[` is `test`. That first environment
+has no bypass, so the list cannot be empty. The return track adds a comma
+and another environment. Inside the braces, the clause track carries `abi`,
+`via`, `mapping` and `compatibility` from the example.
+**Reading key:** square boxes are literal tokens, rounded boxes name
+productions or lexical tokens, and return arrows repeat. Read from open to
+filled circle. The clause bypass and loop are generic syntax; A2 requires
+exactly one of each core access clause and checks the environment coverage.
+
 The [grammar](grammar.ebnf)'s `access` production gives a local path name,
 `in` and a nonempty environment list, then a clause block. [G3's access view](explanation/packages.md#reaching-the-code)
 shows the Counter paths and provider relationships; the syntax view locates

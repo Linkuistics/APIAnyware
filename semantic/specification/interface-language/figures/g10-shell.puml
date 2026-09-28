@@ -1,0 +1,9 @@
+@startebnf
+!include style/ail.puml
+title G10 · Read the header, then the package items
+document = "language", string, ";", "package", name, "version", string,
+                 "{", { item }, "}" ;
+item = import | dependency | environment | declaration | clause ;
+clause = name, "(", [ arguments ], ")", ";" ;
+!include style/railroad-key.puml
+@endebnf

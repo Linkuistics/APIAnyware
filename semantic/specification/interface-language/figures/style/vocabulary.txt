@@ -35,3 +35,16 @@ PlantUML uses SansSerif from the local Java font environment; a different font
 installation may change SVG bytes. Inspect such a difference before accepting it.
 Mermaid remains available once its renderer is installed, pinned and added to
 the check. Do not commit an SVG the check cannot regenerate.
+
+Language model and syntax detail (G9/G10):
+G9 folders are named/versioned packages; compartmented boxes are declarations.
+Entries inside a callable box are its signature slots; record entries are fields.
+Labelled solid arrows are import/member relations, not ownership transfers.
+G10 uses PlantUML's native EBNF layout with productions from grammar.ebnf.
+Square boxes contain literal tokens, shown without EBNF's quoting delimiters;
+rounded boxes name productions or lexical tokens (string, identifier, etc.).
+Read from the open circle to the filled circle, following arrows around loops.
+A fork selects a path; an empty bypass permits omission; a return track repeats.
+railroad-key.puml supplies the key on every syntax view. Syntax views retain
+all alternatives, including provider-dependent forms; semantic constraints
+remain in the adjacent prose and canonical rules.

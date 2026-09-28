@@ -1,0 +1,9 @@
+@startebnf
+!include style/ail.puml
+title G10 · Pin an import and spell a reference
+import = "import", name, "version", string, "digest", string,
+                 "as", identifier, ";" ;
+reference = "@", name ;
+name = identifier, { "::", identifier } ;
+!include style/railroad-key.puml
+@endebnf

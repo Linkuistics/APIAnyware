@@ -1,0 +1,11 @@
+@startebnf
+!include style/ail.puml
+title G10 · Clauses and constructors contain values
+clause = name, "(", [ arguments ], ")", ";" ;
+arguments = value, { ",", value } ;
+value = string | integer | "true" | "false" | reference | place | list
+               | constructor | name ;
+constructor = name, "(", [ arguments ], ")" ;
+list = "[", [ arguments ], "]" ;
+!include style/railroad-key.puml
+@endebnf

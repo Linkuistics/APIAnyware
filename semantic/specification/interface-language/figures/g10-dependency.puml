@@ -1,0 +1,7 @@
+@startebnf
+!include style/ail.puml
+title G10 · Select a profile or an ABI definition
+dependency = "use", ("profile" | "abi"), identifier, "=", string,
+                 "version", string, "digest", string, ";" ;
+!include style/railroad-key.puml
+@endebnf

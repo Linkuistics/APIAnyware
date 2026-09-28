@@ -59,7 +59,17 @@ clauses and fields. `exports` takes a list, written `[...]`; `@Point` selects
 the declaration named inside that list. [L2](#l2) locates such references and
 [L3](#l3) explains what exporting a declaration claims.
 
-<!-- figure-slot: G10-shell; document, item, clause, arguments, value, list -->
+![Railroads for document, item and clause: the package body repeats items, and each clause ends with a semicolon.](figures/g10-shell.svg)
+
+Use this view to locate the fragment's header, package braces and clauses.
+**Reading key:** start at an open circle and finish at the filled circle.
+Square boxes show literal tokens; rounded boxes name grammar productions or
+lexical tokens such as `string`. Forks offer choices, empty bypasses permit
+omission, and return tracks repeat the enclosed path. Follow their arrowheads.
+The first `string` is `"0.1"` in this example; L1 fixes that version value.
+The [values view below](#reading-aid-non-normative-clauses-contain-values)
+expands the arguments used by `surface` and `exports`.
+
 The [grammar](grammar.ebnf)'s `document` production follows this same path:
 header, package name and version, then zero or more `item` occurrences inside
 braces. Each item can be an import, provider dependency, environment,
@@ -132,7 +142,19 @@ of this clause. A made-up `deprecated(maybe);` has the generic clause shape
 but fails L1's closed vocabulary. Recognising a path through the grammar
 therefore supplies only the first part of checking a description.
 
-<!-- figure-slot: G10-clause; clause, arguments, value, constructor -->
+![Railroads for clause, arguments, value, constructor and list: a clause adds the final semicolon outside its values.](figures/g10-clause.svg)
+
+Trace `deprecated` along `clause`, then its first argument through `value` to
+`constructor` for `since("2")`. Return to `arguments` for the comma and message
+string. The semicolon occurs only after the clause's closing parenthesis.
+For `deprecated(no);`, choose the bare `name` branch of `value` instead.
+For the earlier `exports([@Point]);`, choose `list`, then `reference` for its
+element. **Reading key:** square boxes are literal tokens and rounded boxes
+name productions or lexical tokens; take one branch at a fork, bypass an
+optional part or follow the return arrow to repeat. Read each track from its
+open circle to its filled circle. These paths show nesting; L1 and L5 decide
+which values the clause admits.
+
 **End of reading aid.**
 <!-- /reading-aid -->
 
@@ -184,13 +206,20 @@ declarations, and `Geometry::Point` identifies an **imported** declaration.
 The alias gives this package a spelling for the dependency; it leaves `Point`
 owned by `example::geometry` ([L2](#l2)).
 
-<!-- figure-slot: G9-model; geometry Point, canvas Canvas/position/Filter, Geometry import -->
+![Two package folders: canvas contains sibling declarations Canvas, position and Filter; geometry contains Point. A member arrow connects position to Canvas, and an import arrow names Geometry. Each callable contains its own parameter and result slots.](figures/g9-model.svg)
+
 Read the model from packages to their declarations, then from the operation to
 its parameter and result. `Canvas` and `position` sit at the same package
 level. A separate member relation associates `position` with `Canvas`.
 The import relation leads from the canvas package to the geometry package;
 the result type follows that import to `Point`. These containment and reference
 relations explain the names in the next fragment.
+
+**Reading key:** folders contain the declarations of one named/versioned
+package. A declaration box contains its fields or signature slots. Labelled
+arrows show import and member relations. `Filter`, introduced in the next
+reading aid, has its own `point` and Boolean `result` slots; `position` has
+`canvas` and a Point `result`. The type labels follow the same import alias.
 
 Fragment — shows the second package, its import and a member function. The
 all-zero digest is a **placeholder**, not the hash of the geometry fragment.
@@ -308,7 +337,42 @@ uses these slot references as actual clause arguments. [C1](contracts.md#c1)
 explains longer places such as `$result.x`, which selects the coordinate field
 of `position`'s result.
 
-<!-- figure-slot: G10-names; import, reference, name, callable, parameters, parameter, place -->
+![Railroads for import, reference and name: an import supplies a package pin and alias; every reference is an at sign followed by a qualified name.](figures/g10-names.svg)
+
+Follow `import` using the preceding model fragment: `example::geometry` fills
+`name`, the version and placeholder digest fill the two `string` positions,
+and `Geometry` fills the alias `identifier`. In `reference`, `@Canvas` takes
+the shortest `name` path. `@Geometry::Point`, `@position::canvas`,
+`@position::result`, `@Filter::point` and `@Filter::result` each take one
+`::` repetition. The [model above](#l2) supplies their different referents.
+**Reading key:** square boxes are literal tokens; rounded boxes name
+productions or lexical tokens. Read from open to filled circle and follow
+return arrows to repeat. Name resolution comes from L2.
+
+![Railroads for callable, parameters and parameter: fn or callback, a named signature, an optional throws type, and repeated body items.](figures/g10-callable.svg)
+
+This view locates the signature and body of both `position` and `Filter`.
+Choose `fn` for `position` or `callback` for `Filter`. Each example takes the
+parameter path once: `canvas: Canvas` or `point: Geometry::Point`. The result
+`type` follows `->`; these examples bypass `throws`. A bare type name has no
+`@`. The loop inside the braces admits clauses, outcomes, callback-use blocks
+and access blocks syntactically; the rules determine their applicability.
+**Reading key:** forks offer alternatives, an empty bypass permits omission,
+and a return arrow repeats a path. Square boxes are literal tokens; rounded
+boxes name productions or lexical tokens. Follow each track from open circle
+to filled circle. [C5](contracts.md#c5), [C6](contracts.md#c6) and
+[A2](profiles.md#a2) expand the three nested block forms.
+
+![Place railroad: a dollar sign and slot identifier followed by zero or more field, single-pointee or element selections.](figures/g10-places.svg)
+
+Use the short path for `$canvas` inside `position`. For `$result.x`, start
+with `result` and take the dot-plus-identifier branch with `x`. The square
+boxes for `[` and `]` are adjacent: the element selector contains no index.
+**Reading key:** follow the track from open to filled circle; the bypass
+allows no selections and the return track permits more. Square boxes are
+literal tokens and rounded boxes name lexical tokens. [C1's located
+examples](contracts.md#c1) show what each selection addresses.
+
 In the [grammar](grammar.ebnf), `reference` is `@` followed by `name`, and
 `name` is one identifier followed by any number of `::`-separated identifiers.
 The grammar admits both `@Geometry::Point` and `@position::result`; L2 and the
@@ -543,7 +607,15 @@ description; evidence that a library honours it comes from elsewhere
 ([L3](#l3), [C2](contracts.md#c2)). See
 [What a package claims](explanation/packages.md#what-a-package-claims).
 
-<!-- figure-slot: G10-environment; environment, clause; reuse G10-shell if sufficient -->
+![Environment railroad: the environment keyword, its identifier and a braced sequence of clauses.](figures/g10-environment.svg)
+
+Use this view to locate `test` and its `target` and `platform` clauses in
+the fragment. **Reading key:** square boxes are literal tokens, rounded boxes
+name productions or lexical tokens, and the return arrow repeats `clause`.
+Read from open to filled circle; the empty bypass is a grammar path. L3
+separately requires the target and platform facts. The [clause view](#reading-aid-non-normative-clauses-contain-values)
+expands each clause's parentheses and values.
+
 **End of reading aid.**
 <!-- /reading-aid -->
 
@@ -1208,7 +1280,21 @@ bound once, including the empty ones. Participants determine the instance's
 availability by intersection; they need at least one environment in common,
 and pattern composition cannot cycle ([L6](#l6)).
 
-<!-- figure-slot: G10-pattern; pattern, role, instance, clause; optional detail after names -->
+![Railroads for pattern, role and instance: roles occur inside a pattern and an instance names its pattern before supplying clauses.](figures/g10-pattern.svg)
+
+These tracks separate declaring a role from binding its participants.
+In the first fragment, `inspection` fills the pattern's `identifier`;
+`samples: slot many` follows the role's two choice points. The instance then
+uses `canvas_slots` as its own name and `inspection` as the pattern `name`.
+Its `bind(...)` is a clause inside the instance. In the Store extract,
+`law(...)` follows the pattern body's `clause` branch beside its roles.
+**Reading key:** square boxes are literal tokens; rounded boxes name
+productions or lexical tokens. Choose one branch at each fork, take the
+bypass for zero body items or follow the return arrow for more. Read from
+open to filled circle. The two role choices spell the kind and cardinality;
+L6 checks that the bound participants satisfy them. The
+[L2 model](#l2) locates the callable slots used by `canvas_slots`.
+
 **End of reading aid.**
 <!-- /reading-aid -->
 

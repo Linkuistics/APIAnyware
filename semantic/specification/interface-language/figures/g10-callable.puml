@@ -1,0 +1,10 @@
+@startebnf
+!include style/ail.puml
+title G10 · Read a function or callback signature and body
+callable = ("fn" | "callback"), identifier, "(", [ parameters ], ")",
+                 "->", type, [ "throws", type ],
+                 "{", { clause | outcome | callback_use | access }, "}" ;
+parameters = parameter, { ",", parameter } ;
+parameter = identifier, ":", type ;
+!include style/railroad-key.puml
+@endebnf

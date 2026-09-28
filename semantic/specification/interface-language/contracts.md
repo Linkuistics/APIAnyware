@@ -80,7 +80,25 @@ have their own parameter, result and exception slots. The longer spelling
 `@position::result` identifies a slot from outside its callable; `$result`
 selects it locally ([L2](language.md#l2)).
 
-<!-- figure-slot: G10-places; place, with field, single-pointee and element paths -->
+![Place railroad: a slot identifier after a dollar sign, then repeated field, single-pointee or element selections.](figures/g10-places.svg)
+
+Use the same track as the [L2 place view](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+to build each selection in the example. **Reading key:** square boxes are
+literal tokens; rounded boxes name lexical tokens. Start at the open circle,
+choose a selection or its empty bypass, and follow return arrows for more
+selections before reaching the filled circle. The examples take these paths:
+
+| Place | Slot identifier | Selection path, in order |
+|---|---|---|
+| `$selection.canvas` | `selection` | `.` then field identifier `canvas` |
+| `$items[]` | `items` | `[` then `]`, with no index between them |
+| `$point.*.x` | `point` | `.*`, then `.` and field identifier `x` |
+| `$result.x` in `position` | `result` | `.` then field identifier `x` |
+
+The table shows syntax steps; the clauses and types above establish which
+steps are meaningful. Return to the [package model](language.md#l2) to locate
+`position` and its imported result type.
+
 The [grammar](grammar.ebnf)'s `place` starts with `$` and an identifier, then
 repeats field, `.*` or `[]` selections. A syntax path only spells a place;
 C1 checks that each selection fits the type. The [glossary's place entry](glossary.md#place)
@@ -677,7 +695,17 @@ result's domain in one outcome. `any` is the single unpartitioned case, as in
 `view` at [C1](#c1). A partition within one completion uses the same valid
 discriminator throughout ([C5](#c5)).
 
-<!-- figure-slot: G10-outcome; callable and outcome nesting, clause/value constructors -->
+![Outcome railroad: the outcome keyword and a local name followed by a braced sequence of clauses.](figures/g10-outcome.svg)
+
+Take the `outcome` branch of the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+once for `copied` and again for `failed`. This detail shows where their
+`when`, `meaning` and `state` clauses belong. **Reading key:** square boxes
+are literal tokens; rounded boxes name productions or lexical tokens. Read
+from open to filled circle, using the return arrow for more clauses. The
+empty bypass is syntactic; C5 requires the applicable clauses.
+The [values track](language.md#reading-aid-non-normative-clauses-contain-values)
+shows how `equal($result, true)` nests inside `when(...)`.
+
 The [grammar](grammar.ebnf) nests an `outcome` inside `callable`, with clauses
 inside the outcome's braces. The generic syntax permits several outcomes;
 C5 checks their coverage and exclusivity. [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end)
@@ -901,7 +929,27 @@ until destruction. The effects of `subscribe` itself remain synchronous in
 both cases; later callback delivery is described by the callback-use block.
 See [Callbacks](explanation/contracts.md#callbacks).
 
-<!-- figure-slot: G10-callback-use; callback declaration versus callback_use nested in callable -->
+![Callback-use railroad: callback followed by a place and a braced sequence of schedule clauses.](figures/g10-callback-use.svg)
+
+Follow the `callback_use` branch inside the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+for `subscribe`, then substitute `$handler` for this detail's `place`.
+Its repeated clauses describe the registration schedule. **Reading key:**
+square boxes are literal tokens; rounded boxes name productions or lexical
+tokens. Read from open to filled circle; the return arrow repeats clauses
+and the empty bypass omits them syntactically. C6 supplies the required facts.
+
+Use this comparison to keep the two occurrences of `callback` attached to
+their own subjects:
+
+| Example above | Grammar path | What the body describes |
+|---|---|---|
+| `callback Handler(value: u64) -> unit` | `callable`: `callback`, identifier and signature | One Handler invocation and the callable value |
+| `callback $handler` inside `subscribe` | `callback_use`: `callback` and `place` | The schedule for this registration's handler |
+
+Retention, owner scope and quiescence are checked together by C6; the paths
+only distinguish the two block shapes. The [callback timing explanation](explanation/contracts.md#callbacks)
+shows when invocations may run and what teardown promises.
+
 The [grammar](grammar.ebnf) distinguishes `callback` followed by an identifier
 and signature from `callback` followed by a `place` and clause block.
 The syntax view can show that nesting; C6 supplies the schedule constraints.

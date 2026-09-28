@@ -1,0 +1,39 @@
+@startuml
+!include style/ail.puml
+allowmixing
+hide circle
+hide empty methods
+top to bottom direction
+title G9 · Locate declarations in packages, then slots in callables
+folder "example::canvas\nversion 1" as canvas_pkg #E8F3EB {
+  class "Canvas\nresource declaration" as canvas {
+    Opaque handle; lifetime contracts omitted
+  }
+  class "position\nfunction declaration" as position {
+    canvas : Canvas (parameter; named receiver)
+    result : Geometry::Point (result slot)
+  }
+  class "Filter\ncallback declaration" as filter {
+    point : Geometry::Point (parameter)
+    result : bool (result slot)
+  }
+  position -up-> canvas : member(@Canvas, instance)
+  position -[hidden]right-> filter
+}
+folder "example::geometry\nversion 1" as geometry_pkg #E8F3EB {
+  class "Point\nrecord declaration" as point {
+    x : i32 (field)
+    y : i32 (field)
+  }
+}
+canvas_pkg -down-> geometry_pkg : imports as Geometry
+legend bottom
+  Folder = named, versioned package; compartmented box = declaration.
+  A declaration belongs to its enclosing package; entries belong to their box.
+  position and Canvas are package-level siblings; the labelled arrow associates them.
+  Geometry::Point resolves through the import to Point in example::geometry.
+  Read each callable's parameter and result within that callable's box.
+  Filter is introduced in the next fragment. Contracts and other package items are omitted.
+  Non-normative model: L2, L4–L5, C1. The example import digest is a placeholder.
+endlegend
+@enduml

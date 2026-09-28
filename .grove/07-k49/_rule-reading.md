@@ -111,72 +111,21 @@ lines 19–37. Canonical preservation and `task docs:check` passed after the fin
 prose edit. These are editorial and consistency checks; the human reading at
 `first-path-reading-k64` still owns assessment of understanding.
 
-## Handed forward
+## Figure reuse
 
-- **Art — C1 `G10-places`.** Reuse or expand the L2 place view if it can show
-  `$selection.canvas`, `$items[]`, `$point.*.x` and `$result.x` without overload.
-  Pair it with `contracts.ail` region `places`. `[]` is uniform array/buffer
-  element selection, not an index expression; `.*` requires the single-pointee
-  extent when addressing pointer storage. Grammar repetition does not perform
-  type checking. Keep the geometry/canvas model reachable from this detail.
-- **Art — C5 `G10-outcome` and C6 `G10-callback-use`.** Show the nesting of
-  `outcome` and `callback_use` inside `callable`, using `copy_bytes` and
-  `subscribe` respectively. A combined callable-body overview plus small
-  details is allowed. Preserve the distinction between `callback Handler(...)`
-  (a declaration with its own slots) and `callback $handler { ... }` (the
-  registration's schedule). Pair with `contracts.ail` regions `outcomes` and
-  `callback-use`, and the frozen Handler declaration. C5 checks partitions;
-  C6 checks schedule/retention/quiescence relationships. A railroad proves
-  neither. The existing G7 timing explanation remains linked through the
-  concepts callback section; no new timing figure is required by this draft.
-- **Art — A1 `G10-dependency`, A2 `G10-access`.** Draw the `dependency` choice
-  `use profile`/`use abi` using the declared aliases `fixture`/`native`; pair
-  with `providers.ail` region `dependencies`. The `access` production pairs
-  with region `paths`: path name, nonempty `in [test]` list, clause block.
-  Show how it sits inside `read_count`; use or link G3 for the provider
-  relationships instead of duplicating that whole structure. The generic
-  grammar permits repeated clauses; A2 defines the required singular clauses.
-  Reuse existing G10 views where they already teach the needed syntax, with
-  adjacent reading keys and rule links. Every surviving slot is resolved by
-  a figure or an explicit justified reuse; no dangling slot comments remain.
+Art supplied G9 at `figures/g9-model.{puml,svg}` and G10 at
+`figures/g10-{shell,clause,names,callable,places,environment,pattern,outcome,callback-use,dependency,access}.{puml,svg}`
+under `semantic/specification/interface-language/`. The model uses the existing
+Geometry/Canvas/position/Filter examples. Its callable compartments own the
+slots; Canvas and position remain sibling declarations. The syntax figures use
+exact productions from `grammar.ebnf`, the shared style and `railroad-key.puml`.
+All required and optional slots are resolved; there is no outstanding art handoff.
 
-- **Art — G9, L2 `G9-model` slot.** Show containment from the two named/versioned
-  packages to their declarations, the canvas → geometry import labelled
-  `Geometry`, and `position` → `Canvas` member ownership. `Canvas` and
-  `position` are siblings; no visual nesting that makes the function part of
-  the resource body. Show `position`'s named `canvas` parameter and Point result,
-  and `Filter`'s `point` parameter and Boolean result, as slots owned by their
-  respective callables. A second detail view beside `l2-references` is allowed
-  if putting all slots in the main view overloads it. The prose carries these
-  facts, including the difference between declaration references, bare type
-  names and callable-local `$` places. Keep the diagram before the model's
-  member snippet; it may move earlier to precede alias-dependent notation.
-- **Art — G10 shell, L1 `G10-shell` slot.** Railroad paths for `document`,
-  `item` and `clause`, with `arguments`/`value`/`list` expanded only as needed.
-  Pair with `syntax.ail` region `shell`. The grammar's version token is a
-  general `string`; the prose separately states the required `"0.1"` value.
-  Its repetition permits zero items syntactically; L3's mandatory content
-  remains a semantic rule. Show literal tokens, nonterminals and repetition
-  distinctly and explain the reading direction and key.
-- **Art — G10 values, L1 `G10-clause` slot.** `clause`, `arguments`, `value`
-  and `constructor`, paired with `syntax.ail` region `clause` and the prose's
-  `deprecated(no)` comparison. Semicolon belongs to the clause, not the
-  nested `since("2")` constructor. Reuse the shell figure if it already
-  teaches this distinction clearly; do not silently lose the case.
-- **Art — G10 names, L2 `G10-names` slot.** `import`, `reference`, `name`,
-  `callable`, `parameters`, `parameter` and `place`; split into small views
-  where needed. Use `Geometry::Point`, `@Canvas`, `@position::canvas`,
-  `@position::result`, `@Filter::point`, `@Filter::result`, `$canvas` and
-  `$result.x`, with exact surrounding examples from `canvas.ail`. The grammar
-  admits `@name` uniformly; package/slot resolution is semantic, not a
-  railroad branch that the grammar itself distinguishes. Preserve callback
-  and optional `throws` paths when depicting the full `callable` production.
-- **Art — optional G10 details at L3/L6.** The `G10-environment` and
-  `G10-pattern` slots identify `environment`/`clause` and
-  `pattern`/`role`/`instance` respectively. Add a detail only if the shell,
-  names view and located examples leave a syntactic relationship unexplained;
-  otherwise remove these optional slot comments. Examples: `canvas.ail`
-  region `publication`; `patterns.ail` regions `slots`, `cardinalities` and
-  `ordering`; the unchanged buffers lifetime extract. Check every rendered
-  path against the named EBNF production, add a reading key and adjacent
-  explanation, and regenerate SVGs with the established workflow.
+L2 and C1 reuse the same place figure with local keys and examples. C5, C6 and
+A2 link the callable overview and supply their own nested-block detail. The
+existing G3 provider and G7 timing explanations remain linked rather than
+being duplicated. Environment and pattern details were retained because the
+shell does not expose their inner structure. Later correction sessions can
+reuse these sources/SVGs and the existing checked fragments; retain the
+placeholder-import and synthetic-provider limits. Proof should promote these
+paths and boundaries to the root brief when the node closes.

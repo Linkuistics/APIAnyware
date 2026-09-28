@@ -1,0 +1,6 @@
+@startebnf
+!include style/ail.puml
+title G10 · Start at a slot and follow selections
+place = "$", identifier, { ".", identifier | ".*" | "[", "]" } ;
+!include style/railroad-key.puml
+@endebnf
