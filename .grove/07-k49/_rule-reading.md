@@ -103,16 +103,16 @@ also remain byte-identical to that revision. Preserve those boundaries during
 copy-edit and art. Checks of snippet equality do not establish that a line range
 contains the entire declaration it claims: inspect the first/last lines too.
 
+Copy-edit read the complete three-page set and expanded action-first accounts
+of slots, dependency closure, roles, lifetime, concurrency, mapping and
+representation. The examples and figure slots are unchanged. The A2 and C6
+Handler extracts both include the complete declaration at `callbacks.ail`
+lines 19–37. Canonical preservation and `task docs:check` passed after the final
+prose edit. These are editorial and consistency checks; the human reading at
+`first-path-reading-k64` still owns assessment of understanding.
+
 ## Handed forward
 
-- **Copy-edit — whole set.** Read all of `language.md`, `contracts.md` and
-  `profiles.md`, applying plan §4–§6 only inside the marked aids. Preserve the
-  canonical text outside them exactly. Check connected explanations, positive
-  framing and terminology in captions, labels, tables and snippet commentary;
-  keep fragment labels and provider limits explicit. The technical reviewer
-  found one A2 Handler extraction error, now corrected to `callbacks.ail`
-  lines 19–37; there is no unresolved technical finding from that bounded read.
-  Readability and human understanding have not been assessed by that review.
 - **Art — C1 `G10-places`.** Reuse or expand the L2 place view if it can show
   `$selection.canvas`, `$items[]`, `$point.*.x` and `$result.x` without overload.
   Pair it with `contracts.ail` region `places`. `[]` is uniform array/buffer

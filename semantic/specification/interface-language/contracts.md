@@ -109,9 +109,11 @@ failure, termination or optional invocation.
 <!-- reading-aid: c1-regions -->
 ### Reading aid (non-normative): connect a borrow to the period it remains usable
 
-The synthetic Store API owns sixteen immutable bytes. A caller can ask for a
-view of those bytes while keeping ownership of the Store. The description
-states two periods: how long the input Store must be valid for the call, and
+In the synthetic Store API, each `Store` owns sixteen immutable bytes. A caller
+can ask for a view of those bytes while keeping ownership of the `Store`.
+The view is a [borrow](glossary.md#borrow): the caller can read the bytes for a
+stated period while the `Store` continues to own them. The description states
+two periods: how long the input `Store` must be valid for the call, and
 how long the returned pointer remains usable. A [region](glossary.md#region)
 names such a lifetime bound ([C1](#c1)).
 
@@ -177,8 +179,9 @@ recipient. A shorter mutation lifetime is expressed by
 <!-- reading-aid: c2-lifetime -->
 ### Reading aid (non-normative): name who releases a handle and where it can be used
 
-An owned Store handle carries one obligation to destroy it. Its declaration
-names the operation that discharges that obligation. This association is its
+The caller who receives an [owned](glossary.md#owned) `Store` handle becomes
+responsible for destroying it. The `Store` declaration names `destroy` as the
+operation that fulfils that responsibility. This association is its
 [lifecycle](glossary.md#lifecycle); [L6](language.md#l6) also shows how a
 pattern records the relation between resource and destructor.
 
@@ -206,8 +209,11 @@ package example::buffers version "1" {
 
 `@destroy` selects the function declaration. At entry to that function,
 `input($store, consume)` transfers the caller's destruction obligation to the
-callee. `sharing(transferable)` permits moving sole ownership between
-executors; `isolation(none)` declares no nominal executor restriction.
+[callee](glossary.md#caller-and-callee), which destroys the `Store`.
+`sharing(transferable)` permits moving sole ownership between
+[executors](glossary.md#executor), such as from one thread to another.
+`isolation(none)` states that the type imposes no restriction on which executor
+can use it; this type-level restriction is called [isolation](glossary.md#isolation).
 The operation's own concurrency rules still determine which calls may overlap
 ([C2](#c2), [C3](#c3)).
 
@@ -315,9 +321,11 @@ package example::buffers version "1" {
 `completions([returned])` lists the permitted completion mode. Together these
 clauses describe how an invocation can finish, while making no promise that it
 ever will finish. `executor(any)` allows entry on any executor.
-`concurrency(serial)` asks callers to serialize independent calls using the
-same relevant storage or resource. `reentrancy(allowed)` permits nested entry
-under an active call. Executor, independent overlap and nested entry therefore
+`concurrency(serial)` requires callers to let one independent call finish before
+another uses the same mutable storage or receiver/resource. If an active call
+causes a nested call on that same receiver/resource, `reentrancy(allowed)`
+permits the nested entry before the outer call finishes.
+Executor, independent overlap and nested entry therefore
 answer three different questions ([C3](#c3); [concurrency](glossary.md#concurrency),
 [re-entrancy](glossary.md#re-entrancy)).
 
@@ -364,8 +372,9 @@ invocation; a callback-use block describes when the API invokes that callable.
 ### Reading aid (non-normative): distinguish transfer from retained storage
 
 A registration operation may borrow a callback at entry and retain another
-reference for later invocations. In the synthetic subscription API, that
-retained reference lasts as long as the returned Subscription.
+reference for later invocations. Keeping that reference beyond immediate use
+is [retention](glossary.md#retention). In the synthetic subscription API, the
+retained reference lasts as long as the returned `Subscription`.
 
 Fragment — shows `subscribe`'s input contract. The complete
 [callbacks package](examples/callbacks.ail) supplies Handler, the unique
@@ -448,9 +457,10 @@ package example::buffers version "1" {
 }
 ```
 
-`direction($destination, out)` permits writing the pointed-to storage without
-reading its old contents. `aliasing($destination, disjoint)` requires that
-storage to avoid overlap with other memory accessed by this call.
+`direction($destination, out)` lets the callee write the pointed-to storage
+and forbids it from reading the old contents. With
+`aliasing($destination, disjoint)`, the caller supplies storage that does not
+overlap other memory accessed by this call.
 `mutation(arguments)` records the externally visible write. The `mutptr<u8>`
 type permits writing; `extent` and `contents` describe that storage in [C4](#c4).
 For an `in` pointer the callee reads existing contents; `inout` permits both
@@ -655,9 +665,9 @@ package example::buffers version "1" {
 `copied` and `failed` are names local to this function. `when` pairs the
 completion `returned` with a predicate over `$result`. `equal(..., true)` and
 `equal(..., false)` cover the Boolean domain without overlap. `meaning`
-classifies the observation; the API still returns its Boolean rather than
-throwing an exception. `state($destination[], ...)` addresses the initialized
-buffer elements; `state($result, valid)` keeps the discriminator readable.
+labels `true` as success and `false` as failure. In both cases the caller
+receives a Boolean return value. `state($destination[], ...)` addresses the
+initialized buffer elements; `state($result, valid)` keeps the discriminator readable.
 An invalid destination cannot be inspected even though the returned Boolean can.
 
 For a nullable result, `nonnull($result)` and `null($result)` divide the two
@@ -708,8 +718,9 @@ initialized elements. Partially initialized buffers need an explicit valid lengt
 <!-- reading-aid: c5-outputs -->
 ### Reading aid (non-normative): track the obligation delivered with a valid output
 
-An owned reference arrives with a release or destruction obligation. A borrowed
-reference arrives with permission to use the value for a bounded period.
+When a caller receives an owned reference, it becomes responsible for releasing
+or destroying the value according to its lifecycle. When it receives a borrowed
+reference, it gains permission to use the value for a bounded period.
 The [C1 `view` fragment](#c1) gives a borrowed pointer tied to the Store;
 `create` in the [buffers package](examples/buffers.ail) instead uses
 `give($result, owned)` for a newly created Store ([C5](#c5)).
@@ -873,7 +884,8 @@ connects that scope to the returned Subscription. The input retention shown in
 invocation separately ([C6](#c6)).
 
 When `unsubscribe` returns, `quiescence(@unsubscribe)` promises that no invocation
-is running or can begin, including on another thread. The
+is running or can begin, including on another thread. This state is
+[quiescence](glossary.md#quiescence). The
 `outside_callback(@subscribe::handler)` precondition keeps callers from entering
 this blocking destructor inside the callback it needs to finish. The `@` reference
 identifies the registration's parameter slot; `$handler` in the inner block

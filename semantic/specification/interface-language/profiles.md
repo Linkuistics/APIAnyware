@@ -60,12 +60,14 @@ package example::objects version "1" {
 `fixture` and `native` are aliases inside this package. A later
 `via(fixture, ...)` selects the profile, while `abi(native, ...)` selects the
 ABI entry. The strings `"example.fixture"` and `"example.fixture-abi"` name the
-definitions supplied in the resolution set. `test` names the exact environment
+definitions supplied in the [resolution set](glossary.md#resolution-set).
+`test` names the exact [environment](glossary.md#environment)
 in which this package uses them ([L2](language.md#l2), [L3](language.md#l3)).
 
 The provider manifest states which mechanisms, types, values and environments
 it supports. Here [F1](#f1) supplies that synthetic definition. A package using
-an unsupported mechanism can still have recognizable syntax, but the consumer
+an unsupported mechanism can still have recognisable syntax, but the
+[consumer](glossary.md#consumer)
 cannot claim complete validation. The supplied definition must explain the
 mechanism's meaning as well as its spelling ([A1](#a1)).
 
@@ -96,7 +98,7 @@ a new language version. Pure navigation goes in `doc`/`link`, not an unknown
 extension whose meaning consumers might accidentally ignore.
 
 <!-- reading-aid: a1-namespace -->
-### Reading aid (non-normative): recognize a profile clause at its declaration
+### Reading aid (non-normative): recognise a profile clause at its declaration
 
 A profile can add a fact using its alias as a namespace. Counter's description
 includes a synthetic compiler-conformance fact alongside its core sharing and
@@ -205,8 +207,10 @@ The consumer chooses a path explicitly; their order on the page expresses no
 preference. Each path lists applicable environments, and the paths together
 cover the declaration's availability ([A2](#a2)).
 
-`mapping(identity)` relies on this particular profile/ABI pair to lower the
-entire signature faithfully. A profile needing adjustments can instead name
+With `mapping(identity)`, the consumer follows this profile/ABI pair's rules
+to pass the receiver and return the count while preserving the function's
+contract. This correspondence between the declared values and the native call
+is a [mapping](glossary.md#mapping). A profile needing adjustments can instead name
 its recipe with `mapping(profileAlias, "mapping-id")` in the same position;
 F1 defines only identity mapping. Native register splitting can preserve the
 same semantic value, while hiding an observable success status changes the
@@ -315,12 +319,13 @@ The same applies to managed projections and wire protocols.
 <!-- reading-aid: a3-data -->
 ### Reading aid (non-normative): distinguish a stored pointer from an address of storage
 
-The provider determines how semantic types are represented at an access
-boundary. The `Geometry::Point` record in [L2](language.md#l2) declares ordered
-integer fields `x` and `y`. A selected ABI/profile supplies their native
-offsets, size and alignment. A complete [representation](glossary.md#representation)
-recipe covers all reachable types and the operations needed to use them
-([A3](#a3)); a record declaration supplies only part of that information.
+To pass a `Geometry::Point` between caller and callee, a tool needs to know
+where its `x` and `y` fields are stored. The record in [L2](language.md#l2)
+declares their types and order. The selected ABI/profile supplies their native
+offsets and the record's size and alignment. Those facts form part of its
+[representation](glossary.md#representation) recipe. The provider supplies a
+complete recipe for every type used at that access boundary, including the
+operations needed to pass, copy, move and destroy its values ([A3](#a3)).
 
 Data access also needs an explicit mechanism. The Counter package has two
 pointer-valued declarations. One identifies the address of exported byte
@@ -477,11 +482,13 @@ changes the signature. In Counter, both `objc_like` and `swift_like` remain
 available alternatives even if one consumer chooses only the message path.
 The local [access example](#a2) makes that choice inspectable.
 
-Comments and navigation can differ without changing canonical model equality,
-while lossless authoring preserves them for the person editing the document.
-By contrast, a changed dependency digest or ordered record field list changes
-the semantic model. Lists with set meaning, such as `available([test])`, compare
-by identity and reject duplicates ([A5](#a5)).
+Two documents can use different comments and navigation links while describing
+the same API contract. A tool comparing their canonical models ignores those
+differences. An authoring tool still preserves the comments and links when it
+reads and writes a document, so the author keeps that material. Changing a
+dependency digest or the order of record fields does change the semantic model.
+For a list with set meaning, such as `available([test])`, the tool compares
+member identities and rejects duplicates ([A5](#a5)).
 
 A generator may be unable to preserve a callback or lifetime contract in its
 target language even when the description is valid. It reports that binding

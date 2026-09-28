@@ -152,8 +152,10 @@ namespace. A profile's vocabulary MUST be equally closed and typed.
 
 Consider two invented API descriptions. `example::geometry` defines a `Point`
 record containing coordinates. `example::canvas` defines a `Canvas` resource
-and an operation that reads its position as a `Point`. A resource describes
-an opaque API handle whose lifetime needs its own contract ([L4](#l4),
+and an operation that reads its position as a `Point`. The caller passes a
+`Canvas` handle to that operation while the API keeps the canvas's internal
+layout hidden. AIL describes this kind of handle as an
+[opaque resource](glossary.md#opaque-resource), with its own lifetime contract ([L4](#l4),
 [C2](contracts.md#c2)). These fragments focus on where the declarations live.
 
 Start with the geometry package. Its `Point` declaration is **local** when
@@ -250,8 +252,9 @@ its result the imported type name `Geometry::Point`. The `@Canvas` in its
 spellings use the same name resolution; the grammar distinguishes a type
 position from a reference value ([L2](#l2), [L4](#l4)).
 
-A [slot](glossary.md#slot) is a callable's parameter, result or declared thrown
-value. `position` has the parameter slot `canvas` and a result slot. To name a
+`position` receives a `canvas` parameter and returns a point. Each of those
+positions in its signature is a [slot](glossary.md#slot); a callable that can
+throw also has a slot for its declared thrown value. To name a
 slot from outside the function, include the function's name: `@position::canvas`
 or `@position::result`. Inside it, the [place](glossary.md#place) `$canvas`
 addresses the parameter for clauses such as `input` and `valid`. The member
@@ -383,7 +386,7 @@ a download ([L2](#l2)).
 
 A comment edit in the geometry document changes its bytes and hence its package
 digest, even though comments carry no semantics. If a second import elsewhere
-in the dependency closure pins the same package name/version to a different
+in the [dependency closure](glossary.md#dependency-closure) pins the same package name/version to a different
 digest, the conflict is rejected before resolving names. A second alias cannot
 hide it. The one-way canvas-to-geometry dependency is acyclic; adding a geometry
 dependency back to canvas would create a forbidden cycle ([L1](#l1), [L2](#l2)).
@@ -477,9 +480,10 @@ declared alias; an arbitrary string cannot masquerade as an installed provider.
 Suppose the invented canvas library also has drawing operations. An author can
 publish a description covering only its position API. `surface` states that
 chosen subset and release. `exports` selects the public declarations within
-that description; every dependency needed to understand them still belongs to
-its authoritative [dependency closure](glossary.md#dependency-closure)
-([L3](#l3)).
+that description. To interpret `position`, a tool also needs the imported
+`Point` and the definitions that `Point` itself depends on. Following these
+dependencies gives the package's [dependency closure](glossary.md#dependency-closure);
+each member of that set needs a complete, consistent contract ([L3](#l3)).
 
 Fragment — places the publication clauses, an environment and declaration
 availability in the canvas package. Its imported `Point`, provider pins,
@@ -788,7 +792,7 @@ selectors and other source constructs; no such type has an implicit core meaning
 
 The [L2 member function](#l2) uses `input($canvas, borrow)` once for its handle
 parameter. A two-handle operation can state that input obligation once for
-each parameter. It keys the repeated clause by the addressed place
+each parameter. The place argument identifies which input the clause describes
 ([L5](#l5), [C3](contracts.md#c3)).
 
 Fragment — shows distinct input clauses in one callable. The header, resource
@@ -1106,11 +1110,13 @@ spelling alone does not establish conformance.
 <!-- reading-aid: l6-roles -->
 ### Reading aid (non-normative): bind roles to participants
 
-A [pattern](glossary.md#pattern) names roles in a relationship. A
-[pattern instance](glossary.md#pattern-instance) selects the actual
-participants. Start with the slot references introduced in [L2](#l2): this
-pattern has one role accepting any number of slots, and its instance binds
-four slots from `position` and `Filter` ([L6](#l6)).
+An author can group the four slots of `position` and `Filter` under the name
+`samples`. In the example below, `inspection` describes what may belong to
+that group, and `canvas_slots` lists the four participants using [L2's slot
+references](#l2). AIL calls `inspection` a [pattern](glossary.md#pattern),
+`samples` a [role](glossary.md#role), and `canvas_slots` a
+[pattern instance](glossary.md#pattern-instance). The role accepts any number
+of slots; this instance binds it to four ([L6](#l6)).
 
 Fragment — uses the canvas model's function and callback slots. The header,
 publication context and the two callable declarations are omitted. No law is
@@ -1130,7 +1136,8 @@ package example::canvas version "1" {
 }
 ```
 
-`slot` is the role's participant kind and `many` its cardinality. The role
+`slot` is the role's participant kind. `many` permits zero or more participants;
+this permitted number is the role's [cardinality](glossary.md#cardinality). The role
 name `samples` becomes the first argument of `bind`; its second argument is
 a list of canonical slot references. `@position::result` and `@Filter::result`
 remain distinct despite sharing the final word `result` ([L2](#l2), [L6](#l6)).
@@ -1162,8 +1169,9 @@ are in the complete buffers example. Its providers and digests are synthetic
 `type one` requires one type participant; `operation one` requires one
 operation. Binding `resource_type` to `@destroy` would give it the wrong kind
 (N21). Omitting either binding would leave a required role unbound (N22).
-The `releases` law does more than attach a descriptive label: its bound
-operation needs to be the resource's declared unique destructor ([L6](#l6)).
+The validator checks that the operation bound to `release` is the resource's
+declared unique destructor. That check gives the `releases` law its contract
+meaning ([L6](#l6)).
 
 The other cardinalities let a role accept no participant or several. This
 next pattern uses all four role kinds and cardinalities together, to show

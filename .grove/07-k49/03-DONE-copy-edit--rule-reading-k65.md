@@ -62,3 +62,45 @@ The node's human-directed bound routes substantive earlier-stage defects to
 first-path-reading-k64 instead of starting another unattended correction run.
 The later orientation/concepts/tutorial corrections reuse this material after
 this node completes its ordinary copy-edit → art → proof chain.
+
+## Decisions (running log)
+
+- D1: Keep the existing section order, examples and figure slots. Copy edits
+  develop the concrete action before the term, clarify actors and scope, and
+  link glossary-owned terms. All document changes stay within paired aids;
+  no normative wording, snippet or source fixture needs changing.
+- D2: Use direct Markdown, grammar and fixture reads as evidence. The graph's
+  generation is `2026-09-23T09:55:55Z`; coverage reports changed Markdown
+  metadata and excluded example/design directories. No structural-code or
+  graph-completeness claim is needed for this prose-only task.
+
+## Verification
+
+- Read all three pages: L1–L6, C1–C8 and A1–A5/F1, including the rule text,
+  tables, snippet labels and explanations. Kept section order, all AIL fences,
+  fragment omissions, synthetic pins and provider limits. Glossary links now
+  accompany the expanded explanations; `recognise` spelling is consistent in
+  the changed profile aid. No structural correction was identified.
+- Walked the Markdown routes from the overview's rule list and citations to
+  L2, C1, C5, C6, A1 and A2. Direct entries locate the relevant declarations or
+  full source package, name omitted context and offer explanation/glossary
+  routes. `docs:links` checked destinations and reachability of all 17 pages.
+  This was a source/navigation read, not a rendered-browser or human test.
+- After the last prose edit, stripped every paired aid with its trailing blank
+  separator: 17 blocks in language, 14 in contracts and 9 in profiles. Each
+  result matched the corresponding `87221b8c` file byte for byte. A scratch
+  mutation of retained normative text failed equality on each page. This also
+  preserves the original rule anchors and F1 catalogue.
+- Compared grammar, conformance record and frozen buffers/objects/callbacks
+  files with `87221b8c`: byte-identical. Every AIL fence body in the three pages
+  also equals its session-parent version. Inspected Handler lines 19–37:
+  starts at `callback Handler(value: u64) -> unit {`, ends at its matching
+  closing brace, includes the complete outcome. Both extracts use this range.
+- `task docs:check` passed: links and examples checked 19 files; all eleven
+  committed SVGs regenerated identically. SHA-256 digests before/after the run
+  agreed for 67 input files: the full interface-language and documentation-tool
+  trees excluding Python bytecode, root Taskfile, documentation plan and audit.
+- These checks establish source consistency and preservation. The prose was
+  inspected against the rules, glossary and frozen fixtures; no semantic
+  validator or runtime was executed, and no human-comprehension result is
+  claimed. Art owns G9/G10 and the remaining figure handoffs in the node brief.
