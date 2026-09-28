@@ -69,8 +69,8 @@ The 2026-09-28 follow-up read (`first-path-reading-k48`) requests examples and
 language-model/railroad diagrams as constructs are introduced, applied generally
 before another review. `rule-reading-k49` now precedes orientation and adds
 labelled teaching material beside the existing canonical rules (plan §9.7).
-The orientation second correction, orientation-k52–k55, has been proofed.
-Next run concepts-k56–k59 and tutorial-k60–k63. `first-path-reading-k64` follows those
+The orientation and concepts second corrections, orientation-k52–k55 and
+concepts-k56–k59, have been proofed. Next run tutorial-k60–k63. `first-path-reading-k64` follows those
 corrections and precedes reference and review-guide drafting. Each existing
 document gets one further ordered draft/copy-edit/art/proof run; the escalation
 and its bound are recorded in its brief. Further automatic re-runs are not
@@ -323,6 +323,21 @@ access explanations now make sense. The proof's rule checks and figure read
 are editorial evidence only; human comprehension and the correction's effect
 remain unassessed. Keep future examples explicit about these boundaries and
 preserve the separation of domain requirements, API promises and AIL choices.
+
+The second concepts correction is complete (`concepts-k59`, closing
+`concepts-k6`). Packages now introduces the geometry/canvas shell and G9 model
+before its identity discussion; member association, receiver parameters,
+imported types and slot references retain the same names as orientation and
+L2. Contracts and choices locate their examples inside declarations and use
+G10 views for clause/place syntax. G5 spells both invalidated_by arguments;
+G7 names its constructed call notify. Preserve the separation between these
+constructed examples and the complete fixtures, including the placeholder
+Geometry pin and F1 test tokens. Whole-document proof found no actionable
+defect or outstanding handoff; Q1–Q6 remain open. `task docs:check` passed,
+including reproduction of all 23 SVGs. The three pages and their eleven
+rendered figures were checked against the rules and examples; this supplies
+consistency evidence, not a human comprehension result. The already-queued
+first-path-reading-k64 owns that assessment after the tutorial correction.
 
 The tutorial correction completed (`tutorial-k47`, closing `tutorial-k7`). The index and five
 parts lead through complete synthetic label-card packages to a borrowed-to-owned change. The
