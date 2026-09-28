@@ -81,6 +81,26 @@ named parameter with its type, then result type. `unit` means no result value.
 Creation has no parameters and returns either a card or null, written
 `nullable<Card>` ([`L4`](../language.md#l4)).
 
+Use this model to locate the three declarations before tracing their syntax.
+Start with the package folder, then read the boxes inside it. `Card`,
+`create_card` and `destroy_card` are siblings in `tutorial::lifetime` version
+`"1"`. Each function's compartment shows its own parameters and result.
+
+![The tutorial::lifetime version 1 folder contains sibling Card, create_card and destroy_card declarations. Creation returns Card or null; destruction takes card: Card and returns unit. A lifecycle reference leads from Card to destroy_card.](../figures/tutorial-model.svg)
+
+**Reading key:** the folder shows package containment; each compartmented
+box is one declaration. The labelled arrow follows `Card`'s
+`lifecycle(unique, @destroy_card)` reference to the destructor, whose
+definition stays beside `Card` at package level. [Step 4](#card-lifetime)
+explains that clause. Other package items and contracts are omitted from
+this view (non-normative; [`L2`](../language.md#l2), [`L4`](../language.md#l4),
+[`C2`](../contracts.md#c2)).
+
+[Label-card model source](../figures/tutorial-model.puml) ·
+[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+
+Now trace the syntax that puts these declarations inside the package.
+
 ![Document, item and clause railroads show a header followed by a package containing repeated items, and a clause ending in a semicolon.](../figures/g10-shell.svg)
 
 Trace the first track with `"0.1"`, `tutorial::lifetime` and `"1"` from the
@@ -244,6 +264,17 @@ use `$result` to describe that value
 ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 In `when(returned, nonnull($result));`, the inner parentheses belong to
 the predicate and the outer parentheses hold `when`'s two arguments.
+
+Use this table to choose the form that addresses the function, its named
+result slot or the returned value inside its own contract. All three rows
+refer to `create_card` in `tutorial::lifetime` version `"1"`
+(non-normative; [`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+
+| Form | What it selects | Where to read it |
+|---|---|---|
+| `@create_card` | The function declaration. | In the package's `exports` list. |
+| `@create_card::result` | That function's named result slot. | In a reference identifying the slot from elsewhere; the checkpoint does not need this form. |
+| `$result` | The returned value of this invocation. | Inside `create_card`'s outcomes, as shown above. |
 
 Give `create_card` the result type `nullable<Card>`. For each possible
 result, write an [outcome](../glossary.md#outcome): a named case explaining

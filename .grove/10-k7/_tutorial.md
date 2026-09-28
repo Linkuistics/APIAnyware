@@ -58,8 +58,10 @@ Label destructor discharges the new caller obligation. No allocator extension
 or new failure mode is introduced. The Watch subscription is independent of
 Card and delivers only a scalar change number. Preserve that boundary.
 
-The four tutorial diagram sources and generated SVGs live under `figures/`
-with the `tutorial-` prefix. Part 5 compares borrowed and owned results in a
+The five tutorial diagram sources and generated SVGs live under `figures/`
+with the `tutorial-` prefix. Part 1's package model precedes its shell railroad
+and distinguishes declaration containment from the lifecycle reference.
+Part 5 compares borrowed and owned results in a
 table beside the guided change. The tutorial links to the overview's G1 rather
 than repeating the figure. Each detail diagram has a route back to that wider
 context; its source, caption and shared key carry the visual contract.
@@ -85,20 +87,6 @@ The new checkpoint follows all three corrected documents and precedes reference
 and review-guide drafting. The k48 response identifies language.md L2; it does
 not establish that this document was read or that its first correction failed.
 Keep the reported reading extent and proposed remedies distinct.
-
-## Handed forward
-
-- **art — part 1, step 2:** add a small label-card language-model view before
-  the shell railroad. Use the exact `tutorial::lifetime` version `"1"`
-  example: the package contains sibling declarations `Card`, `create_card`
-  and `destroy_card`; creation has a nullable Card result; destruction has
-  a named `card: Card` parameter and a unit result. Show containment separately
-  from the lifecycle reference from Card to destroy_card. The local prose
-  already explains these relationships. Keep G9's geometry/canvas comparison
-  linked for imports and members, which this free-function exercise does not
-  use. Use the shared visual vocabulary, source plus generated SVG, and an
-  adjacent reading key. Inspect the four reused G10 views in parts 1, 3, 4 and
-  5 with their new captions; their grammar and sources are unchanged.
 
 ## First human reading correction
 

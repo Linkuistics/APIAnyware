@@ -1,0 +1,32 @@
+@startuml
+!include style/ail.puml
+allowmixing
+hide circle
+hide empty methods
+top to bottom direction
+title Tutorial 1 · Locate the card and both functions in one package
+folder "tutorial::lifetime\nversion 1" as lifetime_pkg #E8F3EB {
+  class "Card\nresource declaration" as card {
+    Opaque handle; internal layout is private
+  }
+  class "create_card\nfunction declaration" as create_card {
+    No parameters
+    result : nullable<Card> (Card or null)
+  }
+  class "destroy_card\nfunction declaration" as destroy_card {
+    card : Card (parameter)
+    result : unit (no result value)
+  }
+  card -down-> destroy_card : lifecycle(unique, @destroy_card)
+  card -[hidden]right-> create_card
+}
+legend bottom
+  Folder = named, versioned package; compartmented box = declaration.
+  All three declarations belong directly to the package.
+  Read each function's parameters and result within its own box.
+  The labelled arrow follows Card's reference to its destructor.
+  It describes a declaration relation; containment is shown by the folder.
+  Non-normative: L2, L4, C2. Synthetic label-card example.
+  Other package items and declaration contracts are omitted.
+endlegend
+@enduml

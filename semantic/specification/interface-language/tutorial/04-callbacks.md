@@ -380,6 +380,17 @@ Inside `destroy_watch`, the longer reference is needed to identify the
 other function's callback use; that destructor's own input is
 `$subscription` ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
+Read across the rows to keep the registration's handler and the destructor's
+own input distinct. The named slot reference connects the two declarations;
+each `$` place selects a value within its enclosing function (non-normative;
+[`L2`](../language.md#l2), [`C1`](../contracts.md#c1), [`C6`](../contracts.md#c6)).
+
+| Form | Enclosing function in this example | What it selects |
+|---|---|---|
+| `$handler` | `watch_labels` | The callback value passed to this registration; its callback-use block describes the schedule. |
+| `@watch_labels::handler` | `destroy_watch`, inside `outside_callback(...)` | The named handler slot in `watch_labels`; teardown begins outside an invocation of that callback use. |
+| `$subscription` | `destroy_watch` | The watch value passed to this destructor and consumed at entry. |
+
 In `destroy_watch`, add
 `requires(outside_callback(@watch_labels::handler))`. This reference names
 the `handler` use in `watch_labels`. It requires the program to start
