@@ -69,8 +69,8 @@ The 2026-09-28 follow-up read (`first-path-reading-k48`) requests examples and
 language-model/railroad diagrams as constructs are introduced, applied generally
 before another review. `rule-reading-k49` now precedes orientation and adds
 labelled teaching material beside the existing canonical rules (plan §9.7).
-Then run the human-directed second corrections: orientation-k52–k55,
-concepts-k56–k59 and tutorial-k60–k63. `first-path-reading-k64` follows those
+The orientation second correction, orientation-k52–k55, has been proofed.
+Next run concepts-k56–k59 and tutorial-k60–k63. `first-path-reading-k64` follows those
 corrections and precedes reference and review-guide drafting. Each existing
 document gets one further ordered draft/copy-edit/art/proof run; the escalation
 and its bound are recorded in its brief. Further automatic re-runs are not
@@ -285,6 +285,23 @@ human checkpoint did not report an assessment of the whole orientation.
 `first-path-reading-k64` follows the next correction; these editorial observations establish
 neither human comprehension nor the effectiveness of a stage. Carry that limit
 into any process-issue update based on the reading.
+
+The second orientation correction is complete (`orientation-k55`, closing
+`orientation-k5`). Its overview leads to L1's shell/key and L2's model and
+reference examples. The glossary now supplies located geometry/canvas fragments
+for declaration identity, imports, members, callables, clauses, packages, slots
+and places. G9 is reused beside the local/imported example with its own reading
+key. The slot table distinguishes `@position::result` from `@Filter::result`
+and each callable's local `$result`. The all-zero import digest remains a
+placeholder; these fragments are not complete packages. The domain page keeps
+its separate watch API and introduces C pointee notation before using it.
+Whole-document proof found no actionable defect or outstanding handoff.
+`task docs:check` passed, including reproduction of all 23 SVGs.
+Preserve these names, containment relations and boundaries in concepts and
+tutorial corrections. At `first-path-reading-k64`, assess whether the local
+examples and model make those relationships understandable; editorial
+consistency and legibility checks do not establish human comprehension or a
+new process remedy.
 
 The concepts correction completed (`concepts-k43`, closing `concepts-k6`). Its three explanations
 and glossary routes cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in

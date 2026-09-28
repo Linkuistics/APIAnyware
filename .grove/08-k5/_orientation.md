@@ -89,3 +89,13 @@ compressed summaries were expanded in proof: deployment/support limits and
 callback lifetimes/teardown. The glossary retains its reference form.
 The follow-up human checkpoint owns whether these explanations are now
 understandable; editorial inspection alone does not establish that outcome.
+
+The human-directed second correction is proofed in orientation-k55. The
+overview routes to L1/L2; glossary fragments locate declaration identity,
+imports, members, callables and slots in the shared geometry/canvas examples.
+G9 is reused beside the glossary example, and its slot table distinguishes
+position's result from Filter's result and qualified references from local
+places. The domain page keeps its separate watch examples and domain-first
+route. Whole-document proof found no actionable defect or outstanding handoff.
+The node's document, glossary, figure and navigation obligations are satisfied;
+first-path-reading-k64 still owns the human comprehension assessment.
