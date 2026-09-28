@@ -96,12 +96,22 @@ different reading purpose.
 | Understand package scope and how calls reach code | [Packages, environments and access paths](explanation/packages.md) |
 | Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
 | Learn to read and write the notation | [Describing a small API](tutorial/README.md), with complete checkpoint packages |
+| Place names and references in their containing packages | [The language model and two named packages](language.md#l2), followed by member and slot examples |
+| Follow the syntax beside a rule | [The package shell and railroad reading key](language.md#l1), then [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 
 Continue from the domain page to [How AIL states a contract](explanation/contracts.md).
 Then read [Packages, environments and access paths](explanation/packages.md)
 and [Design choices, limits and open questions](explanation/choices.md).
+
+For a direct entry into the notation, start with the package shell, then the
+two-package model. The model locates a declaration in its own package and shows
+how another package refers to it through an import. The accompanying snippets
+also show a function associated with a type and the parameters and result that
+belong to that function. The railroad views show how to follow the syntax;
+the adjacent rules determine what the names mean and whether a description is
+valid. The [glossary](glossary.md#declaration) gives shorter examples for lookup.
 
 ## What is normative
 
@@ -114,6 +124,9 @@ The following files are normative **within this draft**:
 Rule identifiers are stable citation targets; wording can change during review.
 Explanations and glossary entries help interpret those rules. When checking an
 exact requirement, follow their citations back to the canonical files above.
+Within those files, sections labelled **Reading aid (non-normative)** provide
+examples and diagrams, with an explicit end marker. The rule text outside
+those sections remains the authority.
 The supporting material is:
 
 - [Conformance requirements, mutations and review limits](conformance.md).

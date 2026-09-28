@@ -15,6 +15,13 @@ small examples illustrate possible contracts. They are reading aids rather
 than additional fixture definitions. Terms such as [FFI](#ffi) describe the
 domain; terms such as [clause](#clause) also name parts of AIL's notation.
 
+The notation examples use the same invented geometry and canvas packages as
+the [language-model diagram and reading aids](language.md#l2). Read that model
+from packages to their declarations, then to a function's parameters and result.
+For the surrounding document syntax, see the
+[package shell and railroad reading key](language.md#l1). Each fragment below
+names what it omits; none supplies a new complete API contract.
+
 ## ABI
 
 An application binary interface specifies how values and calls cross a machine
@@ -122,6 +129,46 @@ terminator where one is required.
 See [How many bytes exist, and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-do-they-contain).
 Rule: [`C4`](contracts.md#c4).
 
+## Callable
+
+A callable declaration describes one invocation: named parameters, a result,
+an optional thrown value and the conditions of the call. A function describes
+an operation the program calls; a [callback](#callback) describes an invocation
+the API makes through a supplied value.
+
+In the following example, `example::canvas` defines a local resource type
+named `Canvas`, an opaque handle for working with a canvas. It imports
+`example::geometry` under the alias `Geometry`; that package defines `Point`,
+a record with integer coordinates `x` and `y`. The function `position` accepts
+a canvas handle and returns its position as a point.
+
+Fragment — shows the `position` function in the invented canvas package. The
+header, import, `Canvas` declaration, publication context and other callable
+contracts are omitted. The [two-package example](language.md#l2) supplies the
+declaration and import context.
+
+<!-- ail-example: examples/rule-reading/glossary.ail region=callable -->
+```ail
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    execution(sync);
+    // Member, input, remaining effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+```
+
+`fn` introduces the function named `position`. In its parentheses,
+`canvas: Canvas` gives the parameter name and its type; `-> Geometry::Point`
+gives the result type from the package imported as `Geometry`. Type names
+appear without `@`. The braces hold facts about this invocation, including
+the synchronous execution clause. The parameter and result are its
+[slots](#slot).
+
+See [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots),
+including the callable railroad and the contrasting `Filter` callback.
+Rules: [`L2`](language.md#l2), [`L5`](language.md#l5), [`C3`](contracts.md#c3).
+
 ## Callback
 
 A callback is a callable value supplied for the API to invoke. A program might
@@ -175,7 +222,32 @@ unambiguously, even when another package uses the same local name. Overloads
 also have distinct local declaration names. Source spellings and access-path
 names describe other aspects of the API and keep their own identities.
 
-See [Four identities](explanation/packages.md#four-identities).
+Fragment — locates `Point` in a named package. Publication clauses,
+environments, availability and nominal contracts are omitted.
+
+<!-- ail-example: examples/rule-reading/geometry.ail -->
+```ail
+// Fragment: field structure only; no complete publication contract.
+language "0.1";
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Publication, environments and nominal contracts omitted.
+  }
+}
+```
+
+For this record, the three identity values are
+`(example::geometry, "1", Point)`: the package name before `version`, the
+version string and the declaration name after `record`. The parentheses here
+display an identity tuple in prose; they are not an AIL clause. A `Point`
+declared in `example::canvas` would have a different identity. Importing this
+record under the alias `Geometry` gives it a spelling in the importing package
+while preserving its geometry identity; see [local and imported declarations](#local-and-imported-declaration).
+
+See [the two-package model](language.md#l2) and
+[Four identities](explanation/packages.md#four-identities).
 Rule: [`L2`](language.md#l2).
 
 ## Cardinality
@@ -195,6 +267,28 @@ callable's `execution(sync);` clause says its execution is synchronous. The
 rule files define each clause's arguments, meaning and permitted locations.
 A parser recognizes the common shape; validation checks whether the named
 clause is recognized and used correctly there.
+
+Fragment — locates one clause inside `position`. The header, import, `Canvas`,
+publication context and remaining callable contract are omitted.
+
+<!-- ail-example: examples/rule-reading/glossary.ail region=callable -->
+```ail
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    execution(sync);
+    // Member, input, remaining effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+```
+
+Here `execution` names the fact, `sync` is its argument, the parentheses
+enclose that argument and the semicolon ends the clause. The enclosing
+function says which invocation it describes. In contrast, a package-level
+`exports` clause lists public declarations; the [package example](#package)
+shows that containing scope. Follow the
+[clause railroad](language.md#reading-aid-non-normative-clauses-contain-values)
+to see how arguments fit inside the common syntax.
 
 See [From signature to contract](explanation/contracts.md#from-signature-to-contract)
 and [One clause syntax](explanation/choices.md#one-clause-syntax-with-a-closed-vocabulary-in-prose).
@@ -289,6 +383,40 @@ a reference keeps the same entity alive. AIL's term also differs from Rust's
 
 See [Reading AIL's terms](explanation/unsaid.md#reading-ails-terms).
 Rules: [`C3`](contracts.md#c3), [`F1`](profiles.md#f1).
+
+## Declaration
+
+A declaration is a named description inside a package: for example, a record
+type or a function. The declaration supplies the type's structure or the
+operation's signature, together with clauses describing its contract.
+
+Fragment — shows the `Point` record and its fields in the geometry package.
+Publication clauses, environments, availability and nominal contracts are omitted.
+
+<!-- ail-example: examples/rule-reading/geometry.ail -->
+```ail
+// Fragment: field structure only; no complete publication contract.
+language "0.1";
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Publication, environments and nominal contracts omitted.
+  }
+}
+```
+
+The outer braces contain the declaration named `Point`; its inner braces
+contain fields named `x` and `y`. Each field has the core signed 32-bit integer
+type `i32`. These fields are parts of `Point`, while a function such as
+[`position`](#callable) is another declaration at package level. A
+[member](#member) function also sits at package level and names its owning
+type through a clause.
+
+See [local and imported declarations](#local-and-imported-declaration),
+[the language model](language.md#l2) and
+[What a package claims](explanation/packages.md#what-a-package-claims).
+Rules: [`L2`](language.md#l2), [`L4–L5`](language.md#l4).
 
 ## Dependency closure
 
@@ -386,6 +514,8 @@ shared event type under a short local alias. Throughout the dependencies,
 the same package name and version must select the same digest; choosing a
 second alias leaves that requirement unchanged.
 
+The [local/imported example](#local-and-imported-declaration) shows the
+`Geometry` alias in its containing package and explains the pin's placeholder.
 See [What it depends on](explanation/packages.md#what-it-depends-on).
 Rule: [`L2`](language.md#l2).
 
@@ -405,9 +535,10 @@ Rules: [`C1`](contracts.md#c1), [`C5`](contracts.md#c5).
 Nominal isolation is an executor restriction attached to a type. A confined
 watch could require use on the main thread, including destruction and use
 through free functions. An operation's executor requirement has to respect
-that restriction unless a profile defines a legal exception. A type with
-`isolation(none)` has known absence of nominal isolation; individual operations
-still specify their entry requirements.
+that restriction unless a profile defines a legal exception. A type can also
+state that it has no nominal isolation; individual operations still specify
+their entry requirements. See the [located nominal example](contracts.md#c2)
+for the clause that records this choice.
 
 See the [threading explanation](explanation/unsaid.md#which-calls-may-run-together-and-where).
 Definition and rule: [`C2`](contracts.md#c2).
@@ -423,6 +554,55 @@ when those obligations move between caller and callee.
 See the [ownership explanation](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Definition and rule: [`C2`](contracts.md#c2).
 
+## Local and imported declaration
+
+Local and imported describe a declaration relative to the package being read.
+`Point` is local in `example::geometry`, where its record definition appears
+in the [declaration example](#declaration). From the canvas package below,
+`Canvas` and `position` are local; `Point` belongs to the imported geometry
+package. The import gives that package the local alias `Geometry`.
+
+Fragment — shows the two packages' connection and a member function. The
+all-zero digest is a **placeholder**, not the hash of the geometry fragment;
+this is not a resolvable package. A complete package needs exact dependency
+bytes and their digest, publication and environment clauses, nominal contracts,
+and the function's remaining effects, outcomes and access paths.
+
+<!-- ail-example: examples/rule-reading/canvas.ail region=model -->
+```ail
+language "0.1";
+package example::canvas version "1" {
+  import example::geometry version "1"
+    digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    as Geometry;
+  resource Canvas {
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Effects, outcomes, access and publication context omitted.
+  }
+}
+```
+
+The import names `example::geometry`, its version and digest, then introduces
+`Geometry` after `as`. In the signature, `Canvas` selects the local type;
+`Geometry::Point` selects `Point` through that alias. The `::` joins the alias
+and declaration name. When a clause needs a declaration reference, it uses
+`@Canvas` for the local resource or `@Geometry::Point` for the imported record.
+The member clause above uses the first spelling; [Member](#member) explains
+its association and receiver, and [Place](#place) explains the `$canvas` clauses.
+
+Local here means declared in this package, rather than a variable inside a
+function. Importing `Point` preserves its [canonical identity](#canonical-identity).
+See [the model and import/reference railroads](language.md#l2) and
+[What it depends on](explanation/packages.md#what-it-depends-on).
+Rule: [`L2`](language.md#l2).
+
 ## Mapping
 
 A mapping specifies how a declaration's parameters, results and completion
@@ -435,6 +615,43 @@ providers support that mapping.
 
 See [Reaching the code](explanation/packages.md#reaching-the-code).
 Rule: [`A2`](profiles.md#a2).
+
+## Member
+
+A member is a top-level declaration associated with a nominal type by a
+`member` clause. For an instance function, the caller supplies a value of that
+type as an ordinary named parameter, designated as the receiver.
+
+Fragment — shows `Canvas` and its `position` member as sibling declarations.
+The header, `Geometry` import, publication context, nominal contracts and
+remaining callable contracts are omitted; [the import example](#local-and-imported-declaration)
+locates the result type.
+
+<!-- ail-example: examples/rule-reading/glossary.ail region=member -->
+```ail
+package example::canvas version "1" {
+  resource Canvas {
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    // Input, effects, outcomes and access omitted.
+  }
+  // Header, Geometry import and publication context omitted.
+}
+```
+
+`member(@Canvas, instance)` associates `position` with the declaration named
+`Canvas`. `receiver($canvas)` identifies its `canvas` parameter as the receiver.
+The `@` names a declaration; the `$` addresses a value within this callable.
+The function's braces sit beside the resource's braces, so finding a member
+means following the association rather than searching inside the type body.
+A static member uses the `static` member kind and designates no receiver.
+
+See [the language model](language.md#l2) and
+[Four identities](explanation/packages.md#four-identities).
+Rules: [`L2`](language.md#l2), [`L5`](language.md#l5).
 
 ## Opaque resource
 
@@ -500,7 +717,34 @@ could cover only a library's watch operations, provided it fully describes
 those operations and the declarations and definitions they depend on. The
 chosen scope determines the work needed for a complete contract.
 
-See [What a package claims](explanation/packages.md#what-a-package-claims).
+Fragment — shows the geometry package's shell, stated surface and export.
+A complete package also supplies an environment, availability, deprecation,
+sharing and isolation.
+
+<!-- ail-example: examples/rule-reading/syntax.ail region=shell -->
+```ail
+language "0.1";
+package example::geometry version "1" {
+  surface("An invented point API, release 1.");
+  exports([@Point]);
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Environment, availability and nominal contracts omitted.
+  }
+}
+```
+
+The `language` header selects AIL version `"0.1"`; `version "1"` identifies
+this API description independently. The outer braces enclose the package's
+contents. `surface` states what it covers, and `exports([@Point]);` lists
+`Point` as a public root: brackets enclose a list and `@Point` refers to the
+record declaration inside this package. In a package describing watch
+operations, the roots would instead name those operations and any other
+declarations the producer exposes.
+
+See [the package-shell railroad](language.md#l1) and
+[What a package claims](explanation/packages.md#what-a-package-claims).
 Rules: [`L2–L3`](language.md#l2).
 
 ## Pattern
@@ -528,10 +772,38 @@ Rule: [`L6`](language.md#l6).
 ## Place
 
 A place identifies the value or storage a clause addresses, starting from a
-callable [slot](#slot). For example, `$length` names a pointer parameter and
-`$length.*` names its single pointee. A `[]` path selects buffer elements;
-that use needs a buffer extent, while `.*` needs a one-element extent. The
-path lets validation check the clause against the type at that location.
+callable [slot](#slot). Its `$` spelling is read inside that callable.
+
+Fragment — shows the `canvas` parameter used by clauses in `position`.
+The header, `Geometry` import, `Canvas`, publication context and remaining
+callable contracts are omitted; [the two-package model](language.md#l2)
+supplies the declaration context.
+
+<!-- ail-example: examples/rule-reading/glossary.ail region=place -->
+```ail
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Member, effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+```
+
+Here `$canvas` addresses this function's parameter. The clauses say that the
+caller lends the handle, the callee retains no reference and the caller keeps
+it valid throughout the call. A reference to this slot from outside the
+function is `@position::canvas`; it includes the declaration name to locate
+the parameter.
+
+A place can continue into a value. In this same function, `$result.x` selects
+the `x` field of the returned `Point`, whose fields appear in the
+[declaration example](#declaration). For pointer and buffer selections,
+[C1's located examples](contracts.md#c1) show `.*` selecting a single pointee
+and `[]` selecting elements, with the extent each form requires. The path lets
+validation check the clause against the type at that location.
 
 See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
 Rules: [`C1`](contracts.md#c1), [`L5`](language.md#l5).
@@ -699,8 +971,31 @@ Rule: [`C2`](contracts.md#c2).
 ## Slot
 
 A slot is a callable's named parameter, result or declared thrown value. A
-contract can refer to the `watch` parameter or the result of `watch_view`,
-for example. A [place](#place) starts from a slot and can select a field,
+contract identifies the slot within its owning callable.
+
+Fragment — shows the parameter and result of `position` in the canvas
+package. The header, import, `Canvas`, publication context and other callable
+contracts are omitted; [the import example](#local-and-imported-declaration)
+locates `Geometry::Point`.
+
+<!-- ail-example: examples/rule-reading/glossary.ail region=callable -->
+```ail
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    execution(sync);
+    // Member, input, remaining effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+```
+
+`@position::canvas` selects the named parameter. `@position::result` selects
+the result, whose type follows `->`. In these references, `::` joins the
+callable name and slot name. The callback `Filter` in the
+[callback example](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+has its own result, referenced as `@Filter::result`; each result belongs to
+its own invocation. Inside `position`, `$canvas` and `$result` address those
+values locally. A [place](#place) starts from a slot and can select a field,
 pointee or buffer elements within it, letting a clause describe a specific
 part of a larger value.
 

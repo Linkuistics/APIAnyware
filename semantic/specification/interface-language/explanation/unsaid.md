@@ -60,6 +60,11 @@ the library becomes the caller. It passes an event number and the supplied
 `context` pointer, which can identify the program state that should receive the
 notification.
 
+In `watch_view`, `length` is the pointer argument supplied by the caller.
+The C expression `*length` refers to the `size_t` storage at that address,
+where the library can write a count. Later sections compare what callers may
+read from that storage on success and failure.
+
 These values need to remain usable for different amounts of time. The watch
 can be live or destroyed. The bytes can be readable or already replaced. A
 notification can be waiting, running or finished. The following sections
@@ -454,6 +459,13 @@ qualify the word ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
 Continue to [How AIL states a contract](contracts.md) to see these obligations
 in AIL, using the [glossary](../glossary.md) for terms. For exact obligations,
 see [the memory and behavioural rules](../contracts.md).
+
+To place the notation before reading a rule, use the
+[package shell](../language.md#l1) and
+[two-package language model](../language.md#l2). Those examples introduce
+declarations, imports, member functions and their parameters and results.
+They describe a separate invented canvas API; the watch header here remains
+an illustration of possible domain contracts.
 
 Continue through [Packages, environments and access paths](packages.md) and
 [Design choices, limits and open questions](choices.md) after the contract page.

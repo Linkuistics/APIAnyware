@@ -1,0 +1,37 @@
+// Independent orientation fragments; not complete or concatenable packages.
+// These use the same invented canvas and geometry APIs as the L2 reading aids.
+// region: callable
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    execution(sync);
+    // Member, input, remaining effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+// endregion
+
+// region: member
+package example::canvas version "1" {
+  resource Canvas {
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    // Input, effects, outcomes and access omitted.
+  }
+  // Header, Geometry import and publication context omitted.
+}
+// endregion
+
+// region: place
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Member, effects, outcomes and access omitted.
+  }
+  // Header, Geometry import, Canvas and publication context omitted.
+}
+// endregion
