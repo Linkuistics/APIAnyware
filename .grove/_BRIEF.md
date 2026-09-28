@@ -327,6 +327,53 @@ especially the ownership exercise. These are editorial observations, not evidenc
 of human comprehension or the effectiveness of a stage. Preserve that distinction
 in any later Grove issue update; this proof establishes no new process remedy.
 
+The rule-reading pipeline completed (`rule-reading-k67`, closing
+`rule-reading-k49`). `language.md`, `contracts.md` and `profiles.md` now place
+labelled, non-normative examples and figures beside the preserved canonical
+rules. Whole-document proof found no actionable defect or outstanding handoff.
+`task docs:check` passed, including reproduction of all 23 SVGs. Stripping the
+paired reading-aid blocks and their trailing blank separators recovers the
+three pages exactly from `87221b8c`; their anchors and F1 catalogue are preserved.
+The grammar, conformance record and frozen buffers/objects/callbacks fixtures
+also remain byte-identical to that revision. Both Handler extracts include the
+closing brace (`callbacks.ail` lines 19–37).
+
+For the following orientation, concepts and tutorial corrections, reuse these
+landed resources under `semantic/specification/interface-language/`:
+
+- `examples/rule-reading/{syntax,geometry,canvas,types,clauses,patterns,invalid,contracts,providers}.ail`
+  contains the checked teaching material. Region files hold independent
+  fragments, not concatenable complete packages. Keep their omitted-context
+  labels; frozen fixture extracts and complete tutorial packages serve a
+  separate purpose.
+- `figures/g9-model.{puml,svg}` locates `Point` in `example::geometry` version
+  `1`, and `Canvas`, `position` and `Filter` in `example::canvas` version `1`.
+  The canvas package imports geometry as `Geometry`. `position` and `Canvas`
+  are sibling declarations connected by `member`; each callable owns its
+  named parameter and result slots. Preserve that containment distinction.
+- `figures/g10-{shell,clause,names,callable,places,environment,pattern,outcome,callback-use,dependency,access}.{puml,svg}`
+  supplies exact grammar-production views, with the shared key at
+  `figures/style/railroad-key.puml`. L2/C1 share the place view; C5/C6/A2 link
+  the callable overview before their nested-block details. Environment and
+  pattern views expose structure the shell leaves opaque. Existing G3 access
+  and G7 callback-timing explanations remain linked for their distinct jobs.
+
+Keep the all-zero Geometry import digest explicitly a placeholder. The source
+`"Canvas.position"`, symbol `"canvas_position"` and declaration identity
+`(example::canvas, "1", position)` remain separate; `direct` names an access
+path. The `fixture`/`native` pair and repeated `a`/`b` digests are synthetic F1
+definitions and tokens, not production providers. Hypothetical
+`collections::Sequence<i32>` and the optional Panel member require providers
+beyond F1. Nominal-relation and session-order sketches omit compatibility,
+lifetime and availability facts; retention, actor and artifact variants remain
+conditional illustrations. They are not added fixture capabilities.
+
+The proof inspected direct L2 entry, overview-to-rule navigation and the rendered
+model/railroads beside their examples. These checks establish consistency and
+preservation only. `first-path-reading-k64` still owns the human assessment of
+understanding and the combined corrections; no new process remedy follows from
+this proof's empty findings.
+
 The root brief is the requirements authority for later sessions. There are no
 three unresolved interdependent decisions requiring a full grilling: the human
 has specified purpose, audience, forms, quality direction and the multi-step

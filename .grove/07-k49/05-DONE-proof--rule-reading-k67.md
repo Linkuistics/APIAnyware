@@ -58,3 +58,38 @@ This node has an explicit human-directed correction bound. Record substantive
 earlier-stage defects for `first-path-reading-k64`; do not start another
 unattended correction run. Do not infer human understanding from editorial
 checks or treat the pending reader checkpoint as proof work.
+
+## Decisions (running log)
+
+D1. The whole-document read found no actionable defect in the three rule pages
+or their reading aids. Keep the delivered prose and figures unchanged. Checked
+package containment separately from member ownership; import/provider aliases,
+receiver and callback slots, bare types, references and places; lifetime,
+outcome and callback obligations; and each provider-support boundary against
+the canonical rules and frozen fixtures. The Handler extracts include their
+closing brace. Rendered G9 and every G10 view agree with the adjacent examples,
+keys and grammar productions. No correction run or reviewer was needed.
+
+D2. Direct L2 entry supplies the two-package model before dependent reference
+syntax. The overview reaches each canonical page; their local rule links,
+glossary/prerequisite routes, detail-to-overview links and explanation/example
+routes supply onward navigation. The node has no remaining handed-forward
+entry. Full reference inventory work remains with the queued reference node;
+human comprehension remains with `first-path-reading-k64`.
+
+D3. Graph generation `2026-09-23T09:55:55Z` is older than the document edits;
+coverage reports changed/untracked Markdown and excluded design/example
+material. Evidence for this proof comes from direct source reads and rendered
+figures, not graph completeness or structural code claims.
+
+D4. `task docs:check` passed: links and example fences checked across 19 files,
+17 documentation pages reachable, and all 23 SVGs reproduced. Before/after
+SHA-256 digests matched for the 92 subjects: all files under the interface-language
+directory and specification tools (excluding Python caches), root Taskfile,
+documentation plan and audit. Every G10 production token sequence matches
+`grammar.ebnf`. Removing the complete paired reading-aid blocks and their blank
+separators recovers `language.md`, `contracts.md` and `profiles.md` byte for byte
+from `87221b8c`, including rule anchors and F1. The grammar, conformance record
+and buffers/objects/callbacks fixtures also match that revision byte for byte.
+These are consistency and preservation checks, not parsing, semantic validation
+or evidence of human understanding.
