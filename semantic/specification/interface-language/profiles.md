@@ -1,5 +1,22 @@
 # Profiles, access paths and ABI references
 
+<!-- reading-aid: page-context -->
+> **Purpose:** rules with reading aids — connect API declarations to provider definitions and ways to reach code or data.
+> **Reader:** language designers new to API binding, and authors or implementers checking provider boundaries.
+> **Before this:** [the package and declaration model](language.md#l2); [the contract rules](contracts.md#c1) explain value and call obligations.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
+> **Rules:** [A1](#a1), [A2](#a2), [A3](#a3), [A4](#a4) and [A5](#a5) below are canonical; [F1](#f1) defines the synthetic fixture catalogue.
+
+Each **Reading aid (non-normative)** explains an example and has a visible end
+marker. The surrounding paragraphs state the requirements. The examples use
+invented APIs and F1's abstract test providers. Fragments name their missing
+context; the [conformance examples](conformance.md#positive-specifications)
+supply complete contracts. [Packages, environments and access paths](explanation/packages.md)
+provides a connected explanation.
+<!-- /reading-aid -->
+
 Normative draft 0.1. **A1–A5** specify the provider boundary. **F1** defines a
 synthetic catalogue used only by this draft's examples. No production provider
 is implemented by these documents.
@@ -7,6 +24,59 @@ is implemented by these documents.
 <a id="a1"></a>
 
 ## A1. Provider manifests
+
+<!-- reading-aid: a1-dependencies -->
+### Reading aid (non-normative): name the definitions the package depends on
+
+A tool needs definitions for how to reach an API and how its values cross the
+machine boundary. An AIL package selects those definitions by name, version and
+digest. A [profile](glossary.md#profile) defines mechanisms and any extra
+vocabulary; an [ABI entry](glossary.md#abi-entry) defines calling conventions
+and representations. A [provider](glossary.md#provider) supplies the definitions
+and the capabilities needed to use them ([A1](#a1)).
+
+Fragment — shows the dependencies and environment of the invented Counter API.
+The complete [objects package](examples/objects.ail) also supplies publication
+clauses and declarations. These digest strings are **F1 test resolution tokens**,
+not hashes of production manifests or of this page.
+
+<!-- ail-example: examples/rule-reading/providers.ail region=dependencies -->
+```ail
+language "0.1";
+package example::objects version "1" {
+  use profile fixture = "example.fixture" version "1"
+    digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1"
+    digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+    toolchain("fixture-compiler", "1");
+  }
+  // Publication clauses and declarations omitted; these pins are F1 test tokens.
+}
+```
+
+`fixture` and `native` are aliases inside this package. A later
+`via(fixture, ...)` selects the profile, while `abi(native, ...)` selects the
+ABI entry. The strings `"example.fixture"` and `"example.fixture-abi"` name the
+definitions supplied in the resolution set. `test` names the exact environment
+in which this package uses them ([L2](language.md#l2), [L3](language.md#l3)).
+
+The provider manifest states which mechanisms, types, values and environments
+it supports. Here [F1](#f1) supplies that synthetic definition. A package using
+an unsupported mechanism can still have recognizable syntax, but the consumer
+cannot claim complete validation. The supplied definition must explain the
+mechanism's meaning as well as its spelling ([A1](#a1)).
+
+<!-- figure-slot: G10-dependency; dependency production, use profile versus use abi -->
+The [grammar](grammar.ebnf)'s `dependency` production starts with `use`, selects
+`profile` or `abi`, then gives an alias, identifier string, version and digest.
+It describes a reference to an external definition; it does not embed the
+manifest's schema. See [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries).
+
+**End of reading aid.**
+<!-- /reading-aid -->
 
 A profile is a versioned, digest-pinned definition of additional source types,
 clauses, access mechanisms or behavioural rules. Its manifest MUST specify:
@@ -25,6 +95,46 @@ or turn an unknown fact into an authoritative default. A new core meaning requir
 a new language version. Pure navigation goes in `doc`/`link`, not an unknown
 extension whose meaning consumers might accidentally ignore.
 
+<!-- reading-aid: a1-namespace -->
+### Reading aid (non-normative): recognize a profile clause at its declaration
+
+A profile can add a fact using its alias as a namespace. Counter's description
+includes a synthetic compiler-conformance fact alongside its core sharing and
+isolation clauses ([A1](#a1), [F1](#f1)).
+
+Fragment — shows the profile clause on Counter. The complete
+[objects package](examples/objects.ail) supplies its header, pinned providers,
+environment, publication clauses, lifecycle and nominal relations.
+
+<!-- ail-example: examples/rule-reading/providers.ail region=profile-facts -->
+```ail
+package example::objects version "1" {
+  object Counter {
+    sharing(confined);
+    isolation(main);
+    fixture::sendability(nonconforming);
+    // Availability, lifecycle and nominal relations omitted.
+  }
+  // Header, fixture profile pin, environment and publication context omitted.
+}
+```
+
+`fixture::sendability(nonconforming)` selects a clause defined by the profile
+aliased `fixture`. The `::` separates the namespace from its clause name.
+The manifest defines the allowed values and locations; the ordinary clause
+syntax still ends in `;`. `sharing(confined)` and `isolation(main)` remain
+core facts about permitted use. The conformance fact describes a different
+property and leaves those obligations in place ([C2](contracts.md#c2), [F1](#f1)).
+
+A profile-defined type or constructor uses the same alias qualification where
+a type or value is expected. [L4's type example](language.md#l4) shows that
+form and its provider-support boundary. F1 defines no extra types, so a new
+`fixture::SomeType` spelling would fail its vocabulary check. See the
+[profile glossary entry](glossary.md#profile).
+
+**End of reading aid.**
+<!-- /reading-aid -->
+
 An ABI entry is a tooling-owned, versioned definition of calling conventions and
 representations. Its manifest MUST specify accepted environment configurations,
 type lowering, parameter/result/exception lowering, aggregate layout rules,
@@ -41,10 +151,133 @@ unsupported package as text, but MUST NOT label it a validated authoritative mod
 
 ## A2. Access paths
 
+<!-- reading-aid: a2-paths -->
+### Reading aid (non-normative): read one declaration with two ways to reach it
+
+Counter has a member function that reads its count. A consumer can reach that
+same operation by sending a message or by compiling a source call. Each
+[access path](glossary.md#access-path) states the mechanism and the ABI that
+makes it usable. Both paths implement the function's whole contract ([A2](#a2)).
+
+Fragment — shows both paths inside `read_count`. The complete
+[objects package](examples/objects.ail) supplies Counter, the provider pins and
+`test` environment shown at [A1](#a1), publication, input/effect/outcome clauses
+and deprecation. The names `objc_like` and `swift_like` describe synthetic
+fixture paths; they establish no Objective-C or Swift production support.
+
+<!-- ail-example: examples/rule-reading/providers.ail region=paths -->
+```ail
+package example::objects version "1" {
+  fn read_count(receiver: Counter) -> u64 {
+    available([test]);
+    member(@Counter, instance);
+    receiver($receiver);
+    access objc_like in [test] {
+      abi(native, "object-message");
+      via(fixture, "message", "currentCount");
+      mapping(identity);
+      compatibility(stable);
+    }
+    access swift_like in [test] {
+      abi(native, "source");
+      via(fixture, "source-call", "Outer.Counter.currentCount.get");
+      mapping(identity);
+      compatibility(source, "fixture-build");
+    }
+    // Deprecation, input, effects and outcome omitted.
+  }
+  // Header, provider pins, environment, Counter and publication context omitted.
+}
+```
+
+`member(@Counter, instance)` associates the package-level function with Counter.
+`receiver($receiver)` identifies an ordinary named parameter. The first path,
+`objc_like`, applies in `[test]`, selects the `native` ABI's `"object-message"`
+convention, and uses the `fixture` profile's `"message"` mechanism with selector
+`"currentCount"`. F1's mapping makes the receiver implicit when sending that
+message. It remains present in the semantic signature ([L5](language.md#l5),
+[A2](#a2), [F1](#f1)).
+
+The second path selects convention `"source"` and mechanism `"source-call"`.
+Its identity string names the source getter; its compatibility clause names
+the profile's build recipe. [A4](#a4) explains the conditions that recipe pins.
+The consumer chooses a path explicitly; their order on the page expresses no
+preference. Each path lists applicable environments, and the paths together
+cover the declaration's availability ([A2](#a2)).
+
+`mapping(identity)` relies on this particular profile/ABI pair to lower the
+entire signature faithfully. A profile needing adjustments can instead name
+its recipe with `mapping(profileAlias, "mapping-id")` in the same position;
+F1 defines only identity mapping. Native register splitting can preserve the
+same semantic value, while hiding an observable success status changes the
+operation being described. See [Mapping](glossary.md#mapping).
+
+The simpler `position` example in [L2](language.md#l2) selects
+`via(fixture, "symbol", "canvas_position")` with convention `"c"`.
+The path's local name `direct`, the source spelling and the declaration's
+identity each have their own role. Merely knowing the source name supplies
+none of these access clauses.
+
+<!-- figure-slot: G10-access; access nested in callable, environment list and clauses -->
+The [grammar](grammar.ebnf)'s `access` production gives a local path name,
+`in` and a nonempty environment list, then a clause block. [G3's access view](explanation/packages.md#reaching-the-code)
+shows the Counter paths and provider relationships; the syntax view locates
+their braces and clauses.
+
+**End of reading aid.**
+<!-- /reading-aid -->
+
 Every function requires one or more `access` blocks; each global and non-literal
 constant does too. Callbacks instead require `callback_abi(abiAlias, "convention")`
 and `representation(profileAlias, "kind")` in their declaration. A callable's
 source spelling does not create an access path.
+
+<!-- reading-aid: a2-callback -->
+### Reading aid (non-normative): supply the representation of a callable value
+
+An API can receive a callable value for later invocation. Its callback
+declaration describes how that value is represented and entered. The synthetic
+Handler uses `callback_abi(native, "c")` and
+`representation(fixture, "closure")` in its declaration body
+([A2](#a2), [F1](#f1)).
+
+Fragment — shows the complete Handler declaration extracted from the
+[callbacks package](examples/callbacks.ail). Its surrounding package supplies
+F1's `native` and `fixture` aliases, `test`, the registration and Subscription
+lifetime, and publication context.
+
+<!-- ail-example: examples/callbacks.ail lines=19-37 -->
+```ail
+  callback Handler(value: u64) -> unit {
+    available([test]);
+    deprecated(no);
+    sharing(shared);
+    isolation(none);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    callback_abi(native, "c");
+    representation(fixture, "closure");
+    outcome handled {
+      when(returned, any);
+      meaning(success);
+    }
+  }
+```
+
+The representation kind `"closure"` is a provider-defined callable value with
+saved captures. F1 specifies retention and release for stored values and no
+separately visible context argument. [C6](contracts.md#c6) shows how `subscribe`
+uses this type and describes the registration's schedule. The callback's
+own declaration describes one invocation; its representation tells the tool
+how to carry and call the value. See [Callback captures](glossary.md#callback-captures).
+
+**End of reading aid.**
+<!-- /reading-aid -->
 
 Each access has a distinct local name and lists environments in which it applies.
 The list is a nonempty subset of the declaration's availability. Across all paths
@@ -79,6 +312,66 @@ The same applies to managed projections and wire protocols.
 
 ## A3. Type representations and data access
 
+<!-- reading-aid: a3-data -->
+### Reading aid (non-normative): distinguish a stored pointer from an address of storage
+
+The provider determines how semantic types are represented at an access
+boundary. The `Geometry::Point` record in [L2](language.md#l2) declares ordered
+integer fields `x` and `y`. A selected ABI/profile supplies their native
+offsets, size and alignment. A complete [representation](glossary.md#representation)
+recipe covers all reachable types and the operations needed to use them
+([A3](#a3)); a record declaration supplies only part of that information.
+
+Data access also needs an explicit mechanism. The Counter package has two
+pointer-valued declarations. One identifies the address of exported byte
+storage; the other loads a pointer value stored in a global.
+
+Fragment — shows the data access blocks from the complete
+[objects package](examples/objects.ail), with other clauses omitted.
+That package supplies provider pins, `test`, publication facts, mutability and
+output contracts: both pointers borrow four binary bytes with region `static`
+and no earlier invalidator.
+
+<!-- ail-example: examples/rule-reading/providers.ail region=data -->
+```ail
+package example::objects version "1" {
+  constant fixed_bytes: ptr<u8> {
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "address", "fixture_fixed_bytes");
+      mapping(identity);
+      compatibility(stable);
+    }
+    // Availability, sharing/isolation and output contracts omitted.
+  }
+  global pointer_value: ptr<u8> {
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "load", "fixture_pointer_value");
+      mapping(identity);
+      compatibility(stable);
+    }
+    // Availability, mutability, sharing/isolation and output contracts omitted.
+  }
+  // Header, provider pins, environment and publication context omitted.
+}
+```
+
+`via(fixture, "address", "fixture_fixed_bytes")` supplies the address of the
+byte storage. `via(fixture, "load", "fixture_pointer_value")` loads the pointer
+held in the global. Both declarations have type `ptr<u8>`, so the mechanism
+is a separate fact a consumer needs. [C7](contracts.md#c7) shows the global's
+full local output contract, including the meaning of `$result` on a read.
+
+A source expression would need a provider that explicitly defines evaluation,
+ownership and effects. F1's `source-call` is a function mechanism; it does not
+supply an arbitrary data-expression mechanism. Likewise, a value requiring
+runtime metadata still needs a complete representation recipe even when its
+native offsets are hidden ([A3](#a3), [F1](#f1)). See [Reaching the code](explanation/packages.md#reaching-the-code).
+
+**End of reading aid.**
+<!-- /reading-aid -->
+
 A type needed at an access boundary must be representable by the selected provider
 over that path's environments. Core scalar widths, record field order, array
 extent, enum domain and pointer mutability are semantic facts. Layout such as
@@ -104,6 +397,39 @@ effectful evaluations require explicit profile semantics.
 <a id="a4"></a>
 
 ## A4. Representation and compatibility
+
+<!-- reading-aid: a4-compatibility -->
+### Reading aid (non-normative): state which definitions can be used together
+
+The two `read_count` paths at [A2](#a2) state different conditions for using
+their representations. The message path's `compatibility(stable)` uses the
+ABI entry's promised fixture domain. The source path's
+`compatibility(source, "fixture-build")` instead ties use to one named build
+recipe ([A4](#a4), [F1](#f1)).
+
+Both clauses sit inside the same access blocks as `abi`, `via` and `mapping`.
+For `"fixture-build"`, F1 requires `fixture-compiler` version `1` and compilation
+against this package's source surface, with no additional dependencies or
+options. That recipe supplies the conditions under which the compiler
+establishes compatibility for the build. A consumer without that compiler
+can decline the source path and still explain its contract.
+
+An artifact-bound provider would use
+`compatibility(artifact, "build-id")` in that clause position. Its resolution
+set would need the named built artifact set's content identities and
+representation manifest, including compiler/runtime requirements.
+`"build-id"` here illustrates the argument position; it is not an F1 catalogue
+entry or an actual resolved build. A compiler-version string alone supplies
+less information than this artifact identity ([A4](#a4)).
+
+These are three ways to define a [compatibility domain](glossary.md#compatibility-domain).
+A `stable` claim needs a provider guarantee for every reachable type in its
+domain; a `source` claim needs the complete recipe; an `artifact` claim needs
+the identified artifact set. [The design choices explanation](explanation/choices.md)
+discusses why native representations need this explicit boundary.
+
+**End of reading aid.**
+<!-- /reading-aid -->
 
 `stable` claims compatibility across the ABI entry's specified domain; the
 provider must actually guarantee that domain for all reachable types. It is not
@@ -133,6 +459,39 @@ its qualification are in the [survey](../../docs/research/2026-09-22-interface-l
 
 ## A5. Consumer agreement
 
+<!-- reading-aid: a5-views -->
+### Reading aid (non-normative): keep the same API facts in different presentations
+
+A documentation renderer can explain the Store view as “the bytes remain usable
+until Store destruction.” A binding generator needs the same fact when it
+arranges access to that pointer. The [C1 fragment](contracts.md#c1) locates the
+source clauses: `give($result, borrow(owner($store)))` and
+`invalidated_by($result, [])` in the `viewed` outcome. A typed model or prose
+view retains those facts and their connection to Store ([A5](#a5)).
+
+Reordering independent `input`, `retain` and `valid` clauses in that callable
+leaves the contract unchanged. Changing the returned `give` from a borrow to
+`owned`, or adding an invalidating operation, changes facts that consumers
+preserve. In a callable with several parameters, swapping their positions also
+changes the signature. In Counter, both `objc_like` and `swift_like` remain
+available alternatives even if one consumer chooses only the message path.
+The local [access example](#a2) makes that choice inspectable.
+
+Comments and navigation can differ without changing canonical model equality,
+while lossless authoring preserves them for the person editing the document.
+By contrast, a changed dependency digest or ordered record field list changes
+the semantic model. Lists with set meaning, such as `available([test])`, compare
+by identity and reject duplicates ([A5](#a5)).
+
+A generator may be unable to preserve a callback or lifetime contract in its
+target language even when the description is valid. It reports that binding
+limitation separately from malformed AIL and explains any extra restrictions
+it imposes. See [Consumer](glossary.md#consumer) and
+[Validation](glossary.md#validation).
+
+**End of reading aid.**
+<!-- /reading-aid -->
+
 The authoritative view includes declaration identity, full types, per-environment
 access alternatives, slot contracts, all outcomes, callback schedules, availability
 and patterns. A documentation renderer may present this in prose; an LLM library
@@ -156,6 +515,44 @@ contract. It must report that limitation separately from malformed/incomplete AI
 <a id="f1"></a>
 
 ## F1. Synthetic fixture catalogue
+
+<!-- reading-aid: f1-fixture -->
+### Reading aid (non-normative): read examples within their supplied provider boundary
+
+The example packages use an invented provider so their contracts can be
+inspected without assuming an operating-system implementation. The dependency
+fragment at [A1](#a1) binds `fixture` to `"example.fixture"` version `"1"`
+and `native` to `"example.fixture-abi"` version `"1"`. Its `a` and `b` digest
+strings are special fixture-mode tokens. Ordinary digest checking still applies
+to production resolution ([L2](language.md#l2), [F1](#f1)).
+
+The examples on this page locate F1's mechanisms: Counter uses `message` and
+`source-call` at [A2](#a2), while the two data declarations use `address` and
+`load` at [A3](#a3). The canvas `position` fragment linked from A2 shows
+`symbol`. These mechanism strings are arguments to `via`, and each has the
+allowed declaration kind and convention stated in the table below. A plausible
+new string would still be unsupported.
+
+Counter's `fixture::sendability(nonconforming)` at [A1](#a1) records one
+synthetic conformance state. The alternatives `available` and `unavailable`
+describe two other states; none replaces core `sharing`. In that same object's
+body, `fixture::actor("ui")` would state a source actor identity and require
+matching `isolation(executor(fixture, "ui"))`. That is a hypothetical pair:
+the actual Counter example uses `isolation(main)` and omits `fixture::actor`.
+An explicit `fixture::actor(none)` instead pairs with `isolation(none)`.
+F1 limits both profile clauses to the five nominal kinds listed below.
+
+The callback example's `representation(fixture, "closure")` and Counter's
+`runtime(fixture, "retain")`/`runtime(fixture, "release")` refer to this same
+synthetic provider. [C2](contracts.md#c2) locates the runtime clauses, and
+[C4](contracts.md#c4) shows its supported `utf-8` text encoding.
+[The complete fixtures](conformance.md#positive-specifications) combine these
+facts within F1's supported scope. Optional members, generic families or thrown
+completion would require capabilities this catalogue does not supply; the
+language's ability to spell them does not extend the catalogue.
+
+**End of reading aid.**
+<!-- /reading-aid -->
 
 The examples use profile `example.fixture` version `1` and ABI `example.fixture-abi`
 version `1`. Their digest pins use `sha256:` plus 64 `a` or 64 `b` digits,

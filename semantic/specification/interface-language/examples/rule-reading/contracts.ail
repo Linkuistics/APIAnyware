@@ -1,0 +1,212 @@
+// Independent teaching fragments; not concatenable or complete packages.
+// region: places
+package example::canvas version "1" {
+  record Selection {
+    field canvas: Canvas;
+    // Nominal contracts omitted.
+  }
+  fn inspect(selection: Selection, point: ptr<Geometry::Point>, items: array<Canvas, 2>) -> unit {
+    input($selection.canvas, borrow);
+    retain($selection.canvas, none);
+    valid($selection.canvas, call);
+    input($items[], borrow);
+    retain($items[], none);
+    valid($items[], call);
+    extent($point, one);
+    // Pointer inputs, effects, outcomes and access omitted.
+  }
+  // Header, import, Canvas and publication context omitted.
+}
+// endregion
+
+// region: regions
+package example::buffers version "1" {
+  fn view(store: Store) -> ptr<u8> {
+    input($store, borrow);
+    retain($store, none);
+    valid($store, call);
+    extent($result, buffer(16, 16, elements));
+    contents($result, binary);
+    outcome viewed {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, borrow(owner($store)));
+      invalidated_by($result, []);
+    }
+    // Availability, effects and access omitted.
+  }
+  // Header, Store lifetime and publication context omitted.
+}
+// endregion
+
+// region: lifecycle
+package example::buffers version "1" {
+  resource Store {
+    lifecycle(unique, @destroy);
+    sharing(transferable);
+    isolation(none);
+    // Availability, deprecation and implements omitted.
+  }
+  fn destroy(store: Store) -> unit {
+    input($store, consume);
+    retain($store, none);
+    // Effects, successful returned outcome and access omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: effects
+package example::buffers version "1" {
+  fn view(store: Store) -> ptr<u8> {
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    input($store, borrow);
+    retain($store, none);
+    valid($store, call);
+    // Extent, contents, outcome, availability and access omitted.
+  }
+  // Header, Store lifetime and publication context omitted.
+}
+// endregion
+
+// region: retention
+package example::callbacks version "1" {
+  fn subscribe(handler: Handler) -> Subscription {
+    input($handler, borrow);
+    retain($handler, strong(owner($result)));
+    valid($handler, call);
+    // Effects, callback schedule, owned result outcome and access omitted.
+  }
+  // Header, Handler, Subscription lifetime and publication context omitted.
+}
+// endregion
+
+// region: pointers
+package example::buffers version "1" {
+  fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+    mutation(arguments);
+    input($destination, borrow);
+    retain($destination, none);
+    valid($destination, call);
+    direction($destination, out);
+    aliasing($destination, disjoint);
+    extent($destination, buffer(16, 16, elements));
+    contents($destination, binary);
+    // Store input, remaining effects, outcomes, availability and access omitted.
+  }
+  // Header, Store lifetime and publication context omitted.
+}
+// endregion
+
+// region: text
+package example::text version "1" {
+  fn accept_text(text: ptr<u8>) -> unit {
+    input($text, borrow);
+    retain($text, none);
+    valid($text, call);
+    direction($text, in);
+    aliasing($text, disjoint);
+    extent($text, buffer(3, 4, elements));
+    contents($text, text("utf-8", nul));
+    // Effects, successful returned outcome, availability and access omitted.
+  }
+  // Header, fixture provider dependencies and publication context omitted.
+}
+// endregion
+
+// region: outcomes
+package example::buffers version "1" {
+  fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+    outcome copied {
+      when(returned, equal($result, true));
+      meaning(success);
+      state($result, valid);
+      state($destination[], valid);
+    }
+    outcome failed {
+      when(returned, equal($result, false));
+      meaning(failure);
+      state($result, valid);
+      state($destination[], invalid);
+    }
+    // Input, buffer, effect and access contracts omitted.
+  }
+  // Header, Store lifetime and publication context omitted.
+}
+// endregion
+
+// region: replacement
+package example::exchange version "1" {
+  fn replace(value: mutptr<Counter>) -> unit {
+    extent($value, one);
+    direction($value, inout);
+    input($value.*, consume);
+    retain($value.*, none);
+    outcome replaced {
+      when(returned, any);
+      meaning(success);
+      state($value.*, valid);
+      give($value.*, owned);
+    }
+    // Pointer input, contents, aliasing, effects, availability and access omitted.
+  }
+  // Header, Counter lifetime and publication context omitted.
+}
+// endregion
+
+// region: callback-use
+package example::callbacks version "1" {
+  fn subscribe(handler: Handler) -> Subscription {
+    callback $handler {
+      timing(after_return);
+      count(0, many);
+      scope(owner($result));
+      executor(any);
+      concurrency(serial);
+      reentrancy(forbidden);
+      quiescence(@unsubscribe);
+    }
+    // Input retention, effects, owned result outcome and access omitted.
+  }
+  fn unsubscribe(subscription: Subscription) -> unit {
+    input($subscription, consume);
+    retain($subscription, none);
+    requires(outside_callback(@subscribe::handler));
+    // Effects, successful returned outcome and access omitted.
+  }
+  // Header, Handler, Subscription lifetime and publication context omitted.
+}
+// endregion
+
+// region: capability
+package example::optional version "1" {
+  interface Panel {
+    // Nominal contracts and provider representation omitted.
+  }
+  fn redraw(panel: Panel) -> unit {
+    member(@Panel, instance);
+    receiver($panel);
+    requirement(optional);
+    requires(capability(@redraw, $panel));
+    // Input, effects, outcome, availability and access omitted.
+  }
+  // Header, capable provider and publication context omitted; F1 cannot support this.
+}
+// endregion
+
+// region: invalid-extent
+package example::buffers version "1" {
+  fn view(store: Store) -> ptr<u8> {
+    extent($result, buffer(17, 16, elements));
+    // All other clauses omitted to isolate the impossible extent.
+  }
+  // Header, Store lifetime and publication context omitted.
+}
+// endregion

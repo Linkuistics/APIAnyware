@@ -88,7 +88,57 @@ example are constructed sketches whose omitted contracts still need to establish
 compatibility/lifetime/availability. Do not promote them to complete examples.
 The existing full fixture and tutorial packages retain that separate purpose.
 
+The second draft adds `examples/rule-reading/contracts.ail` and `providers.ail`.
+These also hold independent named fragments, not complete packages. The Store,
+Counter and Subscription extracts preserve the frozen examples' facts. The
+additional canvas inspection, text input and reference replacement are constructed
+fragments with omitted context. The optional Panel member explicitly requires a
+provider beyond F1. Inline copy/weak/unretained storage, artifact compatibility
+and actor variants are conditional illustrations, not added fixture capabilities.
+The canonical pre-draft comparison revision for **all three** pages is
+`87221b8c`. Strip entire paired reading-aid blocks, including the newline after
+the closing marker and its blank separator, then compare bytes with that revision.
+The grammar, conformance record and frozen buffers/objects/callbacks packages
+also remain byte-identical to that revision. Preserve those boundaries during
+copy-edit and art. Checks of snippet equality do not establish that a line range
+contains the entire declaration it claims: inspect the first/last lines too.
+
 ## Handed forward
+
+- **Copy-edit — whole set.** Read all of `language.md`, `contracts.md` and
+  `profiles.md`, applying plan §4–§6 only inside the marked aids. Preserve the
+  canonical text outside them exactly. Check connected explanations, positive
+  framing and terminology in captions, labels, tables and snippet commentary;
+  keep fragment labels and provider limits explicit. The technical reviewer
+  found one A2 Handler extraction error, now corrected to `callbacks.ail`
+  lines 19–37; there is no unresolved technical finding from that bounded read.
+  Readability and human understanding have not been assessed by that review.
+- **Art — C1 `G10-places`.** Reuse or expand the L2 place view if it can show
+  `$selection.canvas`, `$items[]`, `$point.*.x` and `$result.x` without overload.
+  Pair it with `contracts.ail` region `places`. `[]` is uniform array/buffer
+  element selection, not an index expression; `.*` requires the single-pointee
+  extent when addressing pointer storage. Grammar repetition does not perform
+  type checking. Keep the geometry/canvas model reachable from this detail.
+- **Art — C5 `G10-outcome` and C6 `G10-callback-use`.** Show the nesting of
+  `outcome` and `callback_use` inside `callable`, using `copy_bytes` and
+  `subscribe` respectively. A combined callable-body overview plus small
+  details is allowed. Preserve the distinction between `callback Handler(...)`
+  (a declaration with its own slots) and `callback $handler { ... }` (the
+  registration's schedule). Pair with `contracts.ail` regions `outcomes` and
+  `callback-use`, and the frozen Handler declaration. C5 checks partitions;
+  C6 checks schedule/retention/quiescence relationships. A railroad proves
+  neither. The existing G7 timing explanation remains linked through the
+  concepts callback section; no new timing figure is required by this draft.
+- **Art — A1 `G10-dependency`, A2 `G10-access`.** Draw the `dependency` choice
+  `use profile`/`use abi` using the declared aliases `fixture`/`native`; pair
+  with `providers.ail` region `dependencies`. The `access` production pairs
+  with region `paths`: path name, nonempty `in [test]` list, clause block.
+  Show how it sits inside `read_count`; use or link G3 for the provider
+  relationships instead of duplicating that whole structure. The generic
+  grammar permits repeated clauses; A2 defines the required singular clauses.
+  Reuse existing G10 views where they already teach the needed syntax, with
+  adjacent reading keys and rule links. Every surviving slot is resolved by
+  a figure or an explicit justified reuse; no dangling slot comments remain.
 
 - **Art — G9, L2 `G9-model` slot.** Show containment from the two named/versioned
   packages to their declarations, the canvas → geometry import labelled
