@@ -1,0 +1,58 @@
+// Independent teaching fragments; none supplies a complete package contract.
+// region: values
+package example::geometry version "1" {
+  alias Coordinate = i32 {
+    // Nominal contracts omitted.
+  }
+  record Samples {
+    field enabled: bool;
+    field origin: Coordinate;
+    field counts: array<u16, 4>;
+    field signal: complex<f32>;
+    // Availability, sharing and isolation omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: references
+package example::canvas version "1" {
+  fn inspect(canvas: Canvas, pixels: ptr<u8>, output: mutptr<u8>) -> unit {
+    // Pointer extents, storage and callable contracts omitted.
+  }
+  fn create() -> nullable<Canvas> {
+    // Allocation outcomes and ownership contracts omitted.
+  }
+  fn read_handle_slot(slot: ptr<Canvas>) -> unit {
+    // Handle-storage and callable contracts omitted.
+  }
+  // Header, Canvas and publication context omitted.
+}
+// endregion
+
+// region: domains
+package example::geometry version "1" {
+  enum Axis: u8 {
+    values(closed);
+    case horizontal = 0;
+    case vertical = 1;
+    // Nominal contracts omitted.
+  }
+  flags Edges: u8 {
+    values(closed);
+    case left = 1;
+    case right = 2;
+    // Nominal contracts omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: profile-type
+package example::collections version "1" {
+  alias Points = collections::Sequence<i32> {
+    // Provider schema and all contracts omitted.
+  }
+  // Header, collections profile pin and publication context omitted.
+}
+// endregion

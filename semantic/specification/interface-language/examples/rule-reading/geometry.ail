@@ -1,0 +1,9 @@
+// Fragment: field structure only; no complete publication contract.
+language "0.1";
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Publication, environments and nominal contracts omitted.
+  }
+}

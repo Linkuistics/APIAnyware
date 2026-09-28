@@ -1,0 +1,54 @@
+// Independent teaching fragments; none supplies a complete package contract.
+// region: slots
+package example::canvas version "1" {
+  pattern inspection {
+    role samples: slot many;
+  }
+  instance canvas_slots: inspection {
+    bind(samples, [@position::canvas, @position::result,
+                   @Filter::point, @Filter::result]);
+  }
+  // Header, position, Filter and publication context omitted.
+}
+// endregion
+
+// region: cardinalities
+package example::buffers version "1" {
+  pattern grouping {
+    role element: type one;
+    role observer: operation optional;
+    role inputs: slot many;
+    role lifetimes: pattern some;
+  }
+  instance store_group: grouping {
+    bind(element, [@Store]);
+    bind(observer, []);
+    bind(inputs, []);
+    bind(lifetimes, [@store_lifetime]);
+  }
+  // Header, Store, store_lifetime and publication context omitted.
+}
+// endregion
+
+// region: ordering
+package example::sessions version "1" {
+  fn prepare(session: Session) -> unit {
+    // Contracts establishing the prepared state omitted.
+  }
+  fn read(session: Session) -> u64 {
+    // Contracts consistent with the ordering law omitted.
+  }
+  pattern prepared_use {
+    role preparation: operation one;
+    role use: operation one;
+    law(before, preparation, use);
+  }
+  instance session_order: prepared_use {
+    bind(preparation, [@prepare]);
+    bind(use, [@read]);
+    subject(preparation, @prepare::session);
+    subject(use, @read::session);
+  }
+  // Header, resource Session, lifetime and publication context omitted.
+}
+// endregion

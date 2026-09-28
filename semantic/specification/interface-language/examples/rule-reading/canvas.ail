@@ -1,0 +1,72 @@
+// Independent fragments of the same invented package; not concatenable documents.
+// The zero digest is a placeholder, not the hash of geometry.ail.
+// region: model
+language "0.1";
+package example::canvas version "1" {
+  import example::geometry version "1"
+    digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    as Geometry;
+  resource Canvas {
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Effects, outcomes, access and publication context omitted.
+  }
+}
+// endregion
+
+// region: callback
+package example::canvas version "1" {
+  callback Filter(point: Geometry::Point) -> bool {
+    outcome decided {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+    }
+    // Invocation, representation and nominal contracts omitted.
+  }
+  // Header, Geometry import and publication context omitted.
+}
+// endregion
+
+// region: spellings
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    source(fixture, "Canvas.position");
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "canvas_position");
+      mapping(identity);
+      compatibility(stable);
+    }
+    // Member, receiver and callable contracts omitted.
+  }
+  // Header, imports, providers, environment and Canvas omitted.
+}
+// endregion
+
+// region: publication
+language "0.1";
+package example::canvas version "1" {
+  surface("The invented canvas position API, release 1.");
+  exports([@Canvas, @position]);
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Canvas {
+    available([test]);
+    // Lifetime and other nominal contracts omitted.
+  }
+  fn position(canvas: Canvas) -> Geometry::Point {
+    available([test]);
+    // Member, receiver and callable contracts omitted.
+  }
+  // Geometry import, providers and remaining support declarations omitted.
+}
+// endregion

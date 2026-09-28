@@ -1,0 +1,16 @@
+// Independent invalid fragments. Each highlights one L2 naming failure;
+// omitted context is supplied by the corresponding language.md example.
+// region: collision
+package example::canvas version "1" {
+  import example::geometry version "1"
+    digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    as Geometry;
+  resource Geometry { }
+}
+// endregion
+
+// region: duplicate-parameter
+package example::canvas version "1" {
+  fn compare(canvas: Canvas, canvas: Canvas) -> bool { }
+}
+// endregion

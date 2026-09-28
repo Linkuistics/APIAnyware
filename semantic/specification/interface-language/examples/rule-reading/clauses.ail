@@ -1,0 +1,106 @@
+// Independent teaching fragments; none supplies a complete package contract.
+// region: inputs
+package example::canvas version "1" {
+  fn compare(left: Canvas, right: Canvas) -> bool {
+    input($left, borrow);
+    input($right, borrow);
+    // Retention, validity, effects, outcomes and access omitted.
+  }
+  // Header, Canvas and publication context omitted.
+}
+// endregion
+
+// region: navigation
+package example::geometry version "1" {
+  doc("Coordinates used by the invented drawing API.");
+  link("https://example.invalid/geometry");
+  record Point {
+    field x: i32;
+    field y: i32;
+    deprecated(no);
+    source(fixture, "Geometry.Point");
+    doc("A position measured along two axes.");
+    // Availability, sharing and isolation omitted.
+  }
+  // Header, fixture profile pin and publication context omitted.
+}
+// endregion
+
+// region: relations
+package example::drawing version "1" {
+  interface Drawable {
+    extends([]);
+    // Lifetime and nominal contracts omitted.
+  }
+  object Shape {
+    base(none);
+    implements([]);
+    // Lifetime and nominal contracts omitted.
+  }
+  object Dot {
+    base(@Shape);
+    implements([@Drawable]);
+    // Lifetime and nominal contracts omitted.
+  }
+  fn required_draw(item: Drawable) -> unit {
+    member(@Drawable, instance);
+    receiver($item);
+    requirement(required);
+    // Callable contracts omitted.
+  }
+  fn shape_draw(item: Shape) -> unit {
+    member(@Shape, instance);
+    receiver($item);
+    // Callable contracts omitted.
+  }
+  fn dot_draw(item: Dot) -> unit {
+    member(@Dot, instance);
+    receiver($item);
+    overrides(@shape_draw);
+    satisfies([@required_draw]);
+    // Compatible signatures, contracts and profile support required.
+  }
+  // Header, providers, availability and publication context omitted.
+}
+// endregion
+
+// region: extension
+package example::canvas_extras version "1" {
+  fn refresh(canvas: Drawing::Canvas) -> unit {
+    member(@Drawing::Canvas, instance);
+    receiver($canvas);
+    extension(fixture, "Refresh", "CanvasExtras");
+    // Callable contracts omitted.
+  }
+  // Header, Drawing import, fixture pin and publication context omitted.
+}
+// endregion
+
+// region: member-kinds
+package example::canvas version "1" {
+  fn default_width() -> u32 {
+    member(@Canvas, static);
+    // Callable contracts omitted.
+  }
+  fn initialize(canvas: Canvas) -> unit {
+    member(@Canvas, initializer);
+    receiver($canvas);
+    // Initialization, ownership and callable contracts omitted.
+  }
+  // Header, Canvas and publication context omitted.
+}
+// endregion
+
+// region: data
+package example::settings version "1" {
+  constant default_limit: u32 {
+    literal(16);
+    // Availability and deprecation omitted.
+  }
+  global current_limit: u32 {
+    mutable(true);
+    // Access, sharing, isolation, availability and deprecation omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion

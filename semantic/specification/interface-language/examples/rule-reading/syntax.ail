@@ -1,0 +1,22 @@
+// Independent teaching fragments; not a complete package.
+// region: shell
+language "0.1";
+package example::geometry version "1" {
+  surface("An invented point API, release 1.");
+  exports([@Point]);
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Environment, availability and nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: clause
+package example::geometry version "2" {
+  record Point {
+    deprecated(since("2"), "Use Position instead.");
+    // Header, package context, fields and nominal contracts omitted.
+  }
+}
+// endregion
