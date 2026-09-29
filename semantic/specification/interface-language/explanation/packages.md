@@ -1,21 +1,36 @@
 # Packages, environments and access paths
 
-> **Purpose:** explanation — understand what a [package](../glossary.md#package) claims and how its operations reach code.
+> **Purpose:** explanation — connect a [package](../glossary.md#package), its dependencies and access paths to the API model.
 > **Reader:** language designers who have met [binding](../glossary.md#binding) obligations and AIL's contract [clauses](../glossary.md#clause).
-> **Before this:** [Using an API across languages](unsaid.md) and [How AIL states a contract](contracts.md).
+> **Before this:** [A model of API behaviour and binding obligations](model.md) and [How AIL states a contract](contracts.md).
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [`L2–L5`](../language.md#l2) and [`A1–A5`](../profiles.md#a1) are canonical; this page gives non-normative explanations.
 
-An API author describing a byte-store library needs more than the contract of
-`view`. A tool reading it also needs the `Store` type, the operation that
-destroys a store, and a way to call each function. The author brings these
-[declarations](../glossary.md#declaration) together in a named, versioned package.
-The package says which part of the API it describes and which configurations
-it covers ([`L2–L3`](../language.md#l2), [`A2`](../profiles.md#a2)).
+In the model's [published description](model.md#description), the author
+establishes which part and release of an API the account covers. Recall the
+watch API: a description of `watch_view` also needs the watch type, its release
+operation and the other definitions its contract refers to. The description
+identifies those [declarations](../glossary.md#declaration), selects its
+dependencies and states the exact configurations in which its claims hold
+([`L2–L3`](../language.md#l2)).
 
-This page follows those connections. Its examples describe invented APIs using
+[Reaching the code](model.md#access) adds the route from each operation to
+its implementation. A tool calling `watch_view` needs both that route and
+the machine-level rules for passing its values. The agreement among
+[writers, checkers and users](model.md#agreement) keeps these facts connected:
+the author supplies them, a checker assesses completeness and consistency,
+and consumers retain them in the views they present
+([`A1–A5`](../profiles.md#a1)).
+
+This page shows how AIL records those description-layer facts. It starts
+with the package that gathers them, then follows identity, scope,
+environments, dependencies and access. By the end, you should be able to
+trace the definitions a tool needs and distinguish a change of presentation
+or calling mechanism from a change to the API contract.
+
+The examples below describe invented APIs using
 the synthetic fixture [profile](../glossary.md#profile), a versioned language
 extension. The profile, [ABI](../glossary.md#abi) catalogue and [digest tokens](../glossary.md#digest-pin)
 come from [`F1`](../profiles.md#f1). Names resembling Objective-C or Swift
@@ -28,12 +43,18 @@ package, then follows how a tool identifies and reaches an API operation.
 
 ## Packages contain declarations
 
-Start with an invented geometry API that describes a point. The document's
-`language` header selects AIL's version; `package` names the API description
-and its version. Braces contain the package's declarations and clauses.
-Here `Point` is a record declaration, and its two `field` lines name the
-coordinates. The colon puts a type after each field name; `i32` is a signed
-32-bit integer ([`L1`](../language.md#l1), [`L4`](../language.md#l4)).
+To read [the published description](model.md#description), a tool needs to
+locate each declaration and follow its references. AIL's language-containment
+view supplies that organization: packages contain declarations, imports
+connect packages, and callables own their slots. The geometry/canvas example
+below shows how this text structure serves the description concept.
+
+The invented geometry API describes a point. Its `language` header selects
+AIL's version; `package` gives the API description its own name and version.
+`Point` records the coordinates as two signed 32-bit integer fields. Those
+fields describe [operations and their values](model.md#operations); the
+package gives their declaration an identity that another description can
+refer to ([`L1–L2`](../language.md#l1), [`L4`](../language.md#l4)).
 
 Fragment — shows a package shell and record. Publication clauses, environments,
 availability and nominal contracts are omitted.
@@ -58,10 +79,11 @@ position. It [imports](../glossary.md#import) geometry under the alias
 `Geometry`. When reading the canvas package, `Geometry::Point` therefore names an imported type
 ([`L2`](../language.md#l2)).
 
-The model shows the packages first, then their declarations and callable
-slots. A [slot](../glossary.md#slot) names a parameter, result or declared
+The language-containment diagram shows the packages first, then their
+declarations and callable slots. A [slot](../glossary.md#slot) names a parameter, result or declared
 thrown value in a [callable's](../glossary.md#callable) signature.
-`Canvas` is an [opaque resource](../glossary.md#opaque-resource), a
+`Canvas` illustrates [entities that outlive a call](model.md#entities): it is
+an [opaque resource](../glossary.md#opaque-resource), a
 [handle](../glossary.md#handle) with its own lifetime contract.
 `position` receives that handle and returns a point. The diagram also shows
 `Filter`, a [callback](../glossary.md#callback) that receives a point and
@@ -77,7 +99,7 @@ imports and functions to their nominal owners through
 [`member`](../glossary.md#member).
 `position` and `Canvas` share the package folder; the member arrow
 associates them. Follow the result type through `Geometry` to `Point`.
-[Model source](../figures/g9-model.puml).
+[Containment diagram source](../figures/g9-model.puml).
 
 Fragment — shows the canvas import and member. The zero digest is a placeholder,
 not the geometry document's hash. A complete package needs actual dependency
@@ -106,12 +128,13 @@ package example::canvas version "1" {
 }
 ```
 
-`fn` introduces the function, parentheses contain its named parameters, and
-`->` precedes its result type. The `member` clause associates `position` with
+The `member` clause associates the package-level function `position` with
 the local declaration `Canvas`; `@Canvas` selects that declaration as a clause
 argument. `receiver($canvas)` chooses the ordinary parameter named `canvas`
-as the instance receiver. The remaining displayed clauses say that the caller
-lends it for the call and the callee retains nothing afterwards
+as the instance receiver. Its [release responsibility](model.md#responsibility)
+stays with the caller: `input` borrows it and `retain` promises no retention.
+`valid` states its [validity](model.md#validity): the caller keeps it usable
+for the call
 ([`L5`](../language.md#l5), [`C3`](../contracts.md#c3)).
 
 Inside `position`, `$canvas` addresses its parameter value. From elsewhere in
@@ -127,21 +150,20 @@ Each spelling has a containing context ([`L2`](../language.md#l2), [`C1`](../con
 | `$canvas`, `$result` inside `position` | Values addressed locally by that function's clauses |
 | `Canvas`, `Geometry::Point` in the signature | Types, written without `@` |
 
-The same `::` punctuation separates the parts of a package name, an import
-alias from a declaration name, or a callable name from a slot name. Follow
-the containing declaration and import to determine which relationship applies.
-The railroad below shows the shared spelling; L2 supplies name resolution.
-
-![Railroads for import, reference and name: imports select a package and pin before introducing an alias; a reference starts with an at sign and a qualified name.](../figures/g10-names.svg)
-
-In `import`, use `example::geometry` for `name` and `Geometry`
-for the alias. In `reference`, `@Canvas` uses a single identifier;
-`@Geometry::Point` and `@position::result` each take one `::` repetition.
-The grammar gives both references the same shape; their different meanings
-come from the model above. [Railroad source](../figures/g10-names.puml) ·
-[Package-shell railroad](../language.md#reading-aid-non-normative-a-document-contains-a-package).
+`@Geometry::Point` follows an import to a declaration; `@position::result`
+follows a local callable to its result slot. Resolving the containing name
+establishes which relationship applies. The similar spelling leaves that
+work to the reader and to name resolution ([`L2`](../language.md#l2)).
+For the exact forms, see the grammar reference's
+[names and references](../reference/notation.md#names) and
+[package shell](../reference/notation.md#shell).
 
 ## Four identities
+
+The model separates [the published description](model.md#description) from
+[reaching the code](model.md#access). To follow a contract through another
+package or calling mechanism, identify which name denotes the declaration
+and which selects its implementation or supporting definitions.
 
 The canvas member's [canonical declaration identity](../glossary.md#canonical-identity) is
 `(example::canvas, "1", position)`. The imported record's identity is
@@ -212,6 +234,11 @@ synthetic; they establish no production support ([`F1`](../profiles.md#f1)).
 
 ## What a package claims
 
+For [the published description](model.md#description), the reader's task is
+to establish what the author claims to have described completely. The store
+example makes that boundary visible: its byte-view operation needs the
+store's lifetime API even when unrelated library features are left out.
+
 An API author can begin with a small, usable part of a library. The synthetic
 buffer package describes an immutable sixteen-byte store: creating it, viewing
 or copying its bytes, and destroying it. The object package covers another
@@ -281,6 +308,10 @@ them. Individual declaration clauses are outside this view.
 [How tools use a published package](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Where it holds
+
+To apply [the published description](model.md#description), a reader needs
+to match its claims to a configuration. Environments record that part of the
+model; availability connects each declaration to the configurations it covers.
 
 An author may have established the contract for platform version `1`. Readers
 need to know that this is the configuration being described; later versions
@@ -367,6 +398,11 @@ profile-defined capability test for the receiver ([`C3`](../contracts.md#c3)).
 
 ## What it depends on
 
+Dependencies connect [the published description](model.md#description) to
+the definitions needed to interpret it. To inspect a contract across packages,
+follow those selections to their exact contents. The profile and ABI selections
+also supply the definitions used for [reaching the code](model.md#access).
+
 Suppose an author puts the store declarations in one package and wants another
 package to use them. The second package can [import](../glossary.md#import)
 the first, selecting its package name, version and exact contents. The canvas
@@ -395,9 +431,9 @@ package example::buffers version "1" {
 }
 ```
 
-In each selection, the alias before `=` is the local name used by later
-clauses. The quoted identifier, version and digest after it identify the
-external definition. `use profile` and `use abi` select different kinds of
+Later clauses use `fixture` and `native` to refer to the selected external
+definitions. Each selection fixes an identifier, version and digest.
+`use profile` and `use abi` select different kinds of
 provider; `import` instead selects another API package
 ([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
 
@@ -443,6 +479,11 @@ change. A digest establishes byte identity, not trust in the author; installatio
 and trust remain tooling decisions ([`L2`](../language.md#l2)).
 
 ## Reaching the code
+
+The model's [reaching the code](model.md#access) concept connects a declared
+operation to a way of invoking it. To assess an access path, follow what the
+consumer does and check that the path preserves the operation's contract.
+The synthetic counter getter offers two routes for this comparison.
 
 To call `read_count`, a binding generator first needs a mechanism that reaches
 the getter. In the message path, generated code sends `currentCount` to the
@@ -564,18 +605,14 @@ priority. Native calling algorithms are outside this view.
 [Package context](#what-a-package-claims) ·
 [How tools use a published package](../README.md#who-writes-and-uses-an-ail-description)
 
-The access railroad locates these clauses inside the function body. For the
-first path, `objc_like` fills the path-name `identifier`, and `test` fills the
-first environment identifier inside brackets. The braced body then repeats
-`clause`. Choose `swift_like` for the second path's name.
+For the exact block form, see
+[access paths in the grammar reference](../reference/notation.md#access).
+[`A2`](../profiles.md#a2) supplies the four required clauses and their
+applicability rules.
 
-![The access railroad shows a path name, a nonempty environment list and a braced sequence of clauses.](../figures/g10-access.svg)
-
-The syntax track permits a sequence of
-clauses; A2 requires the four particular clauses shown above and determines
-where a path applies. [Railroad source](../figures/g10-access.puml).
-
-Data access needs an equally concrete action. The synthetic `fixed_bytes`
+Data access connects [entities that outlive a call](model.md#entities) and
+their [storage](model.md#storage) to the implementation. To read a value,
+the consumer needs an equally concrete action. The synthetic `fixed_bytes`
 names an array: a consumer obtains the address of that array's storage.
 `pointer_value` names a variable containing a pointer: a consumer reads the
 pointer stored there. Both deliver `ptr<u8>`, but the consumer performs a
@@ -623,6 +660,11 @@ an address or loading a stored pointer.
 
 ## Profiles and ABI entries
 
+For [reaching the code](model.md#access), a tool needs shared definitions of
+the calling mechanism and value representations. The agreement among
+[writers, checkers and users](model.md#agreement) extends to those definitions:
+provider manifests specify the meanings a consumer needs to support.
+
 For the message call above, a tool needs a definition of what the selector
 means and how the receiver participates. The synthetic profile supplies those
 rules. It also needs to know how object references are represented and passed
@@ -662,6 +704,11 @@ calling it a validated authoritative model ([`A1`](../profiles.md#a1)).
 
 ## The synthetic fixture
 
+The agreement among [writers, checkers and users](model.md#agreement)
+depends on interpreting the same definitions. Here, the reader's task is to
+assess the examples under their declared test definitions and recognize the
+limits of what those examples demonstrate about [reaching the code](model.md#access).
+
 The examples need a concrete interpretation so that their contracts can be
 inspected. [`F1`](../profiles.md#f1) defines a synthetic fixture profile and ABI
 catalogue for that purpose. Compare its synchronous symbol call in `view` with
@@ -694,6 +741,11 @@ The [conformance record](../conformance.md#verification-record) reports historic
 static checks; it supplies no runnable native implementation.
 
 ## One contract, several views
+
+The model's [writers, checkers and users](model.md#agreement) share an
+account of the API even when they use different presentations. To compare
+those presentations, trace an obligation back to its declaration and check
+which facts remain available.
 
 A documentation reader and a machine consumer need different presentations of
 the same facts. For the synthetic `view`, prose can say that the caller borrows

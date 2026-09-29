@@ -1,14 +1,26 @@
 # Design choices, limits and open questions
 
-> **Purpose:** explanation — distinguish [binding](../glossary.md#binding) constraints from AIL's choices and inspect their costs and limits.
+> **Purpose:** explanation — assess how AIL's choices express the API model and support a reader inspecting its contracts.
 > **Reader:** language designers evaluating the notation after orientation and the concept explanations.
-> **Before this:** [How AIL states a contract](contracts.md) and [Packages, environments and access paths](packages.md).
+> **Before this:** [A model of API behaviour and binding obligations](model.md), [How AIL states a contract](contracts.md) and [Packages, environments and access paths](packages.md).
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [`L1–L6`](../language.md#l1), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; this page is non-normative.
 
 ## How to read this page
+
+Judge each language choice by how well it serves describing the
+[API model](model.md) and the reader's task. A reviewer should be able to
+find what an API promises, relate that promise to the other obligations,
+and see what the notation asks authors and tools to supply. The sections
+below name the concepts each choice concerns and compare what it makes easy
+or hard to express and inspect.
+
+Start with [validity](model.md#validity) and
+[release responsibility](model.md#responsibility): to use a returned view,
+the reader needs to establish how long access lasts and who keeps the
+underlying storage alive.
 
 Suppose a library lends bytes from a store. The caller needs the storage to
 remain usable while reading those bytes. This requirement comes from the
@@ -45,14 +57,16 @@ fn view(store: Store) -> ptr<u8> {
 ```
 
 The signature names a `Store` parameter and a pointer-to-byte result.
-Inside its braces, `$store` addresses the input and `$result` the return
-value. `outcome viewed` contains the returned obligations; `give` supplies
-borrowing within the owner's lifetime, and the empty `[]` list records no
+`$store` addresses the input and `$result` the return value locally to `view`.
+`outcome viewed` describes [how the call finishes](model.md#outcomes) and
+contains the returned obligations; `give` supplies borrowing within the
+owner's lifetime, and `invalidated_by($result, [])` records no
 earlier [invalidator](../glossary.md#invalidation). The full function later
 on this page shows the cost of stating all the other facts too ([`C1`](../contracts.md#c1),
 [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-The same distinction applies to a [callback](../glossary.md#callback). Its
+The same distinction applies to [callbacks and their schedules](model.md#callbacks).
+A [callback](../glossary.md#callback)'s
 saved values, or [captures](../glossary.md#callback-captures), stay usable while
 an invocation can still need them. An API can promise that teardown waits for
 all callback use to finish. AIL expresses that particular promise with
@@ -133,6 +147,13 @@ map to those discussions; each cost concerns work an author or tool must do.
 
 ## A dedicated syntax
 
+The language has to connect [operations and their values](model.md#operations)
+to [entities that outlive a call](model.md#entities),
+[release responsibility](model.md#responsibility) and
+[reaching the code](model.md#access). To assess a dedicated syntax, consider
+whether a reader can follow those relationships across APIs with different
+lifetime and calling mechanisms.
+
 The synthetic store gives its owner a [handle](../glossary.md#handle) to
 destroy once. The synthetic counter uses reference counting: each holder of an
 [owned](../glossary.md#owned) reference releases that reference, and final
@@ -169,6 +190,12 @@ contract.
 <a id="complete-contracts-only"></a>
 
 ## Publishing a complete description
+
+This choice concerns [the published description](model.md#description) and
+the agreement among [writers, checkers and users](model.md#agreement).
+The reader needs settled facts for the API subset being assessed. Requiring
+completeness lets consumers follow those facts through dependencies; it also
+requires authors to resolve every applicable uncertainty before publishing.
 
 An author can publish a [package](../glossary.md#package) describing only an
 immutable sixteen-byte store, as the synthetic buffer example does. The
@@ -238,6 +265,12 @@ cannot be disguised by that permission ([`C6`](../contracts.md#c6),
 
 ## Stating the applicable facts
 
+The agreement among [writers, checkers and users](model.md#agreement)
+depends on recognizing an established fact, including known absence. To
+assess explicit clauses, compare what they let a reader verify with the
+repetition they require from an author. The first examples concern
+[where and when calls run](model.md#execution).
+
 For the synthetic store, the author has established that the type adds no
 restriction on which [executor](../glossary.md#executor) may use it.
 `isolation(none)` records that fact. For the counter,
@@ -277,6 +310,13 @@ tying storage to the returned owner's lifetime, or
 cases ([`C3`](../contracts.md#c3)).
 
 The authoring cost is visible in this entire synthetic `view` declaration.
+Its facts connect [operations and their values](model.md#operations),
+[how a call finishes](model.md#outcomes),
+[release responsibility](model.md#responsibility), [validity](model.md#validity)
+and [storage](model.md#storage). Availability locates the operation in
+[the published description](model.md#description); its access path records
+[reaching the code](model.md#access). Read the groups together to see what
+a signature alone would leave open.
 
 Fragment — shows all clauses of the synthetic `view` function. The complete
 [buffer package](../examples/buffers.ail) supplies `Store`, its destructor,
@@ -353,6 +393,13 @@ cannot turn an unknown fact into an authoritative answer
 
 ## Expressing ownership
 
+For [release responsibility](model.md#responsibility), the reader needs to
+find who takes or receives a release duty. Returned borrowing also connects
+that answer to [validity](model.md#validity) and
+[how a call finishes](model.md#outcomes). This choice concerns where those
+facts appear: beside the types in a signature, or in clauses that can refer
+to an input, an owner and an individual outcome.
+
 Consider two operations taking a store. `view` lets the caller keep ownership;
 `destroy` takes responsibility for destruction at entry. Draft 0.1 writes
 `store: Store` in both signatures and distinguishes them with `input` clauses
@@ -423,6 +470,13 @@ evidence about how the decision was made. [Q3](#q3) preserves that question.
 
 ## One clause syntax, with a closed vocabulary in prose
 
+This choice affects how [writers, checkers and users](model.md#agreement)
+find and interpret facts across the model. A reader inspecting
+[release responsibility](model.md#responsibility) or [storage](model.md#storage)
+meets the same outer clause form, while the relevant rules determine which
+facts it can express. Assess the ease of recognizing a clause alongside the
+work of discovering its permitted arguments and scope.
+
 The synthetic `view` uses both `input($store, borrow);` and
 `extent($result, buffer(16, 16, elements));`. They share a clause shape, but
 their argument types and applicability come from different rules. Compare the
@@ -431,24 +485,19 @@ shape but names no defined fixture clause and is rejected
 ([`L1`](../language.md#l1), [`C3–C4`](../contracts.md#c3),
 [`F1`](../profiles.md#f1); mutation N27).
 
-The [grammar](../grammar.ebnf) defines `clause` as a name, parenthesized
-arguments and a semicolon. Its `value` production handles nested constructors,
-[places](../glossary.md#place), references and lists. The rule files enumerate
-the accepted vocabulary and specify its argument types.
+The [clause grammar](../reference/notation.md#clause) admits the common form
+used by core and profile clauses. The rule files enumerate the accepted
+vocabulary and specify its argument types.
 In summary (non-normative), a parser can recognize the common clause shape.
 A validator also checks that the clause name is defined and that its arguments
 and location satisfy the rules ([`L1`](../language.md#l1), [`L5`](../language.md#l5)).
 
-The clause railroad makes this split visible. In `input($store, borrow);`,
-`input` fills `name` and the arguments are a place and a bare name. In
-`extent($result, buffer(16, 16, elements));`, `buffer(...)` is one constructor
-argument. Its commas and parentheses sit inside the outer clause.
-
-![Railroads for clauses and their values show the same outer name-and-arguments form for core and profile clauses.](../figures/g10-clause.svg)
-
-The diagram admits
-`fixture::invented(true);` as a shape too; the fixture's closed vocabulary
-rejects it. [Railroad source](../figures/g10-clause.puml).
+In the complete `view` above, `input($store, borrow)` leaves release
+responsibility with the caller. `extent($result, buffer(16, 16, elements))`
+states how much returned storage is initialized and allocated. Both address
+callable-local [places](../glossary.md#place), but the rules give those
+arguments different jobs. A familiar clause shape helps locate a fact;
+understanding its meaning still requires the relevant contract rule.
 
 Clause-specific grammar productions are an alternative. The uniform form gives
 core and profile clauses one outer syntax, but costs discoverability: reading
@@ -461,6 +510,12 @@ without eliminating this split in the language's definition.
 <a id="exact-environments"></a>
 
 ## Describing exact environments
+
+For [the published description](model.md#description), a reader needs to
+establish where the claims hold. Listing exact environments makes each
+covered configuration inspectable. The comparison with version ranges below
+shows what this choice requires authors to enumerate and which claims it
+leaves outside the description.
 
 The synthetic buffer author names target `fixture64` and platform `fixture`
 version `1`. The object author adds `fixture-compiler` version `1`, needed for
@@ -487,8 +542,7 @@ package example::buffers version "1" {
 }
 ```
 
-The braces under `environment test` contain its configuration clauses.
-`available([test])` selects that environment by its local name. The
+`available([test])` connects `view` to the configuration named `test`. The
 [provider](../glossary.md#provider) interprets the exact target and platform values ([`L3`](../language.md#l3)).
 
 Now consider a consumer running on platform version `2`. An exact claim for
@@ -520,6 +574,12 @@ built artifacts work together ([`A1`](../profiles.md#a1),
 [`A4`](../profiles.md#a4)).
 
 ## Profiles as the extension point
+
+Profiles extend the agreement among
+[writers, checkers and users](model.md#agreement). To assess this choice,
+follow what a consumer needs to understand an added fact. The examples
+concern [where and when calls run](model.md#execution): core call permissions
+and source-specific conformance or suspension rules answer different questions.
 
 Suppose a caller wants to invoke two counter operations at the same time.
 The core `concurrency(serial)` rule requires it to serialize independent calls
@@ -611,8 +671,17 @@ lacking the machinery to implement it ([`A1`](../profiles.md#a1),
 
 ## Extending coverage beyond draft 0.1
 
+The coverage question tests the agreement among
+[writers, checkers and users](model.md#agreement): an author needs to express
+the API's actual distinctions, and a consumer needs to preserve them.
+For each case below, separate facts the core can already state
+from meanings that need a specified extension. This makes the cost of the
+current boundary visible without treating a synthetic example as evidence
+for a real provider.
+
 A bounded synthetic example can be complete while a similarly shaped real API
-needs further semantics. For example, the synthetic subscription's unique-owner
+needs further semantics. For [callbacks and their schedules](model.md#callbacks),
+the synthetic subscription's unique-owner
 destructor establishes quiescence; an API whose cancellation merely requests
 shutdown needs named events and ordering. The latter cannot be presented as
 `quiescence(@cancel)` unless cancellation return really is that boundary
@@ -624,7 +693,10 @@ to the language or a profile. Others already have useful core forms and need
 authoritative API facts and a real provider. The distinction matters when
 judging what the synthetic examples demonstrate.
 
-**Generic and asynchronous operations need additional rules.** The synthetic
+**Generic and asynchronous operations need additional rules.** These connect
+[operations and their values](model.md#operations),
+[how a call finishes](model.md#outcomes) and
+[where and when calls run](model.md#execution). The synthetic
 getter identifies one concrete source call. A generic family also needs rules
 for permitted type arguments, substitution and the identity of each concrete
 instantiation. An asynchronous operation needs rules for suspension and result
@@ -636,15 +708,18 @@ mutation and consumption rules for the cases to which they apply
 ([`L4`](../language.md#l4), [`C3`](../contracts.md#c3),
 [`A1`](../profiles.md#a1), [`F1`](../profiles.md#f1)).
 
-**Optional operations need a check on the receiver.** Knowing the platform
-version can establish that an interface is available. Calling an optional
+**Optional operations need a check on the receiver.** The distinction is
+between the configurations in [the published description](model.md#description)
+and the capabilities of [entities that outlive a call](model.md#entities).
+Knowing the platform version can establish that an interface is available. Calling an optional
 member also requires establishing that the particular object implements it.
 A profile supplies the capability test. A negotiated wire protocol similarly
 needs rules for the capabilities of the particular session or object, together
 with a mechanism for sending the request ([`C3`](../contracts.md#c3),
 [`A1–A2`](../profiles.md#a1)).
 
-**Native and managed calls need faithful representations and mappings.** A
+**Native and managed calls need faithful representations and mappings.** For
+[reaching the code](model.md#access), a
 native call may require a particular build artifact or a complete source build
 recipe so both sides agree on layout. A managed projection needs to account
 for runtime dispatch and the values callers observe. If a convenience call
@@ -652,14 +727,18 @@ hides a meaningful success status, it becomes a different declaration.
 A compiler name or a familiar method spelling leaves this work outstanding
 ([`A2–A4`](../profiles.md#a2)).
 
-**Variadic and source-only operations need their own access rules.** A
+**Variadic and source-only operations need their own access rules.**
+[Operations and their values](model.md#operations) need a defined route for
+[reaching the code](model.md#access). A
 variadic function needs a schema for extra arguments, their promotions and
 termination. An inline function or macro may require source compilation or
 expansion. A provider distinguishes those mechanisms, including a macro that
 expands to no code, so a consumer knows what action actually performs the
 operation ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
-**Richer layouts and ordering laws need specified extensions.** Packed records
+**Richer layouts and ordering laws need specified extensions.**
+[Storage](model.md#storage) and [entities that outlive a call](model.md#entities)
+need precise representation and relationship rules. Packed records
 need complete layout recipes; unions and bitfields exceed the fixture's
 capabilities. More elaborate relationships between operations need typed laws
 with defined obligations and checks. Adding explanatory prose alone supplies
@@ -668,9 +747,13 @@ neither a representation recipe nor a new law
 [`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1)).
 
 **Several real-API problems already have core forms.** A simple error-output
-API can use exhaustive outcomes to say when its output is readable. An opaque
-handle can name its release protocol. A mutable borrow can list its earlier
-invalidators. An open enum can retain unnamed values across the full width of
+API can use exhaustive outcomes to describe [how a call finishes](model.md#outcomes)
+and when its output is readable. An opaque handle can name the release protocol
+for an [entity that outlives a call](model.md#entities), establishing
+[release responsibility](model.md#responsibility). A mutable borrow can state
+its [validity](model.md#validity) by listing earlier invalidators. Among
+[operations and their values](model.md#operations), an open enum can retain
+unnamed values across the full width of
 its underlying type. Each still needs accurate facts about the API and a
 suitable real provider; the synthetic cases establish no production support
 ([`L4`](../language.md#l4), [`C2`](../contracts.md#c2),
