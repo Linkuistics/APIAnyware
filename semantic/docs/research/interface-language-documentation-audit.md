@@ -508,12 +508,24 @@ typed languages. Their tentative source-side preference is not a normative
 ban, and the ecosystem list establishes neither a common C ABI nor current
 production provider support.
 
-One bounded correction, concepts-k95–k98, is scheduled to make this framing
-explicit in the landing page, model account, rationale and affected summaries.
-It has not yet landed. The human explicitly leaves a more conversational and
-guided presentation for later. Their request to explore distinct syntax for
-each clause type is retained as Q7; no grammar redesign is part of this
-documentation correction.
+One bounded correction, concepts-k95–k98, applied this framing. The landing
+page's [APIs and languages in scope](../../specification/interface-language/README.md#apis-and-languages-in-scope)
+states the intended source breadth, keeps described libraries separate from
+calling programs and AIL-consuming tools, and records the tentative
+source-side preference. The [model account](../../specification/interface-language/explanation/model.md#what-the-model-is-for)
+applies that scope before its C teaching header. The
+[dedicated-syntax comparison](../../specification/interface-language/explanation/choices.md#a-dedicated-syntax)
+and its summary row now assess adopting any source language's syntax against
+the common model. Accurate source-specific statements, explicitly synthetic
+`objc_like`/`swift_like` access paths and the named provider limitations were
+kept. Canonical rules, grammar, figures, every `.ail` file and the eleven
+model concepts are unchanged. The correction was checked editorially and by
+`task docs:check`; the human has not re-read the corrected pages, so this
+records the supplied direction's application, not a further human assessment.
+
+The human explicitly leaves a more conversational and guided presentation
+for later. Their request to explore distinct syntax for each clause type is
+retained as Q7; no grammar redesign is part of this documentation correction.
 
 The cited wording locates one part of the human's read, but its full extent
 and order were not reported. Their positive verdict does not establish that

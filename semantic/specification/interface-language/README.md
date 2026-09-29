@@ -42,8 +42,9 @@ The library being described and the program that calls it play separate roles.
 Programs in interpreted and dynamically typed languages are among the intended
 callers. For the libraries being described, the initial emphasis is on typed
 contracts, and there is a tentative preference to leave interpreted or untyped
-libraries for later. Interpretation and typing are separate properties, so the
-preference rules out no language as such.
+libraries for later. Interpretation and typing are separate properties: a
+library written in an interpreted language can still state a typed contract.
+The preference therefore rules out no language as such.
 
 This breadth is an intended use of the model. Applying it to a particular API
 requires definitions for that API's types, access mechanisms and representations.

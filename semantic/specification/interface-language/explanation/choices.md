@@ -156,8 +156,8 @@ lifetime and calling mechanisms.
 
 The [intended scope](../README.md#apis-and-languages-in-scope) spans source
 languages and platforms, with an emphasis on libraries with typed contracts.
-The comparison therefore asks how each notation serves that common model
-and the [consumers](../glossary.md#consumer) that use it. Programs calling the
+The comparison therefore asks how each notation serves one common API model
+and the [consumers](../glossary.md#consumer) that use its descriptions. Programs calling the
 described APIs can be written in still other languages, including interpreted
 and dynamically typed ones.
 

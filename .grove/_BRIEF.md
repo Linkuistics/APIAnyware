@@ -244,7 +244,7 @@ typed languages remain intended consumers. The human's source-side emphasis
 is on typed contracts, with a tentative preference against describing untyped
 or interpreted libraries; do not turn that preference into a normative ban.
 The ecosystem list describes intended reach, not supplied production providers
-or a shared C ABI. The full-set correction makes this scope explicit in the
+or a shared C ABI. The full-set correction made this scope explicit in the
 orientation, model and rationale while preserving the draft's actual limits.
 
 This work explains and improves presentation of draft 0.1. Preserve its proposed
@@ -312,8 +312,8 @@ semantic validator or general build-system migration.
 - A published edition (HTML or PDF) is not scheduled. If the human wants one,
   the survey's §8 favours AsciiDoc output generated from the Markdown set.
 - The human would like a more conversational, guided presentation later.
-  They accept the present documentation apart from the source/platform
-  framing correction below; a general prose rewrite is outside this run.
+  They accepted the documentation apart from the source/platform framing,
+  now corrected (see Notes); a general prose rewrite was outside that run.
 - Later language design should explore clause-specific syntax that suggests
   meaning through its forms and structure. Q7 in `explanation/choices.md`
   preserves this direction. It is not a grammar change in this documentation
@@ -328,12 +328,23 @@ consumer scope above. They cited the phrase about extending Swift syntax;
 the full reading extent was not reported. This is a positive verdict with a
 specific correction, not evidence that a cold reader achieved every outcome.
 
-One bounded correction under concepts-k6 is authorized by that direction:
-concepts-k95 draft → concepts-k96 copy-edit → concepts-k97 art → concepts-k98
-proof. Its document is the landing page, model page and choices page, with
-affected summary/route text checked across the set. It does not repeat the
-whole documentation project. No further automatic correction or human reading
-checkpoint is scheduled. Any unresolved residue returns to the human.
+The one bounded correction authorized by that direction is proofed
+(`concepts-k98`, closing `concepts-k6`). The landing page's
+`README.md#apis-and-languages-in-scope` states the intended source breadth,
+separates described libraries from calling programs and AIL-consuming tools,
+and keeps the typed-source preference tentative. The model page applies that
+scope before its C teaching header; choices' *A dedicated syntax* and its
+summary row assess adopting any source language's syntax against the common
+model. A whole-set sweep kept every other source-specific mention: each is
+synthetic (`objc_like`/`swift_like`), historical (baseline) or a named
+provider limitation. Proof made three clarity fixes and found no residue or
+hand-forward item. Only those three pages and the audit changed from
+pre-correction `a1d78472`; rules, grammar, figures, `.ail` files and the
+eleven model concepts are byte-identical. `task docs:check` passed (229
+candidates, 0 pending, 26 SVGs). The audit records the correction without a
+further human reading: the human has not re-read the corrected pages. No
+automatic correction or reading checkpoint follows; the conversational
+presentation and Q7 remain later work.
 
 The single full-set proxy read all 29 pages and attempted all six outcomes.
 Its response and limits are preserved in k12. Its raw-example navigation gap
