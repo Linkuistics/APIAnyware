@@ -30,3 +30,24 @@ grammar reference, and accurate labels for source-specific examples.
 
 concepts-k98 is already queued. Add no automatic repetition. Record defects
 outside the art charter for the human instead of absorbing them.
+
+## Decisions (running log)
+
+D1 — Read the bounded pages and every figure they embed: G1 (README), G11a
+and G11b (model). Their captions, box text and legends name the invented
+watch API, roles (author, tool, consumer, package, catalogue) and
+relations, with no source-language or platform restriction; they agree with the
+corrected prose. The choices page embeds no figure. G3, embedded only in
+`explanation/packages.md` outside the bounded document, keeps its explicit
+"Invented API and synthetic definitions" legend and caption for the
+`objc_like`/`swift_like` paths; it is accurately labelled and unchanged.
+
+D2 — Figure declined: a table or diagram of described API sources against
+consuming languages. Reason: editorial judgement (the two-line prose
+distinction in the README and model is short and carries the relation; a
+figure would imply a provider-support matrix the scope disclaims). It is not a
+contract rule or a medium limit.
+
+D3 — No figure, source or SVG changed. `task docs:check` passes (229
+candidates, 0 pending, 0 errors). No later-stage defect; k98 proof already
+stands, so no leaf added.
