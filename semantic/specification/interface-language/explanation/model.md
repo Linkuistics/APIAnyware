@@ -176,7 +176,7 @@ call sequence from a sequence that is merely convenient (non-normative;
 [`L4–L6`](../language.md#l4), [`C2`](../contracts.md#c2),
 [`C7`](../contracts.md#c7)).
 
-Notation and practice: [Lifecycles and patterns](contracts.md#lifecycles-and-patterns) · [tutorial 1](../tutorial/01-lifetime.md).
+Notation and practice: [Entities and their lifecycles](contracts.md#entities-and-their-lifecycles), [Patterns and laws](contracts.md#patterns-and-laws) · [tutorial 1](../tutorial/01-lifetime.md).
 
 <a id="responsibility"></a>
 
@@ -459,7 +459,7 @@ questions](choices.md) develops that assessment.
 |---|---|---|---|
 | [Operations and their values](#operations) | `fn`, callable signatures; `record` and `field`, `alias`, `enum`, `flags`, scalars and pointers; parameter, result and thrown-value slots; `@operation::slot` and places such as `$p`, `.*`, `[]`, `.field` | [From signature to contract](contracts.md#from-signature-to-contract), [Naming what a contract talks about](contracts.md#naming-what-a-contract-talks-about); [tutorial 1](../tutorial/01-lifetime.md) | [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C1`](../contracts.md#c1) |
 | [How a call finishes](#outcomes) | `completions`, `outcome`, `when`, `null`, `nonnull`, `equal`, `range`, `meaning`, `state` | [Every way a call can end](contracts.md#every-way-a-call-can-end); [tutorial 1](../tutorial/01-lifetime.md), [tutorial 3](../tutorial/03-storage.md) | [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
-| [Entities that outlive a call](#entities) | `resource`, `object`, `interface`, `global`, `constant`, `property`; `lifecycle`, `member`, `receiver`; `pattern`, `role`, `instance`, `law` | [Lifecycles and patterns](contracts.md#lifecycles-and-patterns), [member example](packages.md#packages-contain-declarations); [tutorial 1](../tutorial/01-lifetime.md) | [`L4–L6`](../language.md#l4), [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7) |
+| [Entities that outlive a call](#entities) | `resource`, `object`, `interface`, `global`, `constant`, `property`; `lifecycle`, `member`, `receiver`; `pattern`, `role`, `instance`, `law` | [Entities and their lifecycles](contracts.md#entities-and-their-lifecycles), [Patterns and laws](contracts.md#patterns-and-laws), [member example](packages.md#packages-contain-declarations); [tutorial 1](../tutorial/01-lifetime.md) | [`L4–L6`](../language.md#l4), [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7) |
 | [Release responsibility](#responsibility) | `input` with `borrow` or `consume`, `retain`, `give` with `owned` or `borrow` | [Who owns what](contracts.md#who-owns-what); [tutorial 1](../tutorial/01-lifetime.md), [tutorial 2](../tutorial/02-lending.md), [tutorial 5's change](../tutorial/05-access-and-change.md#guided-change-an-owned-snapshot) | [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
 | [Validity](#validity) | `valid`, regions `call`, `static`, `owner`, `invalidated_by`, `mutation` | [How long a borrow lasts](contracts.md#how-long-a-borrow-lasts); [tutorial 2](../tutorial/02-lending.md) | [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
 | [Storage](#storage) | `extent` with `one` or `buffer`, `contents`, `direction`, `aliasing` | [Buffers and strings](contracts.md#buffers-and-strings); [tutorial 3](../tutorial/03-storage.md) | [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4) |

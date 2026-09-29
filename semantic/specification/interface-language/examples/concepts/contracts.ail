@@ -380,3 +380,16 @@ fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
   // Input, other effects, outcomes and access omitted.
 }
 // endregion
+
+// region: unchanged-output
+fn inspect_count(count: mutptr<u64>) -> unit {
+  direction($count, inout);
+  extent($count, one);
+  outcome kept {
+    when(returned, any);
+    meaning(success);
+    state($count.*, unchanged);
+  }
+  // Other callable contracts omitted.
+}
+// endregion

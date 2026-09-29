@@ -1,8 +1,8 @@
 # How AIL states a contract
 
-> **Purpose:** explanation — read AIL's semantic [clauses](../glossary.md#clause) as obligations between [callers and callees](../glossary.md#caller-and-callee).
+> **Purpose:** explanation — connect AIL's semantic [clauses](../glossary.md#clause) to the API model and the obligations they record.
 > **Reader:** language designers who have met the API [binding](../glossary.md#binding) domain and want to understand the notation.
-> **Before this:** [Using an API across languages](unsaid.md).
+> **Before this:** [A model of API behaviour and binding obligations](model.md), following [Using an API across languages](unsaid.md).
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -11,9 +11,11 @@
 Suppose a caller gets a view of a library's bytes. To use it safely, the caller
 needs to know which object keeps the bytes alive and when to stop reading them.
 If the library also accepts a [callback](../glossary.md#callback), the caller
-needs to know when the library has finished using it. This page shows how AIL
-records those answers. By the end, you should be able to follow the obligations
-in the three
+needs to know when the library has finished using it. The [API model](model.md)
+connects those obligations between [callers and callees](../glossary.md#caller-and-callee).
+This page follows its call-layer concepts and shows how AIL records each one.
+By the end, you should be able to identify the model facts expressed by the
+clauses in the three
 [conformance examples](../conformance.md#positive-specifications).
 
 Those examples describe invented APIs using a synthetic fixture
@@ -31,11 +33,11 @@ that description to explain the obligations on each call.
 
 ## From signature to contract
 
-A program that owns a watch eventually calls `watch_close` to finish with it.
-For this example, assume that closing the watch takes responsibility for
-destroying it and completes successfully. The program then has no further close
-to perform. That assumption supplies the contract for the domain page's C
-declaration; an API author would need evidence that the library behaves this way.
+[Operations and their values](model.md#operations) gives the starting point:
+identify a call and the values its contract concerns. Recall the watch handle
+passed to `watch_close`. In this constructed case, the call takes responsibility
+for destroying the watch and returns successfully; an API author would need
+evidence that the library behaves this way.
 
 AIL writes the operation as `fn watch_close`. Its `Watch` parameter is a
 [handle](../glossary.md#handle) identifying the watch. The `input` clause says
@@ -68,21 +70,21 @@ package example::watch version "1" {
 }
 ```
 
-The package braces locate both the `Watch` type and `watch_close` operation.
-`watch: Watch` names a parameter and its type; `-> unit` says that the function
-returns no value. Inside the function, `$watch` addresses that parameter.
-A clause takes the form `name(arguments);`: parentheses group arguments,
-commas separate them, and the semicolon ends the clause. `outcome closed`
-opens a nested block describing one way this call finishes. Comments beginning
-with `//` explain omitted context ([`L1`](../language.md#l1),
-[`L2`](../language.md#l2), [`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
+`Watch` and `watch_close` are declarations in the same package; the parameter
+type resolves to that local resource. Inside the function, `$watch` selects
+the parameter value whose responsibility transfers. The `closed` outcome
+records how this invocation finishes. These relationships connect the
+signature to its contract ([`L1`](../language.md#l1), [`L2`](../language.md#l2),
+[`L4`](../language.md#l4), [`C1`](../contracts.md#c1)). The
+[package containment example](packages.md#packages-contain-declarations)
+shows the wider language structure, including imported declarations and members.
 
 Now consider a program that owns a store of bytes and calls `view` to read
 them. The program keeps responsibility for destroying the store. The call
 returns a pointer to bytes held by that store, so the program also keeps the
 store alive while using the pointer. This is the contract of the synthetic
-buffer example below. The parameter list and arrow describe the values passed
-and returned; the clauses connect those values to their obligations
+buffer example below. Its clauses connect the input store and returned pointer
+to their separate obligations
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 Fragment — shows the input and returned [borrow](../glossary.md#borrow) of `view`. The complete
@@ -104,9 +106,9 @@ fn view(store: Store) -> ptr<u8> {
 }
 ```
 
-Here `ptr<u8>` is a non-null pointer to unsigned eight-bit values. The angle
-brackets supply the pointer's element type; `$result` addresses the returned
-pointer ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
+Here `ptr<u8>` is a non-null pointer to unsigned eight-bit values; `$result`
+addresses that returned pointer. Ownership, bounds and validity are separate
+facts from the pointer type ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
 
 In the second body, `input($store, borrow)` lets the callee use the store while
 leaving ownership with the caller. `valid($store, call)` requires the caller to
@@ -125,17 +127,12 @@ clauses. The rule files define the permitted names and their meanings
 ([`L1`](../language.md#l1),
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-The clause railroad follows the same spelling. For `input($store, borrow);`,
-`input` fills `name`; the two arguments are a [place](../glossary.md#place)
-and a bare name.
-In `give($result, borrow(owner($store)));`, the second argument contains
-nested constructors. Their parentheses stay inside the outer clause's
-parentheses; only the outer clause ends with a semicolon.
-
-![Clause railroads show a name, parenthesized arguments and a final semicolon; arguments can contain places, lists and nested constructors.](../figures/g10-clause.svg)
-
-These are grammar shapes; the cited contract rules determine which arguments
-and locations each clause accepts. [Railroad source](../figures/g10-clause.puml).
+For exact syntax, see [Clauses](../reference/notation.md#clause) and
+[Callables](../reference/notation.md#callable) in the grammar reference.
+The cited contract rules determine which arguments and locations each clause
+accepts. The sections below develop [outcomes](#every-way-a-call-can-end),
+[release responsibility](#who-owns-what) and [validity](#how-long-a-borrow-lasts)
+from this first comparison.
 
 Each clause lets the reader locate one obligation, at the cost of a longer
 body and several rule lookups. Putting ownership in types is an alternative;
@@ -146,10 +143,11 @@ A complete function also states its effects and how a tool reaches its code
 
 ## Naming what a contract talks about
 
-Suppose the caller reserves space for an integer and passes its address as
-`length`. The library receives a pointer and writes an integer through it.
-The pointer can be usable throughout the call even before the library has
-written a usable integer. AIL needs a way to name each separately.
+[Operations and their values](model.md#operations) also asks which value or
+storage each fact concerns. To read an obligation, locate that subject first.
+Recall the address of the watch API's length variable: the pointer can be
+usable before the library writes a readable integer through it. The constructed
+`read_length` below isolates those two subjects.
 
 `$length` names the parameter value. A parameter or result position is a
 [slot](../glossary.md#slot). Adding `.*` names the integer reached through that
@@ -208,13 +206,9 @@ type and extent it follows. Selecting one pointee with `.*` therefore requires
 a different extent from selecting buffer elements with `[]`
 ([`C1`](../contracts.md#c1)).
 
-![The place railroad starts with a dollar sign and identifier, then permits field, single-pointee or buffer-element selectors.](../figures/g10-places.svg)
-
-The bypass permits `$length` with
-no selector. Take `.*` for `$length.*`, or the adjacent `[` and `]` boxes for
-`$destination[]`; the brackets contain no index. The return path allows further
-selections. Types and extent clauses determine which paths are meaningful
-([`C1`](../contracts.md#c1)). [Railroad source](../figures/g10-places.puml).
+The [Places grammar](../reference/notation.md#places) supplies exact syntax.
+Types and extent clauses determine which paths are meaningful
+([`C1`](../contracts.md#c1)).
 
 The selector table keeps the pointer value distinct from the storage addressed
 through it.
@@ -253,7 +247,7 @@ fn make_created() -> Created {
 }
 ```
 
-The dot in `$result.handle` follows the record field. `state($result, valid)`
+`$result.handle` selects the resource held in the returned record. `state($result, valid)`
 covers the record's scalar contents and shape; `give` addresses the resource
 leaf's separate destruction obligation ([`C1`](../contracts.md#c1),
 [`C5`](../contracts.md#c5)).
@@ -273,13 +267,227 @@ locates the callable and `store` locates its parameter
 ([`L2`](../language.md#l2)). [Q4](choices.md#q4) asks about the cost of
 learning these two spellings.
 
+## Every way a call can end
+
+[How a call finishes](model.md#outcomes) connects an observable result to
+the outputs the caller can use. To read an AIL output contract, first find
+the case selected by that result. Recall the watch failure case: a readable
+null result says nothing by itself about whether a separate output was written.
+The synthetic examples below compare a null-result operation with one that
+returns a Boolean and writes through a destination pointer.
+
+AIL calls the way control finishes a [completion](../glossary.md#completion).
+Both examples finish by returning. Their [outcomes](../glossary.md#outcome)
+divide that completion into success and failure cases. Each case says which
+values the caller can use ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+Fragment — shows `create` succeeding or failing. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, the function's
+other contracts and the package context.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=null-outcomes -->
+```ail
+fn create() -> nullable<Store> {
+  outcome created {
+    when(returned, nonnull($result));
+    meaning(success);
+    state($result, valid);
+    give($result, owned);
+  }
+  outcome allocation_failed {
+    when(returned, null($result));
+    meaning(failure);
+    state($result, valid);
+    give($result, owned);
+  }
+  // Other callable contracts omitted.
+}
+```
+
+Fragment — shows `copy_bytes` succeeding or failing. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, the function's
+other contracts and the package context.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=status-outcomes -->
+```ail
+fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+  outcome copied {
+    when(returned, equal($result, true));
+    meaning(success);
+    state($result, valid);
+    state($destination[], valid);
+  }
+  outcome failed {
+    when(returned, equal($result, false));
+    meaning(failure);
+    state($result, valid);
+    state($destination[], invalid);
+  }
+  // Other callable contracts omitted.
+}
+```
+
+The `create` function's null result is valid and observable, and represents
+failure. It creates no ownership obligation. The `copy_bytes` Boolean result
+is valid on both outcomes, but on failure the destination elements are unreadable. The caller
+finds out what happened by testing the status. After failure, it leaves the
+destination elements unread
+([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
+
+The partition table shows why observable failure and unreadable output are
+different: each returned value selects exactly one row for its operation.
+
+| Operation and discriminator | Selected outcome | What the caller receives |
+|---|---|---|
+| `create`: non-null result | `created` — success | Valid store; one destruction obligation |
+| `create`: null result | `allocation_failed` — failure | Valid null; no obligation |
+| `copy_bytes`: `true` | `copied` — success | Valid status and destination elements |
+| `copy_bytes`: `false` | `failed` — failure | Valid status; destination elements unreadable |
+
+The `when` clause selects a case by testing a value, called the
+[discriminator](../glossary.md#discriminator). Here that value is `$result`.
+The caller can determine the case because the result is readable on every
+returned outcome. `meaning` then labels the case as success or failure, and
+`state` describes each value's [output state](../glossary.md#output-state)
+([`C5`](../contracts.md#c5)).
+
+Every possible result needs exactly one case. Null and non-null cover
+`create`; true and false cover `copy_bytes`. For a signed integer status,
+cases covering zero and positive values would leave negative values unanswered.
+In summary (non-normative), outcomes for a completion can test one valid
+discriminator. Together, those tests cover every possible value, and each
+value selects exactly one outcome. Alternatively, one `any` outcome covers
+the whole completion ([`C5`](../contracts.md#c5)).
+
+A caller can also pass storage whose contents the library may read and replace.
+AIL calls that direction `inout`. An outcome can promise to leave those
+contents and their entry obligations unchanged with `state(unchanged)`.
+
+Fragment — shows a constructed operation leaving a count unchanged. A complete
+package would supply the pointer's input, validity, aliasing and contents
+clauses, the operation's effects and access, and the package context.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=unchanged-output -->
+```ail
+fn inspect_count(count: mutptr<u64>) -> unit {
+  direction($count, inout);
+  extent($count, one);
+  outcome kept {
+    when(returned, any);
+    meaning(success);
+    state($count.*, unchanged);
+  }
+  // Other callable contracts omitted.
+}
+```
+
+The outcome preserves the integer reached through `count`. This is an output
+promise about [storage](model.md#storage) that was readable on entry.
+
+If a call consumed an input obligation, returning even the same reference
+requires an explicit transfer back: `state(valid)` and `give(owned)`.
+The caller then has a stated obligation again ([`C3`](../contracts.md#c3),
+[`C5`](../contracts.md#c5)).
+
+The principle is that failure still has an output contract. AIL chooses a small,
+checkable predicate vocabulary over arbitrary executable conditions. This
+bounds coverage checking but leaves correlations across multiple
+discriminators to profiles. It also preserves the API's error observation:
+`meaning(failure)` alone does not turn a null or status into an exception.
+These examples only return; thrown, cancelled or terminated completion needs
+the corresponding signature and provider support
+([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+<a id="lifecycles-and-patterns"></a>
+
+## Entities and their lifecycles
+
+[Entities that outlive a call](model.md#entities) connects a handle used by
+several operations to one identity and lifetime. To find how an owned handle
+is released, read the type's [lifecycle](../glossary.md#lifecycle). Recall the
+watch that remains alive between opening and closing it. The synthetic
+`Store` has a unique destruction obligation; the reference-counted `Counter`
+can remain alive while several parties hold references ([`C2`](../contracts.md#c2)).
+
+Compare the synthetic store's unique handle with the counter's counted
+references.
+
+`resource Store` declares an opaque handle type, while `object Counter`
+declares an object reference type. The earlier `record Created` is a value
+containing a `Store` handle; the handle's lifecycle supplies its release
+discipline. A record's field list describes its contents ([`L4`](../language.md#l4),
+[`C2`](../contracts.md#c2)). For operations associated with a type, the
+[member example](packages.md#packages-contain-declarations) shows how AIL
+connects the member to its owner and named receiver.
+
+Fragment — compares unique destruction and reference counting. The complete
+[buffer](../examples/buffers.ail) and [object](../examples/objects.ail) packages
+supply the types' other contracts and the referenced destructor. `fixture` selects their
+synthetic profile, whose catalogue and digest tokens appear in those files.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=lifecycles -->
+```ail
+// In example::buffers:
+resource Store {
+  lifecycle(unique, @destroy);
+  // Other nominal contracts omitted.
+}
+// In example::objects:
+object Counter {
+  lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
+  // Other nominal contracts omitted.
+}
+```
+
+The store's owned handle carries one destruction obligation. The counter can
+have several owned references, each carrying its own release obligation.
+Retaining creates another owned reference; releasing the final reference
+destroys the counter. In the unique case, destruction
+consumes the handle at entry and invalidates dependent borrows before returning
+([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+
+Compare what the caller releases and when that release ends the resource's
+lifetime; an owned reference carries one obligation in either case.
+
+| Synthetic type | Caller's obligation | What destroys the resource |
+|---|---|---|
+| Unique `Store` | Pass the owned handle to `destroy` once | `destroy` destroys the store before returning |
+| Reference-counted `Counter` | Release each owned reference it holds | The final release destroys the counter |
+
+Use the state diagram to track who is responsible for destroying one synthetic
+immutable store. If `create` returns a store, the program receives that
+responsibility. If it returns null, the program has nothing to destroy.
+Calling `view` lends access to the bytes and leaves responsibility with the
+program. At `destroy` entry, responsibility passes to the library. The library
+destroys the store before returning, ending the program's use of its borrowed
+views and discharging the obligation.
+
+Rounded boxes show states; arrows follow changes in responsibility. A loop
+returns to the same responsibility. This view follows a unique store;
+reference counting and the later [ordering pattern](#patterns-and-laws) are
+outside its scope.
+
+![Store states: a returned store makes the program responsible for destruction; null leaves nothing to destroy. Calling view keeps that responsibility. Entering destroy passes it to the library, which destroys Store and ends use of borrowed views before returning.](../figures/g6-lifecycle.svg)
+
+[Resource state source](../figures/g6-lifecycle.puml) ·
+[Borrow timelines](#how-long-a-borrow-lasts) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
+
+AIL places the release discipline on the type so calls can refer to one
+lifecycle. An alternative would repeat the release operation at every owned
+delivery; that would make each delivery more self-contained, at the cost of
+repeated facts. The type-level choice instead asks readers to follow the
+reference from an owned value to its lifecycle ([`C2`](../contracts.md#c2),
+[`C5`](../contracts.md#c5)).
+
 ## Who owns what
 
-Suppose a program creates a store, reads its bytes, and finally destroys it.
-While reading, it remains responsible for eventually calling `destroy`.
-When it calls `destroy`, the library takes over that responsibility. A binding
-needs to preserve this sequence so the store is released exactly as its
-contract requires.
+[Release responsibility](model.md#responsibility) asks who owes the release
+established by the lifecycle. To track that duty through a call, read its
+input transfer and the selected outcome's delivery clauses. Recall the watch
+cases: reading a view leaves the duty with the program, closing takes it,
+and a successful open gives the program a new duty. The synthetic store
+uses the same three arrangements.
 
 A value delivered as [owned](../glossary.md#owned) brings one destruction or
 release obligation. A [borrow](../glossary.md#borrow) grants access for a stated
@@ -412,11 +620,12 @@ borrowing with strong retention from consumption without retention.
 
 ## How long a borrow lasts
 
-After `view` returns, the program can keep the pointer and read the store's
-bytes. In the synthetic immutable store, those bytes stay usable until the
-store is destroyed. Consider instead a mutable store whose `replace` operation
-can replace its storage. A pointer obtained before replacement can become
-unusable even while the store itself remains alive.
+[Validity](model.md#validity) tells the caller when to stop using borrowed
+access. To find that boundary in AIL, read the region and any earlier
+invalidators together. Recall the watch view that can last until destruction
+or end earlier when an operation refreshes its storage. The synthetic
+immutable store and the constructed mutable variant below express those
+two arrangements.
 
 AIL names the lifetime that bounds access with a [region](../glossary.md#region).
 For this view, the region is the lifetime of its owner, `store`. It separately
@@ -541,123 +750,15 @@ across entry and outcome clauses. That cost is [Q5](choices.md#q5).
 The mutable variant illustrates only the relationship: its omitted operation
 contracts are needed to check whether the named invalidator is legal.
 
-## Every way a call can end
-
-After a call finishes, the caller needs a reliable way to find out what
-happened. The synthetic `create` returns either a store or null. Both values
-are safe to inspect: the store means creation succeeded, and null means it
-failed. The synthetic `copy_bytes` instead returns a Boolean status and writes
-through a separate destination pointer. The caller can always inspect the
-Boolean, but can read the destination only after success.
-
-AIL calls the way control finishes a [completion](../glossary.md#completion).
-Both examples finish by returning. Their [outcomes](../glossary.md#outcome)
-divide that completion into success and failure cases. Each case says which
-values the caller can use ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
-
-Fragment — shows `create` succeeding or failing. The complete
-[buffer package](../examples/buffers.ail) supplies `Store`, the function's
-other contracts and the package context.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=null-outcomes -->
-```ail
-fn create() -> nullable<Store> {
-  outcome created {
-    when(returned, nonnull($result));
-    meaning(success);
-    state($result, valid);
-    give($result, owned);
-  }
-  outcome allocation_failed {
-    when(returned, null($result));
-    meaning(failure);
-    state($result, valid);
-    give($result, owned);
-  }
-  // Other callable contracts omitted.
-}
-```
-
-Fragment — shows `copy_bytes` succeeding or failing. The complete
-[buffer package](../examples/buffers.ail) supplies `Store`, the function's
-other contracts and the package context.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=status-outcomes -->
-```ail
-fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
-  outcome copied {
-    when(returned, equal($result, true));
-    meaning(success);
-    state($result, valid);
-    state($destination[], valid);
-  }
-  outcome failed {
-    when(returned, equal($result, false));
-    meaning(failure);
-    state($result, valid);
-    state($destination[], invalid);
-  }
-  // Other callable contracts omitted.
-}
-```
-
-The `create` function's null result is valid and observable, and represents
-failure. It creates no ownership obligation. The `copy_bytes` Boolean result
-is valid on both outcomes, but on failure the destination elements are unreadable. The caller
-finds out what happened by testing the status. After failure, it leaves the
-destination elements unread
-([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
-
-The partition table shows why observable failure and unreadable output are
-different: each returned value selects exactly one row for its operation.
-
-| Operation and discriminator | Selected outcome | What the caller receives |
-|---|---|---|
-| `create`: non-null result | `created` — success | Valid store; one destruction obligation |
-| `create`: null result | `allocation_failed` — failure | Valid null; no obligation |
-| `copy_bytes`: `true` | `copied` — success | Valid status and destination elements |
-| `copy_bytes`: `false` | `failed` — failure | Valid status; destination elements unreadable |
-
-The `when` clause selects a case by testing a value, called the
-[discriminator](../glossary.md#discriminator). Here that value is `$result`.
-The caller can determine the case because the result is readable on every
-returned outcome. `meaning` then labels the case as success or failure, and
-`state` describes each value's [output state](../glossary.md#output-state)
-([`C5`](../contracts.md#c5)).
-
-Every possible result needs exactly one case. Null and non-null cover
-`create`; true and false cover `copy_bytes`. For a signed integer status,
-cases covering zero and positive values would leave negative values unanswered.
-In summary (non-normative), outcomes for a completion can test one valid
-discriminator. Together, those tests cover every possible value, and each
-value selects exactly one outcome. Alternatively, one `any` outcome covers
-the whole completion ([`C5`](../contracts.md#c5)).
-
-A caller can also pass storage whose contents the library may read and replace.
-AIL calls that direction `inout`. An outcome can promise to leave those
-contents and their entry obligations unchanged with `state(unchanged)`.
-If the call consumed an input obligation, returning even the same reference
-requires an explicit transfer back: `state(valid)` and `give(owned)`.
-The caller then has a stated obligation again ([`C3`](../contracts.md#c3),
-[`C5`](../contracts.md#c5)).
-
-The principle is that failure still has an output contract. AIL chooses a small,
-checkable predicate vocabulary over arbitrary executable conditions. This
-bounds coverage checking but leaves correlations across multiple
-discriminators to profiles. It also preserves the API's error observation:
-`meaning(failure)` alone does not turn a null or status into an exception.
-These examples only return; thrown, cancelled or terminated completion needs
-the corresponding signature and provider support
-([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
-
 ## Buffers and strings
 
-When a library returns a pointer, the caller needs to know how much data it
-can read from that address. When the caller supplies storage for output, the
-library also needs to know how much space is available to write. AIL records
-the readable length and allocated capacity together as the buffer's
-[extent](../glossary.md#buffer-extent). It records how to interpret the data
-separately in [contents](../glossary.md#contents).
+[Storage](model.md#storage) supplies the bounds and interpretation needed
+for a permitted read or write. To inspect an AIL buffer contract, find its
+readable length, allocated capacity and contents. Recall the watch bytes:
+three bytes of binary data fit in three positions, while three text code
+units with a final zero need a fourth. AIL records the bounds in
+[extent](../glossary.md#buffer-extent) and the interpretation in
+[contents](../glossary.md#contents).
 
 Compare the synthetic sixteen-byte binary view with a constructed three-code-unit
 UTF-8 string that includes space for its terminator.
@@ -737,9 +838,10 @@ fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
 }
 ```
 
-The type follows `destination:` in the signature; each `$destination` in the
-body addresses that same pointer parameter. Its `[]` output place, shown in
-the outcomes above, addresses the elements written through it.
+`$destination` addresses the pointer parameter; `$destination[]` in the
+outcomes addresses the elements written through it. Direction and extent
+describe the storage, while each outcome says whether those elements are
+readable.
 
 AIL separates storage bounds from how the caller interprets the bytes. That
 requires authors to supply length and capacity even for a familiar byte-pointer
@@ -752,13 +854,142 @@ integer parameter or output, the extent can name that scalar slot instead of
 using a fixed number. The applicable input or output contract establishes when
 that length is valid ([`C4`](../contracts.md#c4)).
 
+## Threads and sharing
+
+[Where and when calls run](model.md#execution) connects a type's restrictions
+to each operation's permitted execution. To decide whether a call is allowed,
+read both sets of facts. Recall the watch case in which serializing calls
+still leaves a main-thread requirement to meet. The synthetic store and
+counter below separate permission to move a reference from permission to
+enter or overlap calls.
+
+AIL separates where a call can begin from whether calls may overlap. The
+[executor](../glossary.md#executor) clause identifies the permitted thread or
+execution context. [Concurrency](../glossary.md#concurrency) describes
+independent calls that could overlap. A third case occurs when an active call
+invokes client code which calls back into the API before the first call finishes.
+AIL describes that nested entry through
+[re-entrancy](../glossary.md#re-entrancy) ([`C2–C3`](../contracts.md#c2)).
+
+Compare the synthetic store and counter. The store permits moving sole ownership
+between executors; the counter is confined to the main thread. Their call
+contracts supply the remaining restrictions.
+
+Fragment — shows where callers can move and use a store. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, `view` and their
+other contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=store-threads -->
+```ail
+resource Store {
+  sharing(transferable);
+  isolation(none);
+  // Lifetime and other nominal contracts omitted.
+}
+fn view(store: Store) -> ptr<u8> {
+  executor(any);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
+```
+
+Fragment — shows the counter's main-thread restriction. The complete
+[object package](../examples/objects.ail) supplies `Counter`, `read_count` and
+their other contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=counter-threads -->
+```ail
+object Counter {
+  sharing(confined);
+  isolation(main);
+  // Lifetime and other nominal contracts omitted.
+}
+fn read_count(receiver: Counter) -> u64 {
+  member(@Counter, instance);
+  receiver($receiver);
+  executor(main);
+  concurrency(serial);
+  reentrancy(allowed);
+  // Other callable contracts omitted.
+}
+```
+
+The [member and receiver relationship](packages.md#packages-contain-declarations)
+associates `read_count` with `Counter`. Here it lets the reader check that the
+operation's entry executor agrees with the object's isolation
+([`L2`](../language.md#l2), [`L5`](../language.md#l5), [`C2`](../contracts.md#c2)).
+
+In the first case, callers may enter on any executor but serialize independent
+calls using the same store. In the second, callers serialize independent calls
+using the same counter and make those calls on the main thread.
+Both permit the
+specified nested re-entry, which is distinct from independent overlap. A lock
+alone does not satisfy the counter's executor restriction
+([`C2–C3`](../contracts.md#c2)).
+
+The comparison keeps executor permission, independent overlap and nested
+re-entry on separate rows; granting one does not grant the others.
+
+| Permission | Synthetic `Store` / `view` | Synthetic `Counter` / `read_count` |
+|---|---|---|
+| Moving or sharing the reference | Sole ownership is transferable | Reference is confined to main |
+| Call entry | Any executor | Main thread |
+| Independent calls using the same instance | Serialized | Serialized |
+| Specified nested re-entry | Allowed | Allowed |
+
+The type declaration establishes how callers may use its references. For example,
+the counter's `isolation(main)` confines its use to the main thread, including
+retaining, releasing and destroying it. The operation clauses then say how to
+enter each call. This is the relationship between type-level
+[isolation](../glossary.md#isolation) and per-call `executor`
+([`C2–C3`](../contracts.md#c2)).
+
+In summary (non-normative), [`sharing(shared)`](../glossary.md#shared) permits
+references to cross executors; each operation still governs overlapping calls.
+`isolation(none)` states that the type adds no isolation restriction; an
+operation can still require a particular executor. Callback types apply their
+sharing and isolation requirements to captured state, so that state supports
+every use the callback type permits ([`C2`](../contracts.md#c2),
+[`C6`](../contracts.md#c6)).
+
+AIL records these permissions separately. An alternative “thread-safe” flag
+would need a precise definition of which uses it allows. The separate clauses
+make each permission visible, at the cost of checking that type and operation
+contracts agree.
+
+A source-language conformance flag answers another question: whether the type
+satisfies a named source conformance. The synthetic counter records
+`fixture::sendability(nonconforming)` alongside its call restrictions.
+That fixture fact describes a synthetic conformance state; a real Swift
+provider would need evidence from the actual source language and compiler
+([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+
+Fragment — locates the synthetic source-conformance clause. The complete
+[object package](../examples/objects.ail) selects `fixture` and supplies the
+other nominal and package contracts.
+
+<!-- ail-example: ../examples/concepts/contracts.ail region=sendability -->
+```ail
+object Counter {
+  fixture::sendability(nonconforming);
+  // Lifetime, sharing, isolation and other nominal contracts omitted.
+}
+```
+
+The `fixture::` prefix selects the profile's vocabulary; `sendability` is
+its clause name. The provider selection is introduced in
+[What it depends on](packages.md#what-it-depends-on)
+([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
+
 ## Callbacks
 
-Suppose a program passes a handler to receive integer notifications. One API
-might invoke it once before the registration call finishes. Another might
-store it and notify the program later. In the first case, the program can
-finish with the callback state when the call completes. In the second, it
-needs an event that tells it all later use has ended.
+[Callbacks and their schedules](model.md#callbacks) separates one invocation
+from the registration that permits it. To find when callback state can be
+released, read that registration's schedule through to its teardown boundary.
+Recall the watch notification: use can finish within the opening call or
+continue until the returned owner is destroyed. The examples below compare
+a constructed call-scoped handler with a synthetic subscription.
 
 Values saved with the handler are its
 [callback captures](../glossary.md#callback-captures). They need to remain usable
@@ -879,7 +1110,8 @@ fn unsubscribe(subscription: Subscription) -> unit {
 
 `@subscribe::handler` names the slot of the registration function from outside
 that function. Inside `subscribe`, `$handler` addresses the same parameter
-locally. `requires` takes the `outside_callback` constructor as its argument
+locally. The precondition therefore identifies which registration's callback
+the caller needs to stay outside
 ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
 Use the callback timelines to find the point where the program knows the API
@@ -915,197 +1147,12 @@ as a cancellation request with later acknowledgement, needs profile-defined
 events and ordering; cancellation return cannot be labelled quiescence unless
 it actually supplies that boundary ([`C6`](../contracts.md#c6)).
 
-## Threads and sharing
+## Patterns and laws
 
-Suppose a program moves sole ownership of a store from one thread to another.
-That can be legal even when two threads are forbidden from using the store at
-the same time. A different API might require every use on the main thread;
-serializing calls on a worker thread would still violate that requirement.
-
-AIL separates where a call can begin from whether calls may overlap. The
-[executor](../glossary.md#executor) clause identifies the permitted thread or
-execution context. [Concurrency](../glossary.md#concurrency) describes
-independent calls that could overlap. A third case occurs when an active call
-invokes client code which calls back into the API before the first call finishes.
-AIL describes that nested entry through
-[re-entrancy](../glossary.md#re-entrancy) ([`C2–C3`](../contracts.md#c2)).
-
-Compare the synthetic store and counter. The store permits moving sole ownership
-between executors; the counter is confined to the main thread. Their call
-contracts supply the remaining restrictions.
-
-Fragment — shows where callers can move and use a store. The complete
-[buffer package](../examples/buffers.ail) supplies `Store`, `view` and their
-other contracts.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=store-threads -->
-```ail
-resource Store {
-  sharing(transferable);
-  isolation(none);
-  // Lifetime and other nominal contracts omitted.
-}
-fn view(store: Store) -> ptr<u8> {
-  executor(any);
-  concurrency(serial);
-  reentrancy(allowed);
-  // Other callable contracts omitted.
-}
-```
-
-Fragment — shows the counter's main-thread restriction. The complete
-[object package](../examples/objects.ail) supplies `Counter`, `read_count` and
-their other contracts.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=counter-threads -->
-```ail
-object Counter {
-  sharing(confined);
-  isolation(main);
-  // Lifetime and other nominal contracts omitted.
-}
-fn read_count(receiver: Counter) -> u64 {
-  member(@Counter, instance);
-  receiver($receiver);
-  executor(main);
-  concurrency(serial);
-  reentrancy(allowed);
-  // Other callable contracts omitted.
-}
-```
-
-`Counter` and `read_count` are declarations at the same package level.
-`member(@Counter, instance)` associates the function with that object type;
-`receiver($receiver)` selects its ordinary named parameter as the receiver
-([`L2`](../language.md#l2), [`L5`](../language.md#l5)).
-
-In the first case, callers may enter on any executor but serialize independent
-calls using the same store. In the second, callers serialize independent calls
-using the same counter and make those calls on the main thread.
-Both permit the
-specified nested re-entry, which is distinct from independent overlap. A lock
-alone does not satisfy the counter's executor restriction
-([`C2–C3`](../contracts.md#c2)).
-
-The comparison keeps executor permission, independent overlap and nested
-re-entry on separate rows; granting one does not grant the others.
-
-| Permission | Synthetic `Store` / `view` | Synthetic `Counter` / `read_count` |
-|---|---|---|
-| Moving or sharing the reference | Sole ownership is transferable | Reference is confined to main |
-| Call entry | Any executor | Main thread |
-| Independent calls using the same instance | Serialized | Serialized |
-| Specified nested re-entry | Allowed | Allowed |
-
-The type declaration establishes how callers may use its references. For example,
-the counter's `isolation(main)` confines its use to the main thread, including
-retaining, releasing and destroying it. The operation clauses then say how to
-enter each call. This is the relationship between type-level
-[isolation](../glossary.md#isolation) and per-call `executor`
-([`C2–C3`](../contracts.md#c2)).
-
-In summary (non-normative), [`sharing(shared)`](../glossary.md#shared) permits
-references to cross executors; each operation still governs overlapping calls.
-`isolation(none)` states that the type adds no isolation restriction; an
-operation can still require a particular executor. Callback types apply their
-sharing and isolation requirements to captured state, so that state supports
-every use the callback type permits ([`C2`](../contracts.md#c2),
-[`C6`](../contracts.md#c6)).
-
-AIL records these permissions separately. An alternative “thread-safe” flag
-would need a precise definition of which uses it allows. The separate clauses
-make each permission visible, at the cost of checking that type and operation
-contracts agree.
-
-A source-language conformance flag answers another question: whether the type
-satisfies a named source conformance. The synthetic counter records
-`fixture::sendability(nonconforming)` alongside its call restrictions.
-That fixture fact describes a synthetic conformance state; a real Swift
-provider would need evidence from the actual source language and compiler
-([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
-
-Fragment — locates the synthetic source-conformance clause. The complete
-[object package](../examples/objects.ail) selects `fixture` and supplies the
-other nominal and package contracts.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=sendability -->
-```ail
-object Counter {
-  fixture::sendability(nonconforming);
-  // Lifetime, sharing, isolation and other nominal contracts omitted.
-}
-```
-
-The `fixture::` prefix selects the profile's vocabulary; `sendability` is
-its clause name. The provider selection is introduced in
-[What it depends on](packages.md#what-it-depends-on)
-([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
-
-## Lifecycles and patterns
-
-After obtaining an owned value, the caller needs to know how to release it.
-For the synthetic store, it calls a destructor once. For the counter, it
-releases its own reference; other parties may still hold references that keep
-the object alive. AIL records this discipline in the type's
-[lifecycle](../glossary.md#lifecycle) ([`C2`](../contracts.md#c2)).
-
-Compare the synthetic store's unique handle with the counter's counted
-references.
-
-Fragment — compares unique destruction and reference counting. The complete
-[buffer](../examples/buffers.ail) and [object](../examples/objects.ail) packages
-supply the types' other contracts and the referenced destructor. `fixture` selects their
-synthetic profile, whose catalogue and digest tokens appear in those files.
-
-<!-- ail-example: ../examples/concepts/contracts.ail region=lifecycles -->
-```ail
-// In example::buffers:
-resource Store {
-  lifecycle(unique, @destroy);
-  // Other nominal contracts omitted.
-}
-// In example::objects:
-object Counter {
-  lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
-  // Other nominal contracts omitted.
-}
-```
-
-The store's owned handle carries one destruction obligation. The counter can
-have several owned references, each carrying its own release obligation.
-Retaining creates another owned reference; releasing the final reference
-destroys the counter. In the unique case, destruction
-consumes the handle at entry and invalidates dependent borrows before returning
-([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
-
-Compare what the caller releases and when that release ends the resource's
-lifetime; an owned reference carries one obligation in either case.
-
-| Synthetic type | Caller's obligation | What destroys the resource |
-|---|---|---|
-| Unique `Store` | Pass the owned handle to `destroy` once | `destroy` destroys the store before returning |
-| Reference-counted `Counter` | Release each owned reference it holds | The final release destroys the counter |
-
-Use the state diagram to track who is responsible for destroying one synthetic
-immutable store. If `create` returns a store, the program receives that
-responsibility. If it returns null, the program has nothing to destroy.
-Calling `view` lends access to the bytes and leaves responsibility with the
-program. At `destroy` entry, responsibility passes to the library. The library
-destroys the store before returning, ending the program's use of its borrowed
-views and discharging the obligation.
-
-Rounded boxes show states; arrows follow changes in responsibility. A loop
-returns to the same responsibility. This view follows a unique store;
-reference counting and the separate ordering pattern below are outside its scope.
-
-![Store states: a returned store makes the program responsible for destruction; null leaves nothing to destroy. Calling view keeps that responsibility. Entering destroy passes it to the library, which destroys Store and ends use of borrowed views before returning.](../figures/g6-lifecycle.svg)
-
-[Resource state source](../figures/g6-lifecycle.puml) ·
-[Borrow timelines](#how-long-a-borrow-lasts) ·
-[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
-
-Tools may also need to recognize a relationship between declarations. The
-buffer example explicitly connects the resource type to its release operation.
+[Entities that outlive a call](model.md#entities) also includes obligations
+connecting several declarations. To inspect one of these relationships, find
+its participants and the law they satisfy. Recall the watch handle and its
+closing operation; the buffer example similarly connects `Store` to `destroy`.
 AIL calls the reusable form of such a relationship a
 [pattern](../glossary.md#pattern). The pattern below gives names to the two
 participants; its [instance](../glossary.md#pattern-instance) identifies
@@ -1204,8 +1251,13 @@ it ([`L6`](../language.md#l6), [`C8`](../contracts.md#c8)).
 
 ## Extending the language with profiles
 
-Suppose an API operation suspends and delivers its result later. A binding
-needs to know how the operation resumes and how the result reaches its caller.
+[Writers, checkers and users](model.md#agreement) need a shared meaning for
+each extension they rely on. To judge an extended contract, find the profile
+that defines its additional obligations and what the consumer supports. Recall
+that checking a description requires understanding its rules. For an operation
+that suspends and delivers its result later, those rules need to explain
+resumption and delivery.
+
 The core spelling `execution(async)` identifies the kind of execution, while
 a [profile](../glossary.md#profile) supplies the additional rules for those
 events. A profile is a versioned language extension. A
