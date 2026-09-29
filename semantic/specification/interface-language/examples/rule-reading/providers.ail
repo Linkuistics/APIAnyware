@@ -15,6 +15,20 @@ package example::objects version "1" {
 }
 // endregion
 
+// region: actor
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    sharing(value);
+    isolation(none);
+    fixture::actor(none);
+    // Availability and deprecation omitted.
+  }
+  // Header, F1 dependency pins, environment and publication context omitted.
+}
+// endregion
+
 // region: paths
 package example::objects version "1" {
   fn read_count(receiver: Counter) -> u64 {

@@ -112,9 +112,9 @@ facts from the pointer type ([`L4`](../language.md#l4), [`C1`](../contracts.md#c
 
 In the second body, `input($store, borrow)` lets the callee use the store while
 leaving ownership with the caller. `valid($store, call)` requires the caller to
-keep it usable for that invocation. Inside `viewed`, `give` describes the
+keep it usable for that invocation. Inside `viewed`, [`give`](../reference/clauses-outcomes.md#give) describes the
 returned pointer: the caller borrows access for the store's lifetime.
-`invalidated_by($result, [])` says that no operation ends this access earlier
+[`invalidated_by($result, [])`](../reference/clauses-outcomes.md#invalidated_by) says that no operation ends this access earlier
 ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 The caller therefore keeps responsibility for the store across `view`, while
@@ -224,7 +224,7 @@ through it.
 The same distinction matters inside records. Suppose a returned record has an
 integer field and a resource field named `handle`. Declaring the record valid
 tells the caller it can inspect the result. The caller still needs to know
-who destroys the resource in `handle`; `give($result.handle, owned)` supplies
+who destroys the resource in `handle`; [`give($result.handle, owned)`](../reference/clauses-outcomes.md#give) supplies
 that obligation. The integer field has no release obligation to transfer.
 
 Fragment — locates the field selection in a constructed result record and
@@ -249,7 +249,7 @@ fn make_created() -> Created {
 }
 ```
 
-`$result.handle` selects the resource held in the returned record. `state($result, valid)`
+`$result.handle` selects the resource held in the returned record. [`state($result, valid)`](../reference/clauses-outcomes.md#state)
 covers the record's scalar contents and shape; `give` addresses the resource
 leaf's separate destruction obligation ([`C1`](../contracts.md#c1),
 [`C5`](../contracts.md#c5)).
@@ -346,11 +346,11 @@ different: each returned value selects exactly one row for its operation.
 | `copy_bytes`: `true` | `copied` — success | Valid status and destination elements |
 | `copy_bytes`: `false` | `failed` — failure | Valid status; destination elements unreadable |
 
-The `when` clause selects a case by testing a value, called the
+The [`when`](../reference/clauses-outcomes.md#when) clause selects a case by testing a value, called the
 [discriminator](../glossary.md#discriminator). Here that value is `$result`.
 The caller can determine the case because the result is readable on every
-returned outcome. `meaning` then labels the case as success or failure, and
-`state` describes each value's [output state](../glossary.md#output-state)
+returned outcome. [`meaning`](../reference/clauses-outcomes.md#meaning) then labels the case as success or failure, and
+[`state`](../reference/clauses-outcomes.md#state) describes each value's [output state](../glossary.md#output-state)
 ([`C5`](../contracts.md#c5)).
 
 Every possible result needs exactly one case. Null and non-null cover
@@ -387,7 +387,7 @@ The outcome preserves the integer reached through `count`. This is an output
 promise about [storage](model.md#storage) that was readable on entry.
 
 If a call consumed an input obligation, returning even the same reference
-requires an explicit transfer back: `state(valid)` and `give(owned)`.
+requires an explicit transfer back: `state(valid)` and [`give(owned)`](../reference/clauses-outcomes.md#give).
 The caller then has a stated obligation again ([`C3`](../contracts.md#c3),
 [`C5`](../contracts.md#c5)).
 
@@ -562,7 +562,7 @@ fn view(store: Store) -> ptr<u8> {
 
 The first gives the caller one destruction obligation for a non-null store.
 The second gives access to bytes without giving a release obligation. A null
-reference carries no obligation even when its outcome repeats `give(owned)`
+reference carries no obligation even when its outcome repeats [`give(owned)`](../reference/clauses-outcomes.md#give)
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 The library may also need a value for later work. In the synthetic callback
@@ -691,7 +691,7 @@ the store alive for as long as it uses the returned bytes because of
 obligation.
 
 In the mutable variant, the caller also stops using the old view when
-`replace` starts. `invalidated_by` makes entry to the operation the cutoff,
+`replace` starts. [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by) makes entry to the operation the cutoff,
 even if that operation later fails. An empty list in the immutable case says
 there is no such earlier operation; the owner's destruction still ends access
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
@@ -743,7 +743,7 @@ The three regions therefore name different boundaries (non-normative summary):
 |---|---|---|
 | `call` | Completion of this invocation, including synchronous callbacks | `valid($store, call)` on `view` entry |
 | `owner($store)` | Destruction of the owner or release of its final reference | The `view` result |
-| `static` | End of the loaded API instance, with [provider](../glossary.md#provider)-defined shutdown | `give($result, borrow(static))` on synthetic `fixed_bytes` |
+| `static` | End of the loaded API instance, with [provider](../glossary.md#provider)-defined shutdown | [`give($result, borrow(static))`](../reference/clauses-outcomes.md#give) on synthetic `fixed_bytes` |
 
 These meanings come from [`C1`](../contracts.md#c1); synthetic `static` ends at
 provider unload ([`F1`](../profiles.md#f1)). To use a borrow after the call
@@ -973,7 +973,7 @@ contracts agree.
 
 A source-language conformance flag answers another question: whether the type
 satisfies a named source conformance. The synthetic counter records
-`fixture::sendability(nonconforming)` alongside its call restrictions.
+[`fixture::sendability(nonconforming)`](../reference/clauses-access.md#fixture-sendability) alongside its call restrictions.
 That fixture fact describes a synthetic conformance state; a real Swift
 provider would need evidence from the actual source language and compiler
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
@@ -1083,8 +1083,8 @@ fn notify(handler: Handler) -> unit {
 }
 ```
 
-For the subscription, `timing(after_return)` allows the API to start a
-notification only after `subscribe` returns. `count(0, many)` permits zero
+For the subscription, [`timing(after_return)`](../reference/clauses-outcomes.md#timing) allows the API to start a
+notification only after `subscribe` returns. [`count(0, many)`](../reference/clauses-outcomes.md#count) permits zero
 notifications and places no finite upper bound on how many may occur during
 the subscription. The author is stating that the API permits this range of
 counts. The registration call itself still completes synchronously ([`C3`](../contracts.md#c3),
@@ -1238,7 +1238,7 @@ the role takes exactly one operation; `one` is its
 `prepare` and `read_prepared` to those jobs ([`L6`](../language.md#l6)).
 
 Both functions take a store, but callers could pass different stores to them.
-The two `subject` clauses identify which parameter each function uses as the
+The two [`subject`](../reference/clauses-access.md#subject) clauses identify which parameter each function uses as the
 resource being tracked. The law then requires successful preparation on the
 same resource instance before use. Both subject parameters have the same
 nominal resource type ([`L6`](../language.md#l6)).

@@ -30,8 +30,8 @@ might keep the bytes usable until destruction; a mutable store might replace
 them sooner.
 
 AIL's design determines how an author writes that promise. The [clause](../glossary.md#clause)
-`give($result, borrow(owner($store)))` relates the returned pointer to the
-store's lifetime. `invalidated_by` names operations that end access earlier.
+[`give($result, borrow(owner($store)))`](../reference/clauses-outcomes.md#give) relates the returned pointer to the
+store's lifetime. [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by) names operations that end access earlier.
 Those spellings, and the decision to separate the two facts, are language
 choices ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
@@ -99,9 +99,9 @@ fn subscribe(handler: Handler) -> Subscription {
 
 `callback $handler` locates the schedule on `subscribe`'s parameter.
 `@unsubscribe` names a separate declaration: the destructor that ends all
-callback use before returning. `scope(owner($result))` ties the schedule to
+callback use before returning. [`scope(owner($result))`](../reference/clauses-outcomes.md#scope) ties the schedule to
 the returned subscription. The `retain` clause keeps a strong reference to
-the handler for that same owner region. `count(0, many)` states a known permission for zero
+the handler for that same owner region. [`count(0, many)`](../reference/clauses-outcomes.md#count) states a known permission for zero
 or more invocations, conditional on eventual scope end; it supplies no promise
 that a notification will arrive ([`C6`](../contracts.md#c6)).
 
@@ -436,7 +436,7 @@ package. The surrounding API and its other contracts would still be needed.
 ```
 
 In the current example, `store: Store` and `ptr<u8>` describe types; `input`
-states entry transfer and `give` states returned ownership or borrowing.
+states entry transfer and [`give`](../reference/clauses-outcomes.md#give) states returned ownership or borrowing.
 The pointer type constructors carry neither ownership nor extent
 ([`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
@@ -461,7 +461,7 @@ stated above.
 | Entry borrowing | `input($store, borrow)` in the body | `borrow Store` beside the parameter |
 | Returned borrowing | `give($result, borrow(owner($store)))` in an outcome | `borrow bytes` beside the result |
 | Owner lifetime | `owner($store)` within `give` | `lifetime result within store` in the body |
-| Earlier invalidation | `invalidated_by` in an outcome | `replace(store)` in the body's `invalidated result by ...` statement |
+| Earlier invalidation | [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by) in an outcome | `replace(store)` in the body's `invalidated result by ...` statement |
 
 **No rationale for choosing clauses is recorded.** The design left ownership
 placement for a decision based on an example corpus, and draft 0.1 uses clauses.
@@ -503,7 +503,7 @@ Clause-specific grammar productions are an alternative. The uniform form gives
 core and profile clauses one outer syntax, but costs discoverability: reading
 the grammar does not reveal required clauses, their scopes or companions.
 For example, `extent` lives in [`C4`](../contracts.md#c4), while
-`callback_abi` is defined in [`A2`](../profiles.md#a2). A reader assembles both
+[`callback_abi`](../reference/clauses-access.md#callback_abi) is defined in [`A2`](../profiles.md#a2). A reader assembles both
 syntax and meaning across the rules; an indexed reference can help lookup
 without eliminating this split in the language's definition.
 
@@ -585,7 +585,7 @@ Suppose a caller wants to invoke two counter operations at the same time.
 The core `concurrency(serial)` rule requires it to serialize independent calls
 using the same receiver. A source-language tool may also need to know whether
 the type satisfies a particular compiler conformance. The synthetic
-`fixture::sendability(nonconforming)` records that separate answer.
+[`fixture::sendability(nonconforming)`](../reference/clauses-access.md#fixture-sendability) records that separate answer.
 A single “thread-safe” flag would leave the reader unable to distinguish
 permission to overlap calls from a source conformance state
 ([`C2–C3`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
@@ -684,7 +684,7 @@ needs further semantics. For [callbacks and their schedules](model.md#callbacks)
 the synthetic subscription's unique-owner
 destructor establishes quiescence; an API whose cancellation merely requests
 shutdown needs named events and ordering. The latter cannot be presented as
-`quiescence(@cancel)` unless cancellation return really is that boundary
+[`quiescence(@cancel)`](../reference/clauses-outcomes.md#quiescence) unless cancellation return really is that boundary
 ([`C6`](../contracts.md#c6)).
 
 The [pressure-case catalogue](../conformance.md#pressure-cases-outside-the-synthetic-profile)
@@ -819,7 +819,7 @@ and imported declarations; similar notation carries different relationships.
 
 **Question:** Is the split between entry validity and returned borrow validity
 discoverable enough?
-**Where:** `valid($store, call)` and `give($result, borrow(owner($store)))`
+**Where:** `valid($store, call)` and [`give($result, borrow(owner($store)))`](../reference/clauses-outcomes.md#give)
 in [`view`](../examples/buffers.ail), governed by [`C1`](../contracts.md#c1),
 [`C3`](../contracts.md#c3) and [`C5`](../contracts.md#c5).
 **Why it matters:** keeping the store alive while using its returned view follows

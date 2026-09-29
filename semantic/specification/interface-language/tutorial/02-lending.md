@@ -184,13 +184,13 @@ fn current_label(card: Card) -> Label {
 
 `$result` selects the returned label; `$card` still selects the enclosing
 function's input. `owner($card)` names the card's lifetime, and
-`borrow(...)` describes access bounded by that lifetime. The `give` clause associates that access
+`borrow(...)` describes access bounded by that lifetime. The [`give`](../reference/clauses-outcomes.md#give) clause associates that access
 with the result. These values describe the contract; tools do not evaluate
 them as executable expressions ([`L1`](../language.md#l1),
 [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 In the successful `lent` [outcome](../glossary.md#outcome), write
-`state($result, valid)` and `give($result, borrow(owner($card)))`.
+[`state($result, valid)`](../reference/clauses-outcomes.md#state) and `give($result, borrow(owner($card)))`.
 The caller receives a usable, non-null label and keeps the card alive for
 as long as it uses that label ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
@@ -227,7 +227,7 @@ parameter in the enclosing function; `@refresh_card` identifies the other
 declaration from the getter's outcome ([`L2`](../language.md#l2),
 [`C1`](../contracts.md#c1)).
 
-In `lent`, add `invalidated_by($result, [@refresh_card])`. This tells the
+In `lent`, add [`invalidated_by($result, [@refresh_card])`](../reference/clauses-outcomes.md#invalidated_by). This tells the
 caller to stop using that label at entry to `refresh_card` involving its
 card, even though the card itself remains alive. Destruction already ends
 the owner region; the list names the additional, earlier cutoff
@@ -499,9 +499,9 @@ Use these non-normative summaries to check your reading of
 
 ### Answers
 
-1. Refresh entry ends the old borrow through `invalidated_by`. The caller
+1. Refresh entry ends the old borrow through [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by). The caller
    obtains a fresh label after refresh finishes ([`C5`](../contracts.md#c5)).
-2. `give($result, borrow(owner($card)))` relates the returned label to the
+2. [`give($result, borrow(owner($card)))`](../reference/clauses-outcomes.md#give) relates the returned label to the
    card's lifetime. `valid($card, call)` covers the input only for that
    invocation ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
    [`C5`](../contracts.md#c5)).
@@ -511,7 +511,7 @@ Use these non-normative summaries to check your reading of
 
 ## Invalid variant
 
-In `current_label`'s `lent` outcome, replace `give` with this clause and keep
+In `current_label`'s `lent` outcome, replace [`give`](../reference/clauses-outcomes.md#give) with this clause and keep
 the rest unchanged.
 
 Invalid — rejected under [`C1`](../contracts.md#c1).

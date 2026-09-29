@@ -443,7 +443,7 @@ The buffer has three text code units and room for four, including its zero termi
 
 **Meaning (non-normative; [C1](../contracts.md#c1), [C3](../contracts.md#c3)):** `borrow` transfers no ownership obligation. `consume` transfers one owned obligation to the callee at entry on every outcome. Null carries no obligation.
 
-**Constraints:** A consumed obligation belongs to the callee until discharged according to lifecycle or returned through an outcome. Consumption alone implies no mutation. For `inout` replacement, old input and new output ownership are both explicit; a consumed subtree cannot have `state(unchanged)`. Returning the same reference needs `state(valid)` and `give(owned)`. ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
+**Constraints:** A consumed obligation belongs to the callee until discharged according to lifecycle or returned through an outcome. Consumption alone implies no mutation. For `inout` replacement, old input and new output ownership are both explicit; a consumed subtree cannot have [`state(unchanged)`](clauses-outcomes.md#state). Returning the same reference needs `state(valid)` and [`give(owned)`](clauses-outcomes.md#give). ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 
 **Rejected when:** An applicable input contract is absent, duplicated for the same place (N20), applied to an unsuitable place, or contradicted by the output contract. ([L5](../language.md#l5), [C1](../contracts.md#c1), [C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 
@@ -491,7 +491,7 @@ package example::buffers version "1" {
 
 **Meaning (non-normative; [C3](../contracts.md#c3)):** The clause classifies which externally visible input state may change. Writing out parameters counts as argument mutation. Private implementation state and reference-count increments are outside this classification.
 
-**Constraints:** Mutation agrees with pointer constness, direction and extent. Consumption/destruction and the resulting end of borrows are described by transfer/lifecycle. An operation named by `invalidated_by` has an owner parameter and an appropriate mutation contract. ([C3](../contracts.md#c3), [C4](../contracts.md#c4), [C5](../contracts.md#c5)).
+**Constraints:** Mutation agrees with pointer constness, direction and extent. Consumption/destruction and the resulting end of borrows are described by transfer/lifecycle. An operation named by [`invalidated_by`](clauses-outcomes.md#invalidated_by) has an owner parameter and an appropriate mutation contract. ([C3](../contracts.md#c3), [C4](../contracts.md#c4), [C5](../contracts.md#c5)).
 
 **Rejected when:** The clause is missing, contradicts the declared writable-storage contract, or cannot support its stated invalidation relation. ([C3](../contracts.md#c3), [C4](../contracts.md#c4), [C5](../contracts.md#c5), [C8](../contracts.md#c8)).
 
@@ -708,7 +708,7 @@ The caller lends Handler at entry and retains its original obligation. The calle
 
 **Meaning (non-normative; [C1](../contracts.md#c1), [C3](../contracts.md#c3)):** The caller guarantees usability for the stated region. `call` runs from entry through completion, including synchronous callbacks. `static` lasts for the loaded API instance; `owner` ends at owner destruction or final release.
 
-**Constraints:** The provider defines shutdown for `static`. Owner dependencies are acyclic. For unretained storage the caller keeps the referent alive for the full storage region. Output borrows use `give` and a region surviving delivery; their validity is a separate exit obligation. ([C1](../contracts.md#c1), [C3](../contracts.md#c3), [C5](../contracts.md#c5)).
+**Constraints:** The provider defines shutdown for `static`. Owner dependencies are acyclic. For unretained storage the caller keeps the referent alive for the full storage region. Output borrows use [`give`](clauses-outcomes.md#give) and a region surviving delivery; their validity is a separate exit obligation. ([C1](../contracts.md#c1), [C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 
 **Rejected when:** A borrowed input lacks its clause, a place does not resolve or type-check, an owner is unsuitable, dependencies are cyclic, or the guarantee cannot cover the unretained storage period. ([C1](../contracts.md#c1), [C3](../contracts.md#c3), [C8](../contracts.md#c8)).
 

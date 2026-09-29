@@ -1370,6 +1370,9 @@ The [language-containment view](#l2) locates the slots used by `canvas_slots`;
 the [pattern and instance grammar](reference/notation.md#pattern) gives the
 forms for declaring and binding roles.
 
+
+Lookup: [`bind`](reference/clauses-access.md#bind) and [`law`](reference/clauses-access.md#law).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -1436,6 +1439,9 @@ versioned profile defining their operands and obligations; explanatory text
 cannot supply that definition.
 
 See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
+
+
+Lookup: [`subject`](reference/clauses-access.md#subject) and [`law`](reference/clauses-access.md#law).
 
 </blockquote>
 <!-- /reading-aid -->

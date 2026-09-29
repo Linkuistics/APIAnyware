@@ -243,11 +243,11 @@ locates callables and their slots.
 Add two [outcomes](../glossary.md#outcome) describing what happens when the
 call returns. Returning is this function's declared
 [completion](../glossary.md#completion), or way to finish. Use `equal($result, 0)` with
-`meaning(success)` and `equal($result, 1)` with `meaning(failure)`.
+[`meaning(success)`](../reference/clauses-outcomes.md#meaning) and `equal($result, 1)` with `meaning(failure)`.
 In both outcomes, mark `$result` valid so the caller can read the status
 that decides which case occurred ([`C5`](../contracts.md#c5)).
 
-For success, write `state($destination[], valid)`. For failure, write
+For success, write [`state($destination[], valid)`](../reference/clauses-outcomes.md#state). For failure, write
 `state($destination[], invalid)`. The parameter named `destination` is a
 [slot](../glossary.md#slot). The place `$destination` selects its pointer
 value; adding `[]` selects the buffer elements reached through that pointer.
@@ -539,7 +539,7 @@ Use these non-normative summaries to check your reading of
   final zero within the eight-element allocation.
 - Status `1` remains readable, while the output contract guarantees no
   readable buffer elements. The caller leaves those bytes unread.
-- `state($destination[], invalid)` describes output elements. The caller
+- [`state($destination[], invalid)`](../reference/clauses-outcomes.md#state) describes output elements. The caller
   still owns its allocation and supplied a pointer valid for the call.
 - The closed enum admits exactly two statuses, each covered by one outcome.
 - The caller reserves all eight elements before entry. That requirement
@@ -551,7 +551,7 @@ Use these non-normative summaries to check your reading of
    terminator fit?
 2. After status `1`, can a caller read the old bytes because the copy failed?
 3. Why does successful copying need an output-state clause but no
-   `give($destination[], owned)` clause?
+   [`give($destination[], owned)`](../reference/clauses-outcomes.md#give) clause?
 
 ### Answers
 

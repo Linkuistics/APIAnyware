@@ -208,12 +208,12 @@ refer to `create_card` in `tutorial::lifetime` version `"1"`
 Give `create_card` the result type `nullable<Card>`. For each possible
 result, write an [outcome](../glossary.md#outcome): a named case explaining
 what happened and which value the caller can use. Pair `nonnull($result)`
-with `meaning(success)` and `null($result)` with `meaning(failure)`
+with [`meaning(success)`](../reference/clauses-outcomes.md#meaning) and `null($result)` with `meaning(failure)`
 ([`C5`](../contracts.md#c5)).
 
-In both outcomes write `state($result, valid)`. The caller can inspect the
+In both outcomes write [`state($result, valid)`](../reference/clauses-outcomes.md#state). The caller can inspect the
 returned value in either case, including testing the valid null that reports
-failure. Also write `give($result, owned)` in both cases. For a non-null card
+failure. Also write [`give($result, owned)`](../reference/clauses-outcomes.md#give) in both cases. For a non-null card
 this gives the caller its destruction obligation. For null the same clause
 creates no obligation, because ownership applies only to a non-null
 reference ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
@@ -475,7 +475,7 @@ from within a call that is still active. `variadic(false)` fixes the parameter l
 
 Copy each function's `access direct` block too. This [access path](../glossary.md#access-path)
 tells a tool which synthetic symbol implements the function and which rules
-govern the call. Its `abi`, `via`, `mapping` and `compatibility` clauses are
+govern the call. Its [`abi`](../reference/clauses-access.md#abi), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping) and [`compatibility`](../reference/clauses-access.md#compatibility) clauses are
 part of every complete function description. [Part 5](05-access-and-change.md)
 explains them individually ([`A2`](../profiles.md#a2)); the
 [access grammar](../reference/notation.md#access) gives their enclosing form.
@@ -587,7 +587,7 @@ Use these non-normative summaries to check your reading of
 
 ## Check yourself
 
-1. If creation reports allocation failure, does its `give(owned)` create a
+1. If creation reports allocation failure, does its [`give(owned)`](../reference/clauses-outcomes.md#give) create a
    destruction obligation?
 2. Which clause transfers responsibility to `destroy_card`, and why is
    `valid($card, call)` unnecessary there?
@@ -595,7 +595,7 @@ Use these non-normative summaries to check your reading of
 
 ### Answers
 
-1. Null carries no obligation. For a nullable reference, `give(owned)`
+1. Null carries no obligation. For a nullable reference, [`give(owned)`](../reference/clauses-outcomes.md#give)
    applies only when the result is non-null ([`C1`](../contracts.md#c1),
    [`C5`](../contracts.md#c5)).
 2. `input($card, consume)` transfers a valid owned input at entry. The

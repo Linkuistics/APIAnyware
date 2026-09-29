@@ -204,8 +204,8 @@ package example::canvas version "1" {
 
 `source(fixture, "Canvas.position")` records the source declaration's name.
 `access direct in [test]` names one way to call it in environment `test`.
-Inside that block, `via` gives the profile's mechanism (`symbol`) and the
-linker identity (`canvas_position`). `abi` selects
+Inside that block, [`via`](../reference/clauses-access.md#via) gives the profile's mechanism (`symbol`) and the
+linker identity (`canvas_position`). [`abi`](../reference/clauses-access.md#abi) selects
 [calling convention](../glossary.md#calling-convention) `c` within the
 [ABI entry](../glossary.md#abi-entry) named `native`.
 The aliases `fixture` and `native` select versioned
@@ -530,11 +530,11 @@ package example::objects version "1" {
 }
 ```
 
-Read the first block as instructions to the consumer about the call. `abi`
+Read the first block as instructions to the consumer about the call. [`abi`](../reference/clauses-access.md#abi)
 selects the `object-message` [calling convention](../glossary.md#calling-convention)
-within the `native` [ABI entry](../glossary.md#abi-entry). `via` selects the
-fixture's message mechanism and the selector `currentCount`. The `mapping`
-clause connects the AIL signature to that mechanism. The `compatibility`
+within the `native` [ABI entry](../glossary.md#abi-entry). [`via`](../reference/clauses-access.md#via) selects the
+fixture's message mechanism and the selector `currentCount`. The [`mapping`](../reference/clauses-access.md#mapping)
+clause connects the AIL signature to that mechanism. The [`compatibility`](../reference/clauses-access.md#compatibility)
 clause states where the chosen [representations](../glossary.md#representation)
 can be used together
 ([`A2`](../profiles.md#a2), [`A4`](../profiles.md#a4)).

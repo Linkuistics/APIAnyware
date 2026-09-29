@@ -653,7 +653,7 @@ package example::canvas version "1" {
 
 **Applies to:** Package body.
 
-**Required and repeatability:** Exactly one `available`; `deprecated` for public declarations. The applicability table lists the additional clauses. Sharing/isolation, seven effect clauses, applicable slot contracts, outcomes, `callback_abi` and `representation` are required.
+**Required and repeatability:** Exactly one `available`; `deprecated` for public declarations. The applicability table lists the additional clauses. Sharing/isolation, seven effect clauses, applicable slot contracts, outcomes, [`callback_abi`](clauses-access.md#callback_abi) and [`representation`](clauses-access.md#representation) are required.
 
 **Default:** No implicit closure representation or capture policy.
 
@@ -827,7 +827,7 @@ package example::settings version "1" {
 
 **Applies to:** Function or callback declaration body.
 
-**Required and repeatability:** At least one per callable; unique names; one `when` and `meaning` per outcome, with applicable output state and transfer clauses.
+**Required and repeatability:** At least one per callable; unique names; one [`when`](clauses-outcomes.md#when) and [`meaning`](clauses-outcomes.md#meaning) per outcome, with applicable output state and transfer clauses.
 
 **Default:** No implicit failure or output validity.
 
@@ -923,7 +923,7 @@ package example::events version "1" {
 
 **Applies to:** Functions, globals and non-literal constants.
 
-**Required and repeatability:** One or more, covering every available environment; each has one `abi`, `via`, `mapping` and `compatibility`.
+**Required and repeatability:** One or more, covering every available environment; each has one [`abi`](clauses-access.md#abi), [`via`](clauses-access.md#via), [`mapping`](clauses-access.md#mapping) and [`compatibility`](clauses-access.md#compatibility).
 
 **Default:** Selection requires a consumer choice or configuration policy; order does not select.
 
@@ -1058,7 +1058,7 @@ The observer may be absent, but its instance still writes an explicit empty bind
 
 **Applies to:** Package body.
 
-**Required and repeatability:** One `bind` per role, including empty bindings; `subject` for each operation in a `before` law.
+**Required and repeatability:** One [`bind`](clauses-access.md#bind) per role, including empty bindings; [`subject`](clauses-access.md#subject) for each operation in a `before` law.
 
 **Default:** Availability is the nonempty intersection of participants’ availability.
 
@@ -1094,8 +1094,7 @@ package example::buffers version "1" {
 ## Clause-by-declaration applicability
 
 This is a non-normative lookup table. The linked rules determine operands,
-companions and rejection. Linked clause names lead to entries; the remaining
-entries are forthcoming. **Required** means
+companions and rejection. Linked clause names lead to the corresponding entries. **Required** means
 required when the stated applicability condition holds; omission does not infer
 an empty or safe value. Under [L5](../language.md#l5), clauses are singular in
 their stated scope unless an explicit repeatability rule applies, and a clause
@@ -1139,17 +1138,17 @@ support declaration remains subject to its applicable contracts
 | [`extent`](clauses-callable.md#extent) | Callable body: required per pointer leaf, including results and nested pointers; also pointer-typed globals/accessed constants | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
 | [`contents`](clauses-callable.md#contents) | Callable body: required for pointer parameters; other pointer slots when their pointee is byte/integer character storage; C7 also covers pointer data | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
 | [`requires`](clauses-callable.md#requires) | Callable body: repeatable applicable capability or outside-callback preconditions | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
-| `when`, `meaning` | Each outcome: exactly one each | [C5](../contracts.md#c5) |
-| `state` | Outcome: one per applicable non-unit result, thrown value or writable pointee; aggregate state covers children and forbids overlapping child state | [L5](../language.md#l5), [C5](../contracts.md#c5) |
-| `give` | Outcome: required per valid output reference leaf; directly in global/accessed-constant bodies as C7 requires | [C5](../contracts.md#c5), [C7](../contracts.md#c7) |
-| `invalidated_by` | Outcome: required per output borrow, including an empty list; directly in borrowed global/accessed-constant bodies | [C5](../contracts.md#c5), [C7](../contracts.md#c7) |
-| `timing`, `count`, `scope`, `quiescence` | Each callback-use block: required | [C6](../contracts.md#c6) |
-| `abi`, `via`, `mapping`, `compatibility` | Each access path: exactly one each | [A2](../profiles.md#a2), [A4](../profiles.md#a4) |
-| `callback_abi`, `representation` | Callback declaration: required provider selections | [A2](../profiles.md#a2) |
-| `law` | Pattern: optional core/profile laws; repeatable by distinct whole operand tuple | [L5](../language.md#l5), [L6](../language.md#l6) |
-| `bind` | Pattern instance: exactly one per declared role, including empty lists | [L5](../language.md#l5), [L6](../language.md#l6) |
-| `subject` | Pattern instance: one per operation role used in a `before` law | [L5](../language.md#l5), [L6](../language.md#l6) |
-| `fixture::sendability`, `fixture::actor` | Synthetic fixture only: optional once on object/record/enum/flags/interface; actor identity agrees with isolation | [F1](../profiles.md#f1) |
+| [`when`](clauses-outcomes.md#when), [`meaning`](clauses-outcomes.md#meaning) | Each outcome: exactly one each | [C5](../contracts.md#c5) |
+| [`state`](clauses-outcomes.md#state) | Outcome: one per applicable non-unit result, thrown value or writable pointee; aggregate state covers children and forbids overlapping child state | [L5](../language.md#l5), [C5](../contracts.md#c5) |
+| [`give`](clauses-outcomes.md#give) | Outcome: required per valid output reference leaf; directly in global/accessed-constant bodies as C7 requires | [C5](../contracts.md#c5), [C7](../contracts.md#c7) |
+| [`invalidated_by`](clauses-outcomes.md#invalidated_by) | Outcome: required per output borrow, including an empty list; directly in borrowed global/accessed-constant bodies | [C5](../contracts.md#c5), [C7](../contracts.md#c7) |
+| [`timing`](clauses-outcomes.md#timing), [`count`](clauses-outcomes.md#count), [`scope`](clauses-outcomes.md#scope), [`quiescence`](clauses-outcomes.md#quiescence) | Each callback-use block: required | [C6](../contracts.md#c6) |
+| [`abi`](clauses-access.md#abi), [`via`](clauses-access.md#via), [`mapping`](clauses-access.md#mapping), [`compatibility`](clauses-access.md#compatibility) | Each access path: exactly one each | [A2](../profiles.md#a2), [A4](../profiles.md#a4) |
+| [`callback_abi`](clauses-access.md#callback_abi), [`representation`](clauses-access.md#representation) | Callback declaration: required provider selections | [A2](../profiles.md#a2) |
+| [`law`](clauses-access.md#law) | Pattern: optional core/profile laws; repeatable by distinct whole operand tuple | [L5](../language.md#l5), [L6](../language.md#l6) |
+| [`bind`](clauses-access.md#bind) | Pattern instance: exactly one per declared role, including empty lists | [L5](../language.md#l5), [L6](../language.md#l6) |
+| [`subject`](clauses-access.md#subject) | Pattern instance: one per operation role used in a `before` law | [L5](../language.md#l5), [L6](../language.md#l6) |
+| [`fixture::sendability`](clauses-access.md#fixture-sendability), [`fixture::actor`](clauses-access.md#fixture-actor) | Synthetic fixture only: optional once on object/record/enum/flags/interface; actor identity agrees with isolation | [F1](../profiles.md#f1) |
 
 Slot clauses ([`input`](clauses-callable.md#input), [`retain`](clauses-callable.md#retain), [`valid`](clauses-callable.md#valid), [`direction`](clauses-callable.md#direction), [`aliasing`](clauses-callable.md#aliasing), [`extent`](clauses-callable.md#extent),
 [`contents`](clauses-callable.md#contents), `state`, `give`, `invalidated_by`) repeat **by place**, exactly one

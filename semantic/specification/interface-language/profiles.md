@@ -148,6 +148,9 @@ form and its provider-support boundary. F1 defines no extra types, so a new
 `fixture::SomeType` spelling would fail its vocabulary check. See the
 [profile glossary entry](glossary.md#profile).
 
+
+Lookup: [`fixture::sendability`](reference/clauses-access.md#fixture-sendability) and [`fixture::actor`](reference/clauses-access.md#fixture-actor).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -252,6 +255,9 @@ Counter paths relate to their providers. For their exact forms, see the
 [access-path grammar](reference/notation.md#access) and its enclosing
 [callable grammar](reference/notation.md#callable).
 
+
+Lookup: [`abi`](reference/clauses-access.md#abi), [`via`](reference/clauses-access.md#via), [`mapping`](reference/clauses-access.md#mapping), and [`compatibility`](reference/clauses-access.md#compatibility).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -307,6 +313,9 @@ separately visible context argument. [C6](contracts.md#c6) shows how `subscribe`
 uses this type and describes the registration's schedule. The callback's
 own declaration describes one invocation; its representation tells the tool
 how to carry and call the value. See [Callback captures](glossary.md#callback-captures).
+
+
+Lookup: [`callback_abi`](reference/clauses-access.md#callback_abi) and [`representation`](reference/clauses-access.md#representation).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -410,6 +419,9 @@ supply an arbitrary data-expression mechanism. Likewise, a value requiring
 runtime metadata still needs a complete representation recipe even when its
 native offsets are hidden ([A3](#a3), [F1](#f1)). See [Reaching the code](explanation/packages.md#reaching-the-code).
 
+
+Lookup: [`via`](reference/clauses-access.md#via) distinguishes loads from symbol addresses.
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -484,6 +496,9 @@ A `stable` claim needs a provider guarantee for every reachable type in its
 domain; a `source` claim needs the complete recipe; an `artifact` claim needs
 the identified artifact set. [The design choices explanation](explanation/choices.md)
 discusses why native representations need this explicit boundary.
+
+
+Lookup: [`compatibility`](reference/clauses-access.md#compatibility).
 
 </blockquote>
 <!-- /reading-aid -->

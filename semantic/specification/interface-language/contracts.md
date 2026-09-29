@@ -782,6 +782,9 @@ the [outcome](reference/notation.md#outcome),
 [callable](reference/notation.md#callable) and
 [clause-value](reference/notation.md#clause) grammar sections.
 
+
+Lookup: [`when`](reference/clauses-outcomes.md#when), [`meaning`](reference/clauses-outcomes.md#meaning), and [`state`](reference/clauses-outcomes.md#state).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -877,6 +880,9 @@ owner parameter and the appropriate mutation contract. The immutable Store's
 empty list asserts no such earlier invalidator. The tutorial's
 [borrowed-to-owned change](tutorial/05-access-and-change.md) develops a mutable
 owner and an independent owned snapshot in complete synthetic packages.
+
+
+Lookup: [`give`](reference/clauses-outcomes.md#give) and [`invalidated_by`](reference/clauses-outcomes.md#invalidated_by).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1029,6 +1035,9 @@ describes schedule blocks attached to a callable-local place.
 
 Lookup: [`executor`](reference/clauses-callable.md#executor), [`concurrency`](reference/clauses-callable.md#concurrency), [`reentrancy`](reference/clauses-callable.md#reentrancy), and [`requires`](reference/clauses-callable.md#requires).
 
+
+Lookup for schedule facts: [`timing`](reference/clauses-outcomes.md#timing), [`count`](reference/clauses-outcomes.md#count), [`scope`](reference/clauses-outcomes.md#scope), and [`quiescence`](reference/clauses-outcomes.md#quiescence).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -1124,6 +1133,9 @@ Lookup: [mutable](reference/clauses-package.md#mutable),
 [sharing](reference/clauses-package.md#sharing),
 [isolation](reference/clauses-package.md#isolation), and
 [literal](reference/clauses-package.md#literal).
+
+
+Lookup for returned references: [`give`](reference/clauses-outcomes.md#give) and [`invalidated_by`](reference/clauses-outcomes.md#invalidated_by).
 
 </blockquote>
 <!-- /reading-aid -->

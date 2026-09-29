@@ -93,7 +93,7 @@ by package name `tutorial::finished`, version `"1"` and declaration name
 Now find `access direct in [test]` inside that function. `direct` is the
 local name of one way to call it, and `[test]` identifies the
 [environment](../glossary.md#environment) where that way applies. The
-`via` clause names `fixture_current_label` as the linker symbol to reach.
+[`via`](../reference/clauses-access.md#via) clause names `fixture_current_label` as the linker symbol to reach.
 The tool uses one name to identify the contract and another to locate its
 implementation ([`A2`](../profiles.md#a2)).
 
@@ -124,14 +124,14 @@ describe how to pass the card and return the label. The
 [provider](../glossary.md#provider) supplies those definitions
 ([`A1`](../profiles.md#a1), [`F1`](../profiles.md#f1)).
 
-Read `abi(native, "c")` as selecting the `c`
+Read [`abi(native, "c")`](../reference/clauses-access.md#abi) as selecting the `c`
 [calling convention](../glossary.md#calling-convention) within that entry.
 A calling convention specifies the call protocol; the ABI entry also
 defines [representations](../glossary.md#representation) for the values being
 passed. For this fixture, resource handles have a specified 64-bit
 representation ([`A1`](../profiles.md#a1), [`F1`](../profiles.md#f1)).
 
-Read `via(fixture, "symbol", "fixture_current_label")` as asking the
+Read [`via(fixture, "symbol", "fixture_current_label")`](../reference/clauses-access.md#via) as asking the
 [consumer](../glossary.md#consumer) to use the fixture's function-symbol
 mechanism with that exact name. The mechanism keeps all declared parameters
 explicit. Compare these facts with [`F1`](../profiles.md#f1), which defines
@@ -141,7 +141,7 @@ the synthetic catalogue.
 
 Continue [Reaching the code](../explanation/model.md#access) by checking
 that the path accounts for the declared call and keeps its values compatible.
-Read `mapping(identity)` next. A [mapping](../glossary.md#mapping) describes
+Read [`mapping(identity)`](../reference/clauses-access.md#mapping) next. A [mapping](../glossary.md#mapping) describes
 how the consumer passes the declared inputs through the selected path. It
 also accounts for the results and the ways the call can finish, its
 [completions](../glossary.md#completion).
@@ -156,7 +156,7 @@ For this operation it lends the card's label, and refresh ends that borrow.
 Matching a parameter and result type is only part of fulfilling the whole
 operation ([`A2`](../profiles.md#a2)).
 
-Finally, read `compatibility(stable)`. The provider guarantees compatible
+Finally, read [`compatibility(stable)`](../reference/clauses-access.md#compatibility). The provider guarantees compatible
 representations across its stated [compatibility domain](../glossary.md#compatibility-domain).
 Here that domain is the synthetic fixture. A real library would need a
 provider guarantee covering its actual environments and representations
@@ -169,8 +169,8 @@ synthetic example (non-normative; [`A2–A4`](../profiles.md#a2),
 
 | Clause | What it tells the tool |
 |---|---|
-| `abi(native, "c")` | Use the `c` calling convention in the selected ABI definition. |
-| `via(fixture, "symbol", "fixture_current_label")` | Reach the function through this exact synthetic symbol. |
+| [`abi(native, "c")`](../reference/clauses-access.md#abi) | Use the `c` calling convention in the selected ABI definition. |
+| [`via(fixture, "symbol", "fixture_current_label")`](../reference/clauses-access.md#via) | Reach the function through this exact synthetic symbol. |
 | `mapping(identity)` | Pass the declared card and receive the label using the provider's identity mapping. |
 | `compatibility(stable)` | Rely on the provider's representation guarantee within its stated domain. |
 
@@ -195,9 +195,9 @@ callback LabelChanged(change: u64) -> unit {
 ```
 
 For every function, find a path covering `test` and read its four clauses:
-`abi`, `via`, `mapping` and `compatibility`. Each function had these clauses
+[`abi`](../reference/clauses-access.md#abi), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping) and [`compatibility`](../reference/clauses-access.md#compatibility). Each function had these clauses
 from the checkpoint that introduced it. For the callback `LabelChanged`,
-find `callback_abi` and `representation` instead: the program supplies that
+find [`callback_abi`](../reference/clauses-access.md#callback_abi) and [`representation`](../reference/clauses-access.md#representation) instead: the program supplies that
 callable value for the library to invoke ([`A2`](../profiles.md#a2)).
 
 You have now followed a contract to the definitions needed to call its
@@ -534,7 +534,7 @@ after refresh or card destruction. When finished, it calls `destroy_label`
 once to discharge its own obligation ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 
 The type spelling `Label` can occur in either contract. The operation's
-`give` clause tells the caller whether it receives a borrow or an owned
+[`give`](../reference/clauses-outcomes.md#give) clause tells the caller whether it receives a borrow or an owned
 result. Borrowing states the agreement about access; it implies no
 Rust-style static checking or exclusivity.
 
@@ -650,13 +650,13 @@ operation that ends access early. The owned result carries its own
 destruction obligation ([`C1–C2`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 In the returned [outcome](../glossary.md#outcome), replace
-`give($result, borrow(owner($card)))` with `give($result, owned)`.
-Remove `invalidated_by($result, [@refresh_card])`, which described the
+[`give($result, borrow(owner($card)))`](../reference/clauses-outcomes.md#give) with `give($result, owned)`.
+Remove [`invalidated_by($result, [@refresh_card])`](../reference/clauses-outcomes.md#invalidated_by), which described the
 earlier cutoff for the borrow. The result is now an independent owned label
 with its own destruction obligation ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 
 Rename the outcome from `lent` to `supplied` to describe the new result.
-Keep `when(returned, any)`, `meaning(success)` and `state($result, valid)`.
+Keep [`when(returned, any)`](../reference/clauses-outcomes.md#when), [`meaning(success)`](../reference/clauses-outcomes.md#meaning) and [`state($result, valid)`](../reference/clauses-outcomes.md#state).
 The operation still has one successful case covering every returned result
 ([`C5`](../contracts.md#c5)).
 
@@ -688,13 +688,13 @@ fn current_label(card: Card) -> Label {
 }
 ```
 
-In `via`, replace `fixture_current_label` with
+In [`via`](../reference/clauses-access.md#via), replace `fixture_current_label` with
 `fixture_current_label_owned`. The new synthetic symbol identifies the
 implementation specified to produce an independent owned result. The
 original symbol's borrowing behaviour would leave the new contract
 unfulfilled, despite having the same signature ([`A2`](../profiles.md#a2)).
 
-Keep `abi`, `mapping` and `compatibility`. The parameter and result types
+Keep [`abi`](../reference/clauses-access.md#abi), [`mapping`](../reference/clauses-access.md#mapping) and [`compatibility`](../reference/clauses-access.md#compatibility). The parameter and result types
 still use the fixture's resource-handle representation. The implementation
 reached by the changed symbol supplies the independently owned snapshot
 ([`A2–A4`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
@@ -755,7 +755,7 @@ the independent snapshot. The existing export list still includes the
 label's destructor ([`L2–L3`](../language.md#l2)).
 
 **The result brings a responsibility the caller can discharge.**
-`give(owned)` transfers one destruction obligation. The existing
+[`give(owned)`](../reference/clauses-outcomes.md#give) transfers one destruction obligation. The existing
 `lifecycle(unique, @destroy_label)` names how the caller fulfils it.
 `destroy_label` still consumes a non-null label, returns `unit` and has
 one successful returned outcome. A resource value is already a handle, so
@@ -769,7 +769,7 @@ The outcome name changes to `supplied`, while `any` still covers the whole
 returned case ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 **Refresh affects the card's current label.** The owned snapshot has its
-own lifetime, so the earlier borrow's `invalidated_by` clause is removed.
+own lifetime, so the earlier borrow's [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by) clause is removed.
 `refresh_card` continues to mutate its card. Supplying a snapshot can leave
 the card's externally visible contents unchanged, so `current_label` keeps
 `mutation(none)` and its other effects ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
@@ -782,7 +782,7 @@ resource keeps its sharing and isolation facts
 ([`L3`](../language.md#l3), [`L5`](../language.md#l5), [`C2–C6`](../contracts.md#c2)).
 
 **The new symbol selects the snapshot implementation.** The fixture provider
-and signature mapping stay the same, while `via` names the code that supplies
+and signature mapping stay the same, while [`via`](../reference/clauses-access.md#via) names the code that supplies
 the independently owned result.
 A documentation or machine view of this package likewise describes an owned
 result and its destruction responsibility ([`A2–A5`](../profiles.md#a2),
@@ -796,7 +796,7 @@ evidence ([`C8`](../contracts.md#c8)).
 
 1. After refreshing the card in the owned variant, what does the caller
    still owe for the snapshot?
-2. Does `mapping(identity)` allow the original borrowing symbol to serve
+2. Does [`mapping(identity)`](../reference/clauses-access.md#mapping) allow the original borrowing symbol to serve
    the owned contract?
 3. Does receiving an owned result relax the requirement to supply a valid card?
 
@@ -814,7 +814,7 @@ evidence ([`C8`](../contracts.md#c8)).
 
 ## Invalid variant
 
-In the owned variant's `current_label`, delete `give($result, owned)` and
+In the owned variant's `current_label`, delete [`give($result, owned)`](../reference/clauses-outcomes.md#give) and
 leave the outcome as follows.
 
 Invalid — rejected under [`C5`](../contracts.md#c5).

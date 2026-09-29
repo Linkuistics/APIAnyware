@@ -42,6 +42,8 @@ Model: [Reaching the code](explanation/model.md#access).
 See [Reaching the code](explanation/unsaid.md#reaching-the-code).
 Rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 
+Clause lookup: [`abi`](reference/clauses-access.md#abi).
+
 ## ABI entry
 
 An ABI entry is a named, versioned definition of calling conventions and
@@ -58,6 +60,8 @@ Rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 
 Example: [selected definitions](profiles.md#a1).
 Syntax: [dependencies](reference/notation.md#dependency).
+
+Clause lookup: [`abi`](reference/clauses-access.md#abi).
 
 ## Access path
 
@@ -76,6 +80,8 @@ Rule: [`A2`](profiles.md#a2).
 
 Example: [Counter's two access paths](profiles.md#a2).
 Syntax: [access paths](reference/notation.md#access).
+
+Clause lookup: [`abi`](reference/clauses-access.md#abi), [`via`](reference/clauses-access.md#via), [`mapping`](reference/clauses-access.md#mapping), [`compatibility`](reference/clauses-access.md#compatibility).
 
 ## Availability
 
@@ -131,7 +137,7 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rules: [`C1`](contracts.md#c1), [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
 
-Clause lookup: [`input`](reference/clauses-callable.md#input), [`valid`](reference/clauses-callable.md#valid).
+Clause lookup: [`input`](reference/clauses-callable.md#input), [`valid`](reference/clauses-callable.md#valid), [`give`](reference/clauses-outcomes.md#give).
 
 ## Borrow validity
 
@@ -146,7 +152,7 @@ Model: [Validity](explanation/model.md#validity).
 See [How long can the caller use a view?](explanation/unsaid.md#how-long-can-the-caller-use-a-view).
 Rules: [`C1`](contracts.md#c1), [`C5`](contracts.md#c5).
 
-Clause lookup: [`valid`](reference/clauses-callable.md#valid).
+Clause lookup: [`valid`](reference/clauses-callable.md#valid), [`give`](reference/clauses-outcomes.md#give), [`invalidated_by`](reference/clauses-outcomes.md#invalidated_by).
 
 ## Buffer extent
 
@@ -223,6 +229,8 @@ Rules: [`C2–C3`](contracts.md#c2), [`C6`](contracts.md#c6).
 Example: [Handler and its registration](contracts.md#c6).
 Syntax: [callback declarations](reference/notation.md#callable) and
 [callback-use blocks](reference/notation.md#callback-use).
+
+Clause lookup: [`callback_abi`](reference/clauses-access.md#callback_abi), [`representation`](reference/clauses-access.md#representation), [`timing`](reference/clauses-outcomes.md#timing), [`count`](reference/clauses-outcomes.md#count), [`scope`](reference/clauses-outcomes.md#scope).
 
 ## Callback captures
 
@@ -374,6 +382,8 @@ Model: [Reaching the code](explanation/model.md#access).
 
 See [Reaching the code](explanation/packages.md#reaching-the-code).
 Rule: [`A4`](profiles.md#a4).
+
+Clause lookup: [`compatibility`](reference/clauses-access.md#compatibility).
 
 ## Completion
 
@@ -541,6 +551,8 @@ Model: [How a call finishes](explanation/model.md#outcomes).
 See [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end).
 Rule: [`C5`](contracts.md#c5).
 
+Clause lookup: [`when`](reference/clauses-outcomes.md#when).
+
 ## Environment
 
 An environment names an exact target and platform configuration. It can also
@@ -638,7 +650,7 @@ Model: [Validity](explanation/model.md#validity).
 See [How long can the caller use a view?](explanation/unsaid.md#how-long-can-the-caller-use-a-view).
 Rules: [`C1`](contracts.md#c1), [`C5`](contracts.md#c5).
 
-Clause lookup: [`mutation`](reference/clauses-callable.md#mutation).
+Clause lookup: [`mutation`](reference/clauses-callable.md#mutation), [`invalidated_by`](reference/clauses-outcomes.md#invalidated_by).
 
 ## Isolation
 
@@ -755,6 +767,8 @@ Model: [Reaching the code](explanation/model.md#access).
 See [Reaching the code](explanation/packages.md#reaching-the-code).
 Rule: [`A2`](profiles.md#a2).
 
+Clause lookup: [`mapping`](reference/clauses-access.md#mapping).
+
 ## Member
 
 Model: [Entities that outlive a call](explanation/model.md#entities).
@@ -824,6 +838,8 @@ Rule: [`C5`](contracts.md#c5).
 Example: [copying bytes successfully or failing](contracts.md#c5).
 Syntax: [outcomes](reference/notation.md#outcome).
 
+Clause lookup: [`when`](reference/clauses-outcomes.md#when), [`meaning`](reference/clauses-outcomes.md#meaning).
+
 ## Output state
 
 An output state says whether a result, thrown value or writable pointee is
@@ -836,6 +852,8 @@ Model: [How a call finishes](explanation/model.md#outcomes).
 
 See [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end).
 Rules: [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
+
+Clause lookup: [`state`](reference/clauses-outcomes.md#state).
 
 ## Owned
 
@@ -850,6 +868,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rules: [`C2`](contracts.md#c2), [`C5`](contracts.md#c5).
 
+Clause lookup: [`give`](reference/clauses-outcomes.md#give).
+
 ## Ownership transfer
 
 Ownership transfer moves a destruction or release obligation between caller
@@ -863,6 +883,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rules: [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
+
+Clause lookup: [`give`](reference/clauses-outcomes.md#give).
 
 ## Package
 
@@ -920,6 +942,8 @@ Rule: [`L6`](language.md#l6).
 Example: [roles bound to concrete participants](language.md#l6).
 Syntax: [patterns and instances](reference/notation.md#pattern).
 
+Clause lookup: [`law`](reference/clauses-access.md#law).
+
 ## Pattern instance
 
 A pattern instance applies a named pattern by binding every role to concrete
@@ -932,6 +956,8 @@ Model: [Entities that outlive a call](explanation/model.md#entities).
 
 See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
+
+Clause lookup: [`bind`](reference/clauses-access.md#bind), [`subject`](reference/clauses-access.md#subject).
 
 ## Place
 
@@ -1055,7 +1081,7 @@ Model: [Callbacks and their schedules](explanation/model.md#callbacks).
 See [callback teardown](explanation/unsaid.md#when-is-it-safe-to-discard-callback-state).
 Rule: [`C6`](contracts.md#c6).
 
-Clause lookup: [`requires`](reference/clauses-callable.md#requires).
+Clause lookup: [`requires`](reference/clauses-callable.md#requires), [`quiescence`](reference/clauses-outcomes.md#quiescence).
 
 ## Re-entrancy
 
@@ -1113,6 +1139,8 @@ Model: [Reaching the code](explanation/model.md#access).
 See [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries).
 Rule: [`A3`](profiles.md#a3).
 
+Callback clause lookup: [`representation`](reference/clauses-access.md#representation).
+
 ## Resolution set
 
 A resolution set supplies the dependencies and artifact identities that tools
@@ -1155,6 +1183,8 @@ Model: [Entities that outlive a call](explanation/model.md#entities).
 
 See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
+
+Clause lookup: [`bind`](reference/clauses-access.md#bind).
 
 ## Shared
 

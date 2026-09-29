@@ -160,7 +160,7 @@ aliases, as in [part 1](01-lifetime.md#3-select-the-synthetic-definitions-and-co
 The strings select the convention and representation within those definitions
 ([`A1–A2`](../profiles.md#a1)).
 
-Add `callback_abi(native, "c")` and `representation(fixture, "closure")`.
+Add [`callback_abi(native, "c")`](../reference/clauses-access.md#callback_abi) and [`representation(fixture, "closure")`](../reference/clauses-access.md#representation).
 These select the [calling convention](../glossary.md#calling-convention) and
 the way the fixture stores the callback with its captures, its
 [representation](../glossary.md#representation).
@@ -214,7 +214,7 @@ returned `Watch` ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 Declare `resource Watch` with `lifecycle(unique, @destroy_watch)`,
 `sharing(transferable)`, `isolation(none)` and the common clauses shown in
 the checkpoint. Add `watch_labels(handler: LabelChanged) -> Watch` with
-one successful returned outcome: a valid result and `give($result, owned)`.
+one successful returned outcome: a valid result and [`give($result, owned)`](../reference/clauses-outcomes.md#give).
 The program receives an [owned](../glossary.md#owned) watch and becomes
 responsible for destroying it ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 
@@ -309,22 +309,22 @@ For the block's syntax and railroad, see the
 the grammar alone does not establish a complete schedule.
 
 Inside `watch_labels`, add a `callback $handler` block. Write
-`timing(after_return)` so notifications can start only after registration
+[`timing(after_return)`](../reference/clauses-outcomes.md#timing) so notifications can start only after registration
 returns. Compare this with an API that invokes its handler entirely during
 registration: that call could finish all callback use before it returns.
 This subscription permits later use and therefore needs the watch to bound
 it ([`C6`](../contracts.md#c6)).
 
-Write `count(0, many)`. The library is permitted to send zero notifications,
+Write [`count(0, many)`](../reference/clauses-outcomes.md#count). The library is permitted to send zero notifications,
 or any number during the registration's scope. `many` supplies an unbounded
 maximum. The API author uses it when the API permits an unbounded number
 of notifications, based on knowledge of its behaviour
 ([`C6`](../contracts.md#c6)).
 
-Write `scope(owner($result))` to relate the schedule to the watch. Add
+Write [`scope(owner($result))`](../reference/clauses-outcomes.md#scope) to relate the schedule to the watch. Add
 `executor(any)`, `concurrency(serial)` and `reentrancy(forbidden)` to keep
 this registration's permitted invocations consistent with the callback
-declaration. Finally, write `quiescence(@destroy_watch)` to name the
+declaration. Finally, write [`quiescence(@destroy_watch)`](../reference/clauses-outcomes.md#quiescence) to name the
 operation whose return ends all callback use ([`C6`](../contracts.md#c6)).
 
 Registration itself completes synchronously. Its schedule permits later
@@ -337,7 +337,7 @@ call ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 Connect [Release responsibility](../explanation/model.md#responsibility)
 with [Callbacks and their schedules](../explanation/model.md#callbacks).
 Describe the destructor taking over the watch at entry and ending callback
-use before return. The schedule's `quiescence` clause names `destroy_watch`,
+use before return. The schedule's [`quiescence`](../reference/clauses-outcomes.md#quiescence) clause names `destroy_watch`,
 the destructor from the watch's lifecycle.
 
 Fragment — shows watch consumption in `tutorial::callbacks`. The
@@ -807,7 +807,7 @@ Use these non-normative summaries to check your reading of
   `callback $handler` describes when this registration can make such
   invocations.
 - `watch_labels` completes before returning control. Notifications may
-  start afterwards, as permitted by `timing(after_return)`.
+  start afterwards, as permitted by [`timing(after_return)`](../reference/clauses-outcomes.md#timing).
 - The library retains its own handler reference for the watch's
   [region](../glossary.md#region). The input borrow leaves the program's
   existing ownership in place.
@@ -826,9 +826,9 @@ Use these non-normative summaries to check your reading of
 
 ### Answers
 
-1. After `watch_labels` returns, as stated by `timing(after_return)`
+1. After `watch_labels` returns, as stated by [`timing(after_return)`](../reference/clauses-outcomes.md#timing)
    ([`C6`](../contracts.md#c6)).
-2. Zero invocations satisfy `count(0, many)`. Counts cover the registration's
+2. Zero invocations satisfy [`count(0, many)`](../reference/clauses-outcomes.md#count). Counts cover the registration's
    whole scope, conditional on that scope eventually ending
    ([`C6`](../contracts.md#c6)).
 3. Teardown requires `outside_callback`, so the handler cannot make that
@@ -838,7 +838,7 @@ Use these non-normative summaries to check your reading of
 
 ## Invalid variant
 
-In `watch_labels`, replace the callback-use block's `quiescence` clause with
+In `watch_labels`, replace the callback-use block's [`quiescence`](../reference/clauses-outcomes.md#quiescence) clause with
 this clause and keep its owner scope unchanged.
 
 Invalid — rejected under [`C6`](../contracts.md#c6).
