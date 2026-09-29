@@ -236,7 +236,7 @@ package example::objects version "1" {
 
 The message path relies on `F1`'s stable fixture domain; the source path relies on `fixture-build`. Both retain the same semantic getter contract.
 
-**Used by and see also:** [`mapping`](#mapping); [`toolchain`](clauses-package.md#toolchain); [compatibility domain](../glossary.md#compatibility-domain); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`mapping`](#mapping); [`toolchain`](clauses-package.md#toolchain); [compatibility domain](../glossary.md#compatibility-domain); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Reaching the code](../explanation/packages.md#reaching-the-code).
 
@@ -367,7 +367,7 @@ The conformance state is `nonconforming`; the independently stated `confined`/`m
 
 The law checks the same destruction relation already recorded by `Store`'s lifecycle. The [subject entry](#subject) shows an ordering law over two operations using a `Session`.
 
-**Used by and see also:** [`bind`](#bind); [`subject`](#subject); [`lifecycle`](clauses-package.md#lifecycle); [pattern](declarations.md#pattern); review tasks: [Model fit](../review/tasks.md#model-fit).
+**Used by and see also:** [`bind`](#bind); [`subject`](#subject); [`lifecycle`](clauses-package.md#lifecycle); [pattern](declarations.md#pattern); review tasks: [Trace validity across the model](../review/tasks.md#model-fit).
 
 **Rationale:** [Patterns and laws](../explanation/contracts.md#patterns-and-laws).
 
@@ -422,7 +422,7 @@ package example::objects version "1" {
 
 `F1` defines `identity` for both mechanisms. The message mechanism makes the `Counter` receiver implicit while preserving the declared result and contract; identity mapping need not mean identical physical argument placement.
 
-**Used by and see also:** [`via`](#via); [`abi`](#abi); [`receiver`](clauses-package.md#receiver); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`via`](#via); [`abi`](#abi); [`receiver`](clauses-package.md#receiver); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Reaching the code](../explanation/packages.md#reaching-the-code).
 
@@ -592,6 +592,6 @@ package example::objects version "1" {
 
 `fixed_bytes` takes the address of exported byte storage. `pointer_value` loads a pointer held in a variable. Both declarations yield `ptr<u8>`, so the type alone cannot choose between these operations.
 
-**Used by and see also:** [`abi`](#abi); [`mapping`](#mapping); [`compatibility`](#compatibility); [global](declarations.md#global); [constant](declarations.md#constant); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`abi`](#abi); [`mapping`](#mapping); [`compatibility`](#compatibility); [global](declarations.md#global); [constant](declarations.md#constant); [access tutorial](../tutorial/05-access-and-change.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Reaching the code](../explanation/packages.md#reaching-the-code).

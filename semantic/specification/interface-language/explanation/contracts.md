@@ -1346,9 +1346,10 @@ target language ([`C8`](../contracts.md#c8), [`A5`](../profiles.md#a5)).
 Next: [Packages, environments and access paths](packages.md), then
 [Design choices, limits and open questions](choices.md).
 For a guided exercise, follow [Describing a small API](../tutorial/README.md).
-For review, [Predict](../review/tasks.md#predict) tests a returned borrow,
-[Change](../review/tasks.md#change) adds pointer obligations, and
-[Stretch](../review/tasks.md#stretch) examines callback teardown.
+For review, three tasks exercise these contracts: [predict an escaping borrow's validity](../review/tasks.md#predict)
+to test a returned borrow, [change a pointer input](../review/tasks.md#change) to add
+pointer obligations, and [assess cancellation and teardown](../review/tasks.md#stretch)
+to examine when callback state can be released.
 See [the canonical contract rules](../contracts.md) for exact obligations. Return to the
 [overview](../README.md) for the document map or the [domain explanation](unsaid.md)
 for the failures these contracts prevent.

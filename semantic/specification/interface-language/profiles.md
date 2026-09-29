@@ -8,7 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [A1](#a1), [A2](#a2), [A3](#a3), [A4](#a4) and [A5](#a5) below are canonical; [F1](#f1) defines the synthetic fixture catalogue.
-> **Routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
+> **Reading routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
 > **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an example. The paragraphs

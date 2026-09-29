@@ -165,7 +165,7 @@ rules determine which values each named clause accepts.
 
 [Diagram source](../figures/g10-clause.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Predict](../review/tasks.md#predict), [Change](../review/tasks.md#change) and [Compare](../review/tasks.md#compare).
+Review tasks: [Predict an escaping borrow's validity](../review/tasks.md#predict), [Change a pointer input](../review/tasks.md#change) and [Compare a view's lifetime in two designs](../review/tasks.md#compare).
 
 <a id="names"></a>
 
@@ -221,7 +221,7 @@ to refer to declarations and slots.
 
 [Diagram source](../figures/g10-names.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Trace](../review/tasks.md#trace).
+Review tasks: [Trace names and members](../review/tasks.md#trace).
 
 <a id="callable"></a>
 
@@ -266,7 +266,7 @@ within its callable declaration.
 [Full-size callable view](../figures/g10-callable.svg) ·
 [Diagram source](../figures/g10-callable.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Trace](../review/tasks.md#trace), [Change](../review/tasks.md#change) and [Author](../review/tasks.md#author).
+Review tasks: [Trace names and members](../review/tasks.md#trace), [Change a pointer input](../review/tasks.md#change) and [Author a complete call contract](../review/tasks.md#author).
 
 <a id="places"></a>
 
@@ -306,7 +306,7 @@ storage an obligation addresses.
 
 [Diagram source](../figures/g10-places.puml) · [Exact grammar](../grammar.ebnf)
 
-Review task: [Trace](../review/tasks.md#trace).
+Review task: [Trace names and members](../review/tasks.md#trace).
 
 <a id="environment"></a>
 
@@ -443,7 +443,7 @@ Use this view to locate the clauses describing one named completion case.
 
 [Diagram source](../figures/g10-outcome.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Model fit](../review/tasks.md#model-fit).
+Review tasks: [Trace validity across the model](../review/tasks.md#model-fit).
 
 <a id="callback-use"></a>
 
@@ -499,7 +499,7 @@ describing its schedule.
 
 [Diagram source](../figures/g10-callback-use.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Stretch](../review/tasks.md#stretch).
+Review tasks: [Assess cancellation and teardown](../review/tasks.md#stretch).
 
 <a id="dependency"></a>
 
@@ -590,7 +590,7 @@ the clauses defining that route.
 
 [Diagram source](../figures/g10-access.puml) · [Exact grammar](../grammar.ebnf)
 
-Review tasks: [Change](../review/tasks.md#change).
+Review tasks: [Change a pointer input](../review/tasks.md#change).
 
 ## Vocabulary and validity
 

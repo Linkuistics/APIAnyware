@@ -582,7 +582,7 @@ package example::buffers version "1" {
 
 The caller releases an owned `Store` through `destroy`; `input($store, consume)` transfers that duty at entry. Reference counting uses the separate [runtime form](#runtime).
 
-**Used by and see also:** [Resource](declarations.md#resource); [`runtime`](#runtime); [`isolation`](#isolation); [`N09`/`N10`](../conformance.md#rejection-mutations); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Resource](declarations.md#resource); [`runtime`](#runtime); [`isolation`](#isolation); [`N09`/`N10`](../conformance.md#rejection-mutations); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 See also [Entities that outlive a call](../explanation/model.md#entities) for the lifecycle's place in the model.
 
@@ -711,7 +711,7 @@ package example::canvas version "1" {
 
 `position` and `Canvas` are siblings in the canvas package. `@Canvas` is the local owner, while `Geometry::Point` names the imported result type. The [language-containment view](declarations.md) locates these relationships.
 
-**Used by and see also:** [Function](declarations.md#fn); [property](declarations.md#property); [`receiver`](#receiver); [`extension`](#extension); [names](notation.md#names); review tasks: [Trace](../review/tasks.md#trace).
+**Used by and see also:** [Function](declarations.md#fn); [property](declarations.md#property); [`receiver`](#receiver); [`extension`](#extension); [names](notation.md#names); review tasks: [Trace names and members](../review/tasks.md#trace).
 
 **Rationale:** [Packages, environments and access paths](../explanation/packages.md).
 
@@ -899,7 +899,7 @@ package example::canvas version "1" {
 
 `$canvas` is the receiver value inside `position`; `@position::canvas` identifies that parameter [slot](../glossary.md#slot) from a declaration-reference argument. The parameter's type is written `Canvas`, without `@`.
 
-**Used by and see also:** [`member`](#member); [`accessors`](#accessors); [names and references](notation.md#names); [places](notation.md#places); review tasks: [Trace](../review/tasks.md#trace).
+**Used by and see also:** [`member`](#member); [`accessors`](#accessors); [names and references](notation.md#names); [places](notation.md#places); review tasks: [Trace names and members](../review/tasks.md#trace).
 
 **Rationale:** [Packages, environments and access paths](../explanation/packages.md).
 

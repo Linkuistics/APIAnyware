@@ -835,6 +835,7 @@ that clause leaves a required fact unanswered.
 
 Return: [Describing a small API](README.md).
 Next: [Reviewing AIL](../review/README.md) connects the contracts you have written
-to six review dimensions and a feedback template. Try [Compare](../review/tasks.md#compare)
-for another ownership design or [Model fit](../review/tasks.md#model-fit) to trace
-validity across the conformance packages.
+to six review dimensions and a feedback template. To try another ownership design,
+[compare a view's lifetime in two designs](../review/tasks.md#compare). To follow
+how validity is stated across the conformance packages,
+[trace validity across the model](../review/tasks.md#model-fit).

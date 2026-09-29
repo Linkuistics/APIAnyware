@@ -434,9 +434,9 @@ ways to investigate them; it does not decide their merits.
 |---|---|
 | [Q1 — keyword presentation](../../specification/interface-language/explanation/choices.md#q1) | Open for the authors. Use [normative wording](../../specification/interface-language/reference/notation.md#normative-wording) and cite any specific rule whose force is unclear. |
 | [Q2 — two meanings of closure](../../specification/interface-language/explanation/choices.md#q2) | Open vocabulary choice. The [glossary](../../specification/interface-language/glossary.md#closure) separates dependency closure from callback captures. |
-| [Q3 — ownership placement](../../specification/interface-language/explanation/choices.md#q3) | Open evidence gap. [Compare](../../specification/interface-language/review/tasks.md#compare) makes the earlier sketch and draft 0.1 inspectable without inventing the decision's rationale. |
-| [Q4 — slot and reference spelling](../../specification/interface-language/explanation/choices.md#q4) | Open design trade-off. [Trace](../../specification/interface-language/review/tasks.md#trace) follows imports, members and callable slots. |
-| [Q5 — split borrow validity](../../specification/interface-language/explanation/choices.md#q5) | Open discoverability question. [Predict](../../specification/interface-language/review/tasks.md#predict) and [Model fit](../../specification/interface-language/review/tasks.md#model-fit) recover input and output obligations. |
+| [Q3 — ownership placement](../../specification/interface-language/explanation/choices.md#q3) | Open evidence gap. The [Compare task](../../specification/interface-language/review/tasks.md#compare) makes the earlier sketch and draft 0.1 inspectable without inventing the decision's rationale. |
+| [Q4 — slot and reference spelling](../../specification/interface-language/explanation/choices.md#q4) | Open design trade-off. The [Trace task](../../specification/interface-language/review/tasks.md#trace) follows imports, members and callable slots. |
+| [Q5 — split borrow validity](../../specification/interface-language/explanation/choices.md#q5) | Open discoverability question. The [Predict](../../specification/interface-language/review/tasks.md#predict) and [Model fit](../../specification/interface-language/review/tasks.md#model-fit) tasks recover input and output obligations. |
 | [Q6 — rule granularity](../../specification/interface-language/explanation/choices.md#q6) | Open diagnostic/citation choice. The [mutation index](../../specification/interface-language/reference/README.md#mutations) connects IDs to rules and entries; finer rule identifiers have not been introduced. |
 
 The current question register contains Q1–Q6. The navigation integration adds
@@ -468,13 +468,12 @@ their introductions. The G10 embeds occur only in that grammar reference.
 example/source agreement, diagram regeneration and enumerated reference
 coverage. External URLs are listed without being fetched. These checks do
 not parse AIL, validate its contracts, exercise a native implementation or
-measure reader comprehension. The navigation walk checks that destinations
-answer the linked question; the human checkpoint assesses their usability.
+measure reader comprehension. The navigation walk compares each link with the
+question its destination answers; only the human checkpoint assesses usability.
 
 ### Reader evidence and unresolved work
 
-At the earlier reading checkpoint, the human clarified, “I mean your
-improvement is good.” They then asked for the model to lead the learning
+At the earlier reading checkpoint, the human confirmed that the improvement was good. They then asked for the model to lead the learning
 route, because the language serves as a tool. They also requested removal of
 railroad-reading instruction boxes and asked for visible boundaries around
 reading aids. At the later model-reading checkpoint, they said the material was

@@ -1083,7 +1083,7 @@ Rule: [`C6`](contracts.md#c6).
 
 Clause lookup: [`requires`](reference/clauses-callable.md#requires), [`quiescence`](reference/clauses-outcomes.md#quiescence).
 
-Review: [Stretch](review/tasks.md#stretch) separates a cancellation request from completed teardown.
+Review: the task [assess cancellation and teardown](review/tasks.md#stretch) separates a cancellation request from completed teardown.
 
 ## Re-entrancy
 

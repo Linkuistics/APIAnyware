@@ -121,7 +121,7 @@ package example::canvas version "1" {
 
 The digest is an illustrative placeholder, not a computed hash. `Geometry::Point` is an imported type; `@Geometry::Point` is its declaration reference. `Canvas` is local, and `$canvas` is the function’s local [place](../glossary.md#place). A complete package supplies the matching geometry document.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Trace](../review/tasks.md#trace).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Trace names and members](../review/tasks.md#trace).
 
 **Rationale:** [Packages, environments and access paths](../explanation/packages.md).
 
@@ -164,7 +164,7 @@ package example::objects version "1" {
 
 These are `F1`’s synthetic test resolution tokens, not hashes of provider manifests. Ordinary publication uses real matching manifest digests. `fixture` and `native` are distinct aliases used by the declarations.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Packages, environments and access paths](../explanation/packages.md).
 
@@ -294,7 +294,7 @@ package example::buffers version "1" {
 
 `Store` is the handle itself. `ptr<Store>` would address storage containing such a handle.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 
@@ -641,7 +641,7 @@ package example::canvas version "1" {
 
 `@position::canvas` identifies a parameter slot; `$canvas` addresses its value within the callable. The function returns an imported record type.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 
@@ -862,7 +862,7 @@ package example::buffers version "1" {
 
 On the non-null outcome, the caller receives one owned `Store` handle. A complete function also describes the null case.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 
@@ -911,7 +911,7 @@ package example::events version "1" {
 
 `$handler` refers to this registration’s parameter. `Handler` itself describes each invocation; `Watch` is the returned owner whose destructor ends the schedule.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Stretch](../review/tasks.md#stretch).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Assess cancellation and teardown](../review/tasks.md#stretch).
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 
@@ -959,7 +959,7 @@ package example::objects version "1" {
 
 In the synthetic fixture provider, `currentCount` is a message identity and the explicit semantic receiver is lowered to an implicit native receiver. This is not a claim about an OS API.
 
-**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [Applicability table](#applicability); [grammar and notation](notation.md); [conformance examples](../conformance.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Packages, environments and access paths](../explanation/packages.md).
 

@@ -74,7 +74,7 @@ package example::buffers version "1" {
 
 `disjoint` keeps the destination separate from `Store`'s source bytes and any other memory this call accesses. The writable destination and its size are stated independently.
 
-**Used by and see also:** [`direction`](#direction); [`extent`](#extent); [`concurrency`](#concurrency); [buffer tutorial](../tutorial/03-storage.md); review tasks: [Change](../review/tasks.md#change).
+**Used by and see also:** [`direction`](#direction); [`extent`](#extent); [`concurrency`](#concurrency); [buffer tutorial](../tutorial/03-storage.md); review tasks: [Change a pointer input](../review/tasks.md#change).
 
 **Rationale:** [Buffers and strings](../explanation/contracts.md#buffers-and-strings).
 
@@ -179,7 +179,7 @@ package example::callbacks version "1" {
 
 The API keeps independent invocations of this registration's handler from overlapping. `Handler`'s declaration also uses `serial`, governing calls across registrations. The separate `reentrancy(forbidden)` clause addresses nested invocation.
 
-**Used by and see also:** [`executor`](#executor); [`reentrancy`](#reentrancy); [callback use](declarations.md#callback-use); [concurrency](../glossary.md#concurrency); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`executor`](#executor); [`reentrancy`](#reentrancy); [callback use](declarations.md#callback-use); [concurrency](../glossary.md#concurrency); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Threads and sharing](../explanation/contracts.md#threads-and-sharing).
 
@@ -226,7 +226,7 @@ package example::text version "1" {
 
 `F1` supplies `utf-8`. Three text code units occupy the first three bytes, and a zero occupies the fourth. With `text("utf-8", none)`, the length would delimit text without a required terminator; with `binary`, zero bytes would be ordinary data.
 
-**Used by and see also:** [`extent`](#extent); [`direction`](#direction); [contents](../glossary.md#contents); [buffer tutorial](../tutorial/03-storage.md); review tasks: [Change](../review/tasks.md#change).
+**Used by and see also:** [`extent`](#extent); [`direction`](#direction); [contents](../glossary.md#contents); [buffer tutorial](../tutorial/03-storage.md); review tasks: [Change a pointer input](../review/tasks.md#change).
 
 **Rationale:** [Buffers and strings](../explanation/contracts.md#buffers-and-strings).
 
@@ -280,7 +280,7 @@ package example::buffers version "1" {
 
 The caller supplies writable storage. `out` prevents reading its old contents; a successful outcome makes the sixteen written elements valid. The failure outcome marks them invalid.
 
-**Used by and see also:** [`input`](#input); [`mutation`](#mutation); [`extent`](#extent); [output states](../contracts.md#c5); [`N13`](../conformance.md#rejection-mutations); review tasks: [Change](../review/tasks.md#change).
+**Used by and see also:** [`input`](#input); [`mutation`](#mutation); [`extent`](#extent); [output states](../contracts.md#c5); [`N13`](../conformance.md#rejection-mutations); review tasks: [Change a pointer input](../review/tasks.md#change).
 
 **Rationale:** [Buffers and strings](../explanation/contracts.md#buffers-and-strings).
 
@@ -380,7 +380,7 @@ package example::buffers version "1" {
 
 `any` allows entry from any executor, while `serial` restricts independent overlap. The [callback-use example](#concurrency) uses the same executor form in a registration's schedule.
 
-**Used by and see also:** [`isolation`](clauses-package.md#isolation); [`sharing`](clauses-package.md#sharing); [`concurrency`](#concurrency); [executor](../glossary.md#executor); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`isolation`](clauses-package.md#isolation); [`sharing`](clauses-package.md#sharing); [`concurrency`](#concurrency); [executor](../glossary.md#executor); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Threads and sharing](../explanation/contracts.md#threads-and-sharing).
 
@@ -427,7 +427,7 @@ package example::text version "1" {
 
 The buffer has three text code units and room for four, including its zero terminator. `buffer(0, 4, elements)` would still require four allocated bytes; `buffer(0, 0, elements)` could use a non-null pointer with no dereferenceable storage.
 
-**Used by and see also:** [`contents`](#contents); [`direction`](#direction); [pointer types](types.md#pointers); [buffer extent](../glossary.md#buffer-extent); review tasks: [Change](../review/tasks.md#change).
+**Used by and see also:** [`contents`](#contents); [`direction`](#direction); [pointer types](types.md#pointers); [buffer extent](../glossary.md#buffer-extent); review tasks: [Change a pointer input](../review/tasks.md#change).
 
 **Rationale:** [Buffers and strings](../explanation/contracts.md#buffers-and-strings).
 
@@ -475,7 +475,7 @@ package example::buffers version "1" {
 
 `destroy` takes `Store`'s one destruction obligation at entry. In contrast, `view` in the [validity example](#valid) borrows `Store` and leaves that obligation with the caller.
 
-**Used by and see also:** [`retain`](#retain); [`valid`](#valid); [`lifecycle`](clauses-package.md#lifecycle); [`N20`](../conformance.md#rejection-mutations); review tasks: [Change](../review/tasks.md#change), [Compare](../review/tasks.md#compare).
+**Used by and see also:** [`retain`](#retain); [`valid`](#valid); [`lifecycle`](clauses-package.md#lifecycle); [`N20`](../conformance.md#rejection-mutations); review tasks: [Change a pointer input](../review/tasks.md#change), [Compare a view's lifetime in two designs](../review/tasks.md#compare).
 
 **Rationale:** [Who owns what](../explanation/contracts.md#who-owns-what).
 
@@ -573,7 +573,7 @@ package example::buffers version "1" {
 
 The combination `serial` and `allowed` permits nested re-entry while excluding independent overlap on the same `Store`. The [callback-use example](#concurrency) instead forbids nested invocations of its registration.
 
-**Used by and see also:** [`concurrency`](#concurrency); [`requires`](#requires); [re-entrancy](../glossary.md#re-entrancy); [`N18`](../conformance.md#rejection-mutations); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`concurrency`](#concurrency); [`requires`](#requires); [re-entrancy](../glossary.md#re-entrancy); [`N18`](../conformance.md#rejection-mutations); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Threads and sharing](../explanation/contracts.md#threads-and-sharing).
 
@@ -649,7 +649,7 @@ package example::optional version "1" {
 
 `capability(@redraw, $panel)` concerns this `Panel` receiver. The declaration's environment availability, supplied in a complete package, answers a separate question.
 
-**Used by and see also:** [`requirement`](clauses-package.md#requirement); [callback use](declarations.md#callback-use); [teardown tutorial](../tutorial/04-callbacks.md#8-require-teardown-from-outside-the-callback); [`N18`](../conformance.md#rejection-mutations); review tasks: [Stretch](../review/tasks.md#stretch).
+**Used by and see also:** [`requirement`](clauses-package.md#requirement); [callback use](declarations.md#callback-use); [teardown tutorial](../tutorial/04-callbacks.md#8-require-teardown-from-outside-the-callback); [`N18`](../conformance.md#rejection-mutations); review tasks: [Assess cancellation and teardown](../review/tasks.md#stretch).
 
 **Rationale:** [Callbacks](../explanation/contracts.md#callbacks).
 
@@ -700,7 +700,7 @@ package example::callbacks version "1" {
 
 The caller lends `Handler` at entry and retains its original obligation. The callee creates a separate reference lasting through the returned `Subscription`'s lifetime. `valid($handler, call)` covers the caller's initial loan.
 
-**Used by and see also:** [`input`](#input); [`valid`](#valid); [`storage`](clauses-package.md#storage); [retention](../glossary.md#retention); [callback tutorial](../tutorial/04-callbacks.md#5-keep-the-handler-for-later-notifications); review tasks: [Change](../review/tasks.md#change), [Compare](../review/tasks.md#compare).
+**Used by and see also:** [`input`](#input); [`valid`](#valid); [`storage`](clauses-package.md#storage); [retention](../glossary.md#retention); [callback tutorial](../tutorial/04-callbacks.md#5-keep-the-handler-for-later-notifications); review tasks: [Change a pointer input](../review/tasks.md#change), [Compare a view's lifetime in two designs](../review/tasks.md#compare).
 
 **Rationale:** [Who owns what](../explanation/contracts.md#who-owns-what).
 
@@ -758,7 +758,7 @@ package example::buffers version "1" {
 
 The caller keeps `Store` usable during `view`. The returned pointer's borrow lasts until `Store`'s lifetime ends, as stated separately by `give($result, borrow(owner($store)))`.
 
-**Used by and see also:** [`input`](#input); [`retain`](#retain); [region](../glossary.md#region); [lending tutorial](../tutorial/02-lending.md#3-keep-the-input-card-usable-during-the-call); review tasks: [Predict](../review/tasks.md#predict), [Change](../review/tasks.md#change).
+**Used by and see also:** [`input`](#input); [`retain`](#retain); [region](../glossary.md#region); [lending tutorial](../tutorial/02-lending.md#3-keep-the-input-card-usable-during-the-call); review tasks: [Predict an escaping borrow's validity](../review/tasks.md#predict), [Change a pointer input](../review/tasks.md#change).
 
 **Rationale:** [How long a borrow lasts](../explanation/contracts.md#how-long-a-borrow-lasts).
 

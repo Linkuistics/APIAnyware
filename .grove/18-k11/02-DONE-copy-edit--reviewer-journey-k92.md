@@ -47,3 +47,25 @@ draft; art still reads the admitted visual material and navigation tables.
 Proof owns the node's handoff about updating Step 2's remaining-stage status
 when this pipeline has actually completed. The full-set human checkpoint is
 separate and remains live.
+
+## Decisions (running log)
+
+D1 — Terminology: the canonical-page aid label was `Routes` on language,
+contracts and profiles and `Reading routes` on baseline and conformance; made
+uniform as `Reading routes`.
+
+D2 — Task links: bare task verbs (`[Author]`, `[Trace]`, `[Model fit]`) replaced
+by the task's gloss under the link-text rule, using the wording contracts.md,
+language.md and profiles.md already used. Sentences where a gloss made the
+verb redundant (explanation/contracts.md, explanation/packages.md,
+tutorial/05, glossary, audit Q3–Q5) were rewritten by hand. The review pages'
+own local task names were left, since their index defines them.
+
+D3 — README "omission labels" (unexplained jargon) replaced by what the label
+states. Audit: an out-of-context quotation ("I mean your improvement is good")
+replaced by a plain report, and "the navigation walk checks that destinations
+answer the linked question" narrowed to what a walk can establish.
+
+D4 — Not touched: F12's and the closing paragraph's "remaining stages" wording
+belongs to proof (node brief `## Handed forward`, kept). No structural finding.
+`task docs:check` passes. Successor art leaf k93 cut; none was queued.

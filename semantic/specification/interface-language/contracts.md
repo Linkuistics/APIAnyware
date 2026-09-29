@@ -8,7 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [C1](#c1), [C2](#c2), [C3](#c3), [C4](#c4), [C5](#c5), [C6](#c6), [C7](#c7) and [C8](#c8) below are canonical.
-> **Routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
+> **Reading routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
 > **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an invented example.

@@ -130,7 +130,7 @@ package example::buffers version "1" {
 
 The view borrows the bytes until this call's `Store` is destroyed. In the same complete [package](../glossary.md#package), `create` instead returns an owned `Store` using `give($result, owned)`; the caller receives its destruction obligation only for a non-null result.
 
-**Used by and see also:** [`invalidated_by`](#invalidated_by); [`state`](#state); [`input`](clauses-callable.md#input); [`lifecycle`](clauses-package.md#lifecycle); [lending tutorial](../tutorial/02-lending.md); [global output example](../contracts.md#c7); review tasks: [Predict](../review/tasks.md#predict), [Compare](../review/tasks.md#compare), [Model fit](../review/tasks.md#model-fit).
+**Used by and see also:** [`invalidated_by`](#invalidated_by); [`state`](#state); [`input`](clauses-callable.md#input); [`lifecycle`](clauses-package.md#lifecycle); [lending tutorial](../tutorial/02-lending.md); [global output example](../contracts.md#c7); review tasks: [Predict an escaping borrow's validity](../review/tasks.md#predict), [Compare a view's lifetime in two designs](../review/tasks.md#compare), [Trace validity across the model](../review/tasks.md#model-fit).
 
 **Rationale:** [Who owns what](../explanation/contracts.md#who-owns-what).
 
@@ -182,7 +182,7 @@ package example::buffers version "1" {
 
 The empty list leaves `Store` destruction as the endpoint. The [lending tutorial](../tutorial/02-lending.md#5-end-earlier-borrows-when-refresh-begins) instead names `@refresh_card`, whose entry ends the old label borrow while the card remains alive.
 
-**Used by and see also:** [`give`](#give); [`mutation`](clauses-callable.md#mutation); [region](../glossary.md#region); [global output example](../contracts.md#c7); review tasks: [Predict](../review/tasks.md#predict), [Compare](../review/tasks.md#compare), [Model fit](../review/tasks.md#model-fit).
+**Used by and see also:** [`give`](#give); [`mutation`](clauses-callable.md#mutation); [region](../glossary.md#region); [global output example](../contracts.md#c7); review tasks: [Predict an escaping borrow's validity](../review/tasks.md#predict), [Compare a view's lifetime in two designs](../review/tasks.md#compare), [Trace validity across the model](../review/tasks.md#model-fit).
 
 **Rationale:** [How long a borrow lasts](../explanation/contracts.md#how-long-a-borrow-lasts).
 
@@ -289,7 +289,7 @@ package example::callbacks version "1" {
 
 `@unsubscribe` is `Subscription`'s destructor. Its precondition prevents a callback from waiting for its own completion through that blocking destructor. Returning from `subscribe` alone does not end this owner-scoped schedule.
 
-**Used by and see also:** [`scope`](#scope); [`requires`](clauses-callable.md#requires); [callback tutorial](../tutorial/04-callbacks.md); review tasks: [Stretch](../review/tasks.md#stretch), [Model fit](../review/tasks.md#model-fit).
+**Used by and see also:** [`scope`](#scope); [`requires`](clauses-callable.md#requires); [callback tutorial](../tutorial/04-callbacks.md); review tasks: [Assess cancellation and teardown](../review/tasks.md#stretch), [Trace validity across the model](../review/tasks.md#model-fit).
 
 **Rationale:** [Callbacks](../explanation/contracts.md#callbacks).
 
@@ -344,7 +344,7 @@ package example::callbacks version "1" {
 
 The result of this `subscribe` invocation bounds this registration. Call-scoped delivery instead finishes before the registration completes, with the companions described above.
 
-**Used by and see also:** [`timing`](#timing); [`quiescence`](#quiescence); [`retain`](clauses-callable.md#retain); [callback tutorial](../tutorial/04-callbacks.md); review tasks: [Stretch](../review/tasks.md#stretch), [Model fit](../review/tasks.md#model-fit).
+**Used by and see also:** [`timing`](#timing); [`quiescence`](#quiescence); [`retain`](clauses-callable.md#retain); [callback tutorial](../tutorial/04-callbacks.md); review tasks: [Assess cancellation and teardown](../review/tasks.md#stretch), [Trace validity across the model](../review/tasks.md#model-fit).
 
 **Rationale:** [Callbacks](../explanation/contracts.md#callbacks).
 
@@ -402,7 +402,7 @@ package example::buffers version "1" {
 
 The result is readable in both cases and selects the outcome. Destination bytes are readable only in `copied`. Their state describes initialized elements within the declared length, not spare capacity.
 
-**Used by and see also:** [`give`](#give); [`when`](#when); [`extent`](clauses-callable.md#extent); [storage tutorial](../tutorial/03-storage.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`give`](#give); [`when`](#when); [`extent`](clauses-callable.md#extent); [storage tutorial](../tutorial/03-storage.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Every way a call can end](../explanation/contracts.md#every-way-a-call-can-end).
 
@@ -518,6 +518,6 @@ package example::buffers version "1" {
 
 `true` and `false` cover the whole Boolean result domain and share `$result` as discriminator. The same complete package's `create` partitions a nullable `Store` result with `nonnull($result)` and `null($result)`.
 
-**Used by and see also:** [`meaning`](#meaning); [`state`](#state); [`completions`](clauses-callable.md#completions); [outcome block](declarations.md#outcome); [lifetime tutorial](../tutorial/01-lifetime.md); review tasks: [Author](../review/tasks.md#author).
+**Used by and see also:** [`meaning`](#meaning); [`state`](#state); [`completions`](clauses-callable.md#completions); [outcome block](declarations.md#outcome); [lifetime tutorial](../tutorial/01-lifetime.md); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
 **Rationale:** [Every way a call can end](../explanation/contracts.md#every-way-a-call-can-end).

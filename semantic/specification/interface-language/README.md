@@ -166,7 +166,8 @@ If you arrived at an example file, follow its clause-by-clause walkthrough:
 [objects](review/walkthroughs.md#objects). For the tutorial's separate card API,
 the [checkpoint map](tutorial/README.md) pairs each complete package with its
 teaching part. The reference and rule-reading fragments are linked beside the
-examples they illustrate; their omission labels identify their limited scope.
+examples they illustrate; each fragment's label says which surrounding declarations
+it leaves out.
 
 These examples describe invented APIs. Their synthetic fixture
 [profile](glossary.md#profile), catalogue and [digest tokens](glossary.md#digest-pin)
