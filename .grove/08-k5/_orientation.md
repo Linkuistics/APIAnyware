@@ -49,6 +49,28 @@ available for reuse by `explanation/contracts.md`. Both use
 `task docs:check` includes `docs:diagrams`, which compares regenerated SVG bytes.
 Use `task docs:diagrams:write` after source or style edits, then inspect the SVGs.
 
+## Model-first run
+
+The human's 2026-09-29 direction (first-path-reading-k64, D12–D13) makes the
+model the organizing structure: explain it, then describe AIL by reference to
+it, because the language is a tool. model-first-documentation-k68 gave this
+node the canonical model account: the new `explanation/model.md` with figure
+G11 (plan §9.8), plus routing edits to `README.md`, `explanation/unsaid.md` and
+`glossary.md` (plan §9.1, *Model-first run*). The concept set, anchors and
+construct map are plan §10.
+
+This new human direction authorizes exactly one ordered run, orientation-k69
+(draft) through orientation-k72 (proof), all four queued now. It is new scope,
+not a reset of the two earlier correction runs below, and it authorizes no
+correction run inside it: residue that would send work back to an earlier
+stage is recorded for `model-reading`, the checkpoint that follows this node.
+
+Done when, for this run: the model page meets §9.8 with every §10 anchor;
+G11 is committed as source plus SVG; the landing page, domain page and
+glossary route to the model page; the k64 residues named in orientation-k69
+are repaired; proof walks landing → domain → model and two direct concept
+entries; `task docs:check` passes.
+
 ## Current human-directed correction
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires

@@ -19,6 +19,13 @@ routes. The 2026-09-28 feedback at language.md L2 shows why a direct rule entry
 needs its own context. Preserve those aids when adding reference back-links,
 and incorporate the actual assessment recorded by first-path-reading-k64.
 
+The model-first route (plan §3) is part of the journey: landing → domain page
+→ `explanation/model.md` → concepts → tutorial → review guide. Plan §9.6 adds
+two-way model routes: each concept section and map row on the model page links
+its reference entries and review tasks, and each links back. Walk the route
+end to end and from each concept to its notation, tutorial part, rules and
+entries.
+
 ## Pipeline
 
 `draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act

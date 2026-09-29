@@ -1,8 +1,8 @@
-# reference-k22
+# reference-k21
 
 ## Goal
 
-Draft the clause entries for callable effects and input obligations, including buffers and strings.
+Draft the clause entries for package, environment and common declaration scope.
 
 ## Context
 
@@ -15,7 +15,8 @@ Draft the clause entries for callable effects and input obligations, including b
 ## Done when
 
 - Every clause assigned to this file has an entry with the §9.4 fields in
-  order, and each fact matches its rule text.
+  order, including *Expresses* with its plan §10 concept, and each fact
+  matches its rule text.
 - `reference/README.md` links this clause file, replacing its plain-text
   mention (plan §3, *Staging*).
 - `task docs:check` passes.

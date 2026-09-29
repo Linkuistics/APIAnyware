@@ -1,8 +1,8 @@
-# reference-k21
+# reference-k23
 
 ## Goal
 
-Draft the clause entries for package, environment and common declaration scope.
+Draft the clause entries for outcomes, callback use, access paths, patterns and the fixture profile, and complete the mutation-to-rule and alphabetical indexes.
 
 ## Context
 
@@ -14,8 +14,11 @@ Draft the clause entries for package, environment and common declaration scope.
 
 ## Done when
 
-- Every clause assigned to this file has an entry with the §9.4 fields in
-  order, and each fact matches its rule text.
+- Every remaining clause has an entry, and `task docs:coverage` passes with
+  nothing pending.
+- The indexes in `reference/README.md`, including the model-concept index,
+  are complete, and the concept pages,
+  tutorial and glossary link to entries where they name a clause.
 - `reference/README.md` links this clause file, replacing its plain-text
   mention (plan §3, *Staging*).
 - `task docs:check` passes.
@@ -24,4 +27,4 @@ Draft the clause entries for package, environment and common declaration scope.
 
 The classified inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
 
-A later draft sibling finishes this document, so do not cut `copy-edit` here: the last draft session does.
+This is the node's last draft session, so its last act is `leaf-add` of the `copy-edit` leaf, unless a live later sibling already holds one.

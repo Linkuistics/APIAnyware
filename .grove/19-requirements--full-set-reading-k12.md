@@ -9,19 +9,22 @@ any) the tree should hold.
 
 ## Context
 
-- Documentation plan §8 and §1 (all five outcomes):
+- Documentation plan §8 and §1 (all six outcomes):
   `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md`.
 - Checkpoint 1's findings and dispositions, in `first-path-reading-k8`'s
   commit.
 - Follow-up findings in `first-path-reading-k48` and the subsequent
-  `first-path-reading-k64` assessment. Keep each read's reported extent and
-  correction history distinct; do not infer approval of unreported pages.
+  `first-path-reading-k64` assessment, and the model account's assessment in
+  `model-reading`. Keep each read's reported extent and correction history
+  distinct; do not infer approval of unreported pages.
+- The model-first route (plan §3) and outcome 6 (plan §1): judge whether the
+  reader can explain which model concept each construct expresses.
 - The audit's closing "Step 2: refactored output" section, written by
   `reviewer-journey`.
 
 ## Work
 
-1. Run the proxy reader as in checkpoint 1, over the whole set and all five
+1. Run the proxy reader as in checkpoint 1, over the whole set and all six
    outcomes, starting it from each direct-entry type in the plan's §3. Label
    its output as a proxy.
 2. The human reads the set as a reviewer, starting from the landing page, and

@@ -14,9 +14,12 @@ Draft `review/README.md` (the six dimensions and the feedback template) and `rev
 
 ## Done when
 
-- Both pages follow §9.5. Every task has a goal, conditions, steps, expected
-  observations and a feedback prompt. Every prompt cites a rule, example or
-  page and invites criticism.
+- Both pages follow §9.5, including its model-first framing: each dimension
+  is stated against the plan §10 concepts, every task starts from a model
+  question about a named example, and `review/tasks.md` includes the *Model
+  fit* task. Every task has a goal, conditions, steps, expected observations
+  and a feedback prompt. Every prompt cites a rule, example or page and
+  invites criticism, including of how well AIL serves the model.
 - The landing page links the review guide as the end of the guided route,
   with `review/README.md` as its entry. The index links the walkthroughs and
   the tasks, and the map's interim direct link to the walkthroughs is

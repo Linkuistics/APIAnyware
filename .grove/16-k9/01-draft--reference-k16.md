@@ -35,6 +35,13 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
   a member and receiver, and declaration/slot/place references in context.
 - The plan's §2 clause-file split is confirmed or amended against the entry
   count.
+- The disposition list records the plan §10 model concept of every
+  entry-class item, and `docs:coverage` has been seen to fail on an entry with
+  no concept or a concept that is not an anchor on `explanation/model.md`.
+  Every §10 concept has an entry or a recorded reason.
+- Declaration and type entries carry the *Expresses* field (plan §9.4), and
+  `reference/README.md` has a model-concept index covering the entries that
+  exist, with the pending clause entries named.
 - `task docs:check` passes.
 
 ## Notes

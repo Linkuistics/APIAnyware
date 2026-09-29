@@ -66,6 +66,28 @@ table beside the guided change. The tutorial links to the overview's G1 rather
 than repeating the figure. Each detail diagram has a route back to that wider
 context; its source, caption and shared key carry the visual contract.
 
+## Model-first run
+
+The human's 2026-09-29 direction (first-path-reading-k64, D12–D13): explain
+the model, then describe AIL by reference to it. The tutorial applies the
+model's concepts to the label-card API: each part opens with the concepts it
+applies, and each step meets a concept before its notation (plan §9.3,
+*Model-first run*; concepts in plan §10). Part 1 moves the card's entity,
+outcomes and release responsibility ahead of the publication clauses and pins.
+The six checkpoint files stay byte-identical.
+
+This new human direction authorizes exactly one ordered run: tutorial-k80
+(index and parts 1–3) and tutorial-k81 (parts 4–5), then tutorial-k82
+copy-edit, tutorial-k83 art and tutorial-k84 proof, all queued now. It is new
+scope, not a reset of the earlier correction runs below, and it authorizes no
+correction run inside it: residue that would send work back is recorded for
+the full-set checkpoint.
+
+Done when, for this run: the index and every part name and link their
+concepts before the notation; the checkpoint files are byte-identical; the
+early routes to new material and the owned-snapshot exercise survive;
+`task docs:check` passes.
+
 ## Current human-directed correction
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires

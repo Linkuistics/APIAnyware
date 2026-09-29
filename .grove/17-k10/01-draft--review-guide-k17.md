@@ -14,8 +14,9 @@ Draft `review/walkthroughs.md`, a clause-by-clause reading of `buffers.ail`, `ca
 
 ## Done when
 
-- Every declaration in the three examples is read clause by clause, and code
-  is quoted by line range through `docs:examples`.
+- Every declaration in the three examples is read clause by clause, with its
+  clauses grouped by plan §10 model concept and each group naming and linking
+  its concept; code is quoted by line range through `docs:examples`.
 - Trace questions have expected observations after them, checked against the
   rules.
 - Under the staging rule in the plan's §3: the landing page's map links

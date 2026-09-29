@@ -85,10 +85,23 @@ clarified the teaching priority: explain the model, then describe AIL by
 reference to it, because the language serves as a tool. The 2026-09-29 direction
 also removes railroad-reading boxes and asks for visual boundaries around
 non-normative aids. This checkpoint applies those bounded presentation changes.
-`model-first-documentation-k68` precedes reference and review-guide drafting;
-it revises the learning route and cuts the bounded document work needed for the
-model-first account. The existing correction history remains visible; this new
-human direction supplies the scope, not an automatic repetition policy.
+
+`model-first-documentation-k68` revised the documentation plan for a
+three-stage learning route — why a description is needed, what it records,
+how AIL writes it down — with exact lookup kept separate (plan §3). The
+canonical model account is a new page, `explanation/model.md`, with figure G11
+(plan §9.8). Plan §10 fixes its eleven concepts, their anchors, order and
+concept-to-notation map; every later document names and links those
+concepts. The cut, in walk order: one bounded orientation run that lands the
+model page and its routes (orientation-k69–k72); `model-reading`, one human
+read of the model account before anything is organized around it; one bounded
+concepts run, including the canonical aids' model-concept routes
+(concepts-k74–k79); one bounded tutorial run (tutorial-k80–k84); then the
+reference, review guide, reviewer journey and full-set checkpoint, whose
+briefs now consume the model. Each run is authorized once by the human's
+direction and grows no automatic correction run. The existing correction
+history remains visible; this new direction supplies the scope, not an
+automatic repetition policy.
 
 ## Reader and structure brief
 
@@ -269,8 +282,8 @@ semantic validator or general build-system migration.
 - Step 1 audit: `semantic/docs/research/interface-language-documentation-audit.md`
   (findings F1–F12; review questions Q1–Q6).
 - Documentation plan, including the page architecture, prose contract,
-  figure inventory, checks, reader checkpoints and the structure brief for
-  every document (§9):
+  figure inventory, checks, reader checkpoints, the structure brief for
+  every document (§9) and the model concepts and their notation (§10):
   `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md`.
 - Research basis and stage criteria (§9 there):
   `semantic/docs/research/documentation-basis-a.md`.

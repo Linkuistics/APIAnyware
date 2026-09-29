@@ -35,10 +35,18 @@ and the explanations of AIL's name resolution and semantic constraints.
 
 The human's 2026-09-29 priority is to explain the model and describe AIL by
 reference to it, because the language serves as a tool. Give each entry a
-clear connection to the model concept and task it expresses. The new
-model-first-documentation-k68 precedes this node and reconciles the detailed
-structure briefs before drafting. Preserve the bordered non-normative aids,
-their bold labels and explicit anchors when adding lookup routes.
+clear connection to the model concept and task it expresses.
+model-first-documentation-k68 reconciled plan §9.4 with that priority: the
+reference is the exact-lookup path, separate from the learning route, and
+consumes the canonical model account in `explanation/model.md` rather than
+restating it. Each entry gains an *Expresses* field naming its plan §10
+concept and linking the concept's anchor; `reference/README.md` gains a
+model-concept index; the disposition list records each entry's concept and
+`docs:coverage` fails on an entry with none. The concepts run (concepts-k76)
+lands the model-concept routes in the canonical reading aids; preserve them,
+with the bordered aids, bold labels and explicit anchors, and add lookup
+routes beside them. Use §10's concept names exactly as the model page does,
+including any change `model-reading` made.
 
 ## Pipeline
 

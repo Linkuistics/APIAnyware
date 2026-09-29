@@ -16,7 +16,8 @@ Integrate navigation across the finished set and append the Step 2 index to the 
 
 - Every page has an inbound link from the map or its parent index. Links
   between rules, entries, explanations, tutorial parts and review tasks run
-  both ways.
+  both ways, and so do the model routes: the model page's concept sections and
+  map rows link their reference entries and review tasks, which link back.
 - The audit's "Step 2: refactored output" section maps F1–F12 to their
   resolving pages, gives the status of Q1–Q6 and any added questions, and
   names what remains unresolved.

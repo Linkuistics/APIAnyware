@@ -1,6 +1,7 @@
 # API Interface Language documentation plan
 
-Status: planned 2026-09-23. This plan turns the
+Status: planned 2026-09-23; revised 2026-09-29 for the model-first route (§3,
+§9.8, §10). This plan turns the
 [documentation audit](../research/interface-language-documentation-audit.md)
 (Step 1) and the [documentation-basis survey](../research/documentation-basis-a.md)
 into the architecture of the rewritten documentation (Step 2). It fixes each
@@ -44,7 +45,14 @@ After the relevant documents, the primary reader can:
    discoverability, and fitness for producers and consumers;
 5. look up any clause, declaration kind, type or rule and find its exact
    syntax, operands, applicability, requiredness, constraints and rejection
-   conditions.
+   conditions;
+6. describe the model: name the entities and relationships an API description
+   records, and say which model concept each introduced AIL construct
+   expresses (§10).
+
+Outcome 6 organizes the others. The numbering is historical: briefs and task
+notes cite outcomes 1–5 by number, so the model outcome is appended rather
+than renumbering them. The learning route reaches it first (§3).
 
 **Not taught.** General programming, EBNF, type systems, closed vocabularies
 and how to read railroad diagrams. The reader knows these (survey §4.1,
@@ -59,6 +67,7 @@ normative and supporting files keep their current paths.
 |---|---|---|---|---|
 | `README.md` | API Interface Language | Landing page and orientation | What is this, what state is it in, and where do I start? | Orientation |
 | `explanation/unsaid.md` | Using an API across languages | Domain explanation | What do callers and API implementers need to agree on? | Orientation |
+| `explanation/model.md` | A model of API behaviour and binding obligations | Explanation of the model: the canonical account of what a description records | Which entities and relationships does a description record, and which AIL construct expresses each? | Orientation (model-first run) |
 | `glossary.md` | Glossary | Terms, with familiar-meaning warnings | What does this word mean here, and how does it differ from the meaning I know? | Orientation |
 | `explanation/contracts.md` | How AIL states a contract | Explanation of the semantic core | How does AIL express each obligation, and why this way? | Concepts |
 | `explanation/packages.md` | Packages, environments and access paths | Explanation of the package and provider boundary | What does a package claim, and how does a consumer reach the code? | Concepts |
@@ -94,30 +103,57 @@ a reference entry.
 
 ## 3. Reader journeys
 
-The organizing priority is the model and its use. Establish a coherent overview
-of API behavior and binding obligations, then teach each concept through a
-concrete case before showing the AIL that expresses it. Connect notation back
-to the named model concept. `model-first-documentation-k68` revises the detailed
-route and structure briefs under this requirement before further drafting.
+The organizing priority is the model and its use (human direction,
+2026-09-29: "the language is a tool and is not of interest by itself"). The
+learning route has three stages, and each answers a different question:
+
+1. **Why a description is needed.** The landing page and *Using an API across
+   languages* show, through one small C API, what a caller and implementer
+   have to agree on and what goes wrong without that agreement. No AIL yet.
+2. **What the description records.** *A model of API behaviour and binding
+   obligations* (`explanation/model.md`) gathers those agreements into one
+   account: the entities involved, how they relate, and what a caller or tool
+   needs to know about each. It names each model concept once, with a stable
+   anchor, and ends with the concept-to-notation map (§10). This page is the
+   canonical model explanation; later pages link to it instead of re-deriving
+   the model.
+3. **How AIL writes it down.** The concept pages, the tutorial, the canonical
+   reading aids and the reference introduce each construct by the model
+   concept it expresses. Each introduction names the concept and the reader's
+   task, links the concept's anchor, then shows the notation in a located
+   snippet. The package/declaration containment model (G9) and railroad views
+   appear where the syntax needs them; they support the account and do not
+   organize it.
+
+Exact lookup is separate from this route. The reference answers "what exactly
+does this clause take and when is it rejected?"; it links each entry back to
+its model concept but teaches nothing in sequence.
 
 **The guided route:** landing page, then *Using an API across languages*,
-then the three concept pages, then the tutorial, then the review guide. The
-reference is consulted along the way, not read through. Every page ends with
-where to go next on this route.
+then *A model of API behaviour and binding obligations*, then the three
+concept pages, then the tutorial, then the review guide. The reference is
+consulted along the way, not read through. Every page ends with where to go
+next on this route.
 
 **Direct entries.** Each needs its own route back:
 
 - **From a rule** (a review comment cites C6). The normative page's page-one
-  block names the explanation that motivates the rules and the reference
-  entries that index them once they exist. Local reading aids give each
-  introduced construct a concrete context; a reader following a rule link
-  need not first read the whole guided route (§9.7).
+  block names the model page and the explanation that motivates the rules, and
+  the reference entries that index them once they exist. Each rule section's
+  first reading aid names the model concept its constructs express and links
+  that concept's anchor. Local reading aids give each introduced construct a
+  concrete context; a reader following a rule link need not first read the
+  whole guided route (§9.7).
+- **From a model concept** (a link to `model.md#callbacks`). The concept's
+  section links the domain case that motivates it, the concept-page section
+  that introduces its notation, the tutorial part that exercises it and the
+  canonical rules; the reference entries are added when they land.
 - **From an example** (a link to `buffers.ail`). The walkthrough explains the
   example, and the landing page lists all examples with their purpose.
 - **From a term** (a search for *quiescence*). The glossary entry links to its
   defining page and to the rules that use it.
-- **From a reference entry.** Each entry links to its rule, to its
-  explanation and to examples that use it.
+- **From a reference entry.** Each entry names the model concept it expresses
+  and links to it, to its rule, to its explanation and to examples that use it.
 
 A reader who lands anywhere must learn, within the first screen, what the page
 is for, what it assumes, the draft's status, and where the canonical rules are
@@ -203,7 +239,9 @@ metrics (survey §6).
   *dependency closure* or *callback captures*, because the normative text uses
   both senses (audit Q2).
 - **Domain before notation.** Explain an obligation in domain terms before
-  showing the clause that states it. Every analogy to Rust, Swift, C++ or C
+  showing the clause that states it. Where the model page already explains
+  it, recall it in a sentence or two with the concrete case and link the
+  concept, rather than re-teaching it. Every analogy to Rust, Swift, C++ or C
   says where it fails.
 - **Show constructs as they are introduced** (human decision, 2026-09-28).
   Put a small, explained snippet beside a construct's first substantive
@@ -214,6 +252,13 @@ metrics (survey §6).
   introduction. Build from a small example to the relationship and rule,
   retaining complete examples for later inspection. Domain-only passages can
   use their C example or concrete actions without introducing AIL prematurely.
+- **Two models, one purpose.** The *API model* (§10, `explanation/model.md`,
+  figure G11) is what the documentation teaches: the entities and obligations
+  a description records. The *language model* (G9) is how AIL organizes the
+  text that records them: packages, declarations, imports, members and slots.
+  Introduce the language model where a snippet needs it, after the API-model
+  concept that motivates the construct, and say which API-model concept the
+  containment serves. Never call G9 "the model" without qualification.
 - **Establish the language model before dependent syntax.** Relate packages,
   declarations, nominal owners, imports, callables and slots before presenting
   reference spellings that assume those relationships. The explicit acceptance
@@ -236,6 +281,14 @@ metrics (survey §6).
   Choose the next learning step by the model concept or reader task it enables.
   Use syntax examples to express those ideas and reference entries for exact
   lookup. This is the human's explicit priority at first-path-reading-k64.
+  Concretely, every notation-introducing section names its model concept in
+  its opening sentences, in the concept's own words from `model.md`, links
+  that concept's anchor, and states the reader's task ("to tell a caller when
+  it may stop reading the view …") before showing syntax. It then shows how
+  AIL expresses the concept and judges the notation by that job. A section
+  that introduces a construct with no concept in §10 is a defect: either the
+  construct belongs to an existing concept or §10 is incomplete, and the draft
+  records which.
 - **Two cases, then the principle.** Teach a concept by comparing two
   contrasting cases, then state the principle, then say where the comparison
   breaks down (survey D7).
@@ -345,6 +398,7 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 | ID | Level | Question it answers | Kind | Home |
 |---|---|---|---|---|
 | G1 | Context | Who writes AIL packages, what do they depend on, and who reads them? | C4 system context | Landing page; linked or reused where it helps a later page |
+| G11 | API model | Which entities and relationships does a description record: operations and their values, outcomes, entities with lifetimes, release responsibility, validity, storage, execution, callback schedules, and the published description that reaches code? | Conceptual structure, class-style; one overview, or two linked views (calls; description and access) if one is not legible | `explanation/model.md`; linked from the concept pages, the tutorial index and the canonical page-one blocks |
 | G2 | Package | What does a package contain and pin? | Structure, class-style | `explanation/packages.md` |
 | G3 | Access | How does one operation reach code through two access paths and an ABI entry? | Structure | `explanation/packages.md` |
 | G4 | Contract | What moves between caller and callee when a call borrows, consumes, or gives an owned value? | Sequence | `explanation/unsaid.md`, `explanation/contracts.md` |
@@ -354,6 +408,13 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 | G8 | Navigation | Which page answers which question? | Table, not a diagram | Landing page |
 | G9 | Language model | Where do declarations and slots live, and how do imports and member ownership relate them? | Structure, with concrete names shared by the examples | `language.md` L2; linked or reused by `explanation/packages.md` |
 | G10 | Syntax | How does the reader follow the package shell, imports, references and clauses? | Small railroad views tied to named EBNF productions | At the relevant introductions in `language.md`; reused in reference notation |
+
+G11 sits between G1 and the detail figures in the C4-style order: G1 shows
+who writes and uses a description, G11 what it records, and G2–G7 and G9–G10
+one relationship or production each. G11 uses the watch API's names from the
+domain page and the concept names and anchors from §10; its labels name
+entities and relations in the prose's words, not AIL keywords. G9 remains the
+language-containment view and is never substituted for G11.
 
 The drafts decide which figure slots a page needs and record each unfilled
 slot in the document node's handed-forward list for `art`. Prose carries every
@@ -434,7 +495,8 @@ Later increments add tasks when they first need them:
   - A committed *disposition list* classifies every candidate. A candidate is
     a reference entry, with the file that owns it; covered by a named entry
     (a value constructor such as `owner(…)`, documented under its clause); or
-    not vocabulary, with a one-line reason.
+    not vocabulary, with a one-line reason. A reference entry's disposition
+    also names the §10 model concept it expresses (§9.4).
   - The check fails on an unclassified candidate, on an entry-class item with
     no entry in its file, and on a disposition naming nothing the sources
     contain. An entry owned by a reference session that has not yet run is
@@ -531,6 +593,23 @@ document work. The human did not report a page-by-page reading extent, so this
 records a positive assessment and new direction without inferring a full-path
 comprehension result.
 
+`model-first-documentation-k68` cut one further ordered run for each of
+orientation, concepts and tutorial, in that order, before reference and
+review-guide drafting. The human direction authorizes exactly those runs; it
+does not reset the correction history or authorize automatic repetition.
+Each run is its draft session(s), then one copy-edit, one art and one proof.
+A defect that would send work back to an earlier stage is recorded for the
+next human checkpoint instead of growing a correction run.
+
+One earlier read, `model-reading`, sits between the orientation run and the
+concepts run. It asks one concrete question: does the model page's concept
+set, order and concept-to-notation map (§10) give the right account of what
+an API description records, before the concept pages, tutorial, canonical
+aids, reference and review guide are organized around it? Record the human's
+words and actual reading extent; a changed concept set becomes an edit to §10
+and the later briefs, and a defect in the model page becomes work for the human
+to direct. The full-set checkpoint still follows cross-set navigation.
+
 ## 9. Structure briefs
 
 Each brief states the reader and outcome, the ordered sections with the
@@ -540,13 +619,16 @@ it. The order holds unless the draft records why it changed.
 
 ### 9.1 Orientation
 
-Pages: `README.md`, `explanation/unsaid.md` and `glossary.md`.
+Pages: `README.md`, `explanation/unsaid.md`, `explanation/model.md` (its own
+brief is §9.8) and `glossary.md`.
 
 **Reader and outcome.** The primary reader, arriving with no context. After
 these pages they can state what AIL is and its status. They can name the
 binding obligations that govern use of the API and explain what each one
 requires. They can say who writes and reads AIL, and choose a path through the
-documentation. This is outcome 1 in §1.
+documentation. This is outcome 1 in §1. After the model page they can also
+describe the model as a whole, the first half of outcome 6: its entities,
+relationships and the question each concept answers for a caller or tool.
 
 **`README.md`: ordered sections**
 
@@ -621,6 +703,34 @@ context to distinguish containment, association and reference. Link the rule
 reading aids and the concept explanation. The landing route should make these
 aids discoverable; the domain page retains its domain-first purpose.
 
+**Model-first run (human direction, 2026-09-29).** The run lands the model
+page (§9.8) and makes the orientation pages lead to it:
+
+- `README.md`. *What AIL is* says in a sentence that the documentation
+  explains a model of API behaviour and binding obligations and then shows how
+  AIL writes it down. *Paths through the documentation* gains a first-row
+  route "Understand what a description records → the model page", and routes
+  the direct notation entry through the model page before L1/L2. The
+  continuation paragraph follows §3's route. Repair the two k64 residues: the
+  link text "The package shell and railroad reading key" (also in
+  `glossary.md`) names a key that no longer exists, and *What is normative*
+  still describes reading aids as having "an explicit end marker"; describe
+  the bordered, labelled aids as they now are.
+- `explanation/unsaid.md`. Keep every obligation section and its failure case;
+  they are the model page's motivating evidence. End each obligation section
+  by naming, in one sentence, the model concept it motivates, linking its
+  anchor. *A shared description for API tools* and *Reaching the code* keep
+  their domain explanations and point to the model page's description and
+  access concepts for how the parts fit together. *Where next* leads to the
+  model page first.
+- `glossary.md`. Each term that names a model concept, or an entity within
+  one, links its concept anchor alongside its defining page. The fragment
+  examples added in 2026-09-28 remain; their introduction names the model
+  concept before the containment it illustrates.
+
+The run preserves the pages' existing explanations, examples, figures G1/G4
+and anchors. It moves no domain explanation out of `unsaid.md`.
+
 **Emphasis.** Concrete actions and consequences before abstraction, and domain
 obligations before AIL syntax. The landing page gives a newcomer a clear route
 to the domain page while retaining the explanation needed to choose that route.
@@ -652,7 +762,9 @@ Pages: `explanation/contracts.md`, `explanation/packages.md` and
 explain how AIL states each obligation from §9.1, and read any clause in the
 three conformance examples at the level of what it commits. They can tell a
 domain constraint from an AIL choice for every major choice, and know what
-draft 0.1 cannot express. These are outcomes 2 (in part) and 3.
+draft 0.1 cannot express. These are outcomes 2 (in part) and 3. They can also
+say which model concept each construct they have met expresses, and judge
+whether AIL expresses that concept well: the second half of outcome 6.
 
 **`explanation/contracts.md`: ordered sections.** Every section after the
 first follows the same pattern: the domain obligation, two contrasting cases
@@ -732,6 +844,65 @@ snippet/context check to all three concept pages, including their tables.
     and extended by any session that finds an ambiguity. Each entry has an
     identifier, the question, where it arises, and why it matters.
 
+**Model-first run (human direction, 2026-09-29).** Where this block and the
+ordered lists above conflict, this block governs. The three pages become the
+account of how AIL writes down the model in `model.md`; they stop teaching
+the model from scratch.
+
+*`explanation/contracts.md`, revised order.* Sections follow §10's concept
+order for the call layer. Each section opens with the model concept (its
+`model.md` name and link), the reader's task and a one-paragraph recall of
+the concrete case, then keeps the existing pattern: two contrasting cases in
+AIL, the principle, AIL's choice and its alternative, and the rule links.
+
+1. Page-one block, whose *Before this* names the model page.
+2. *From signature to contract* — operations and values: the declaration and
+   clause shape, introduced as how AIL writes an operation's facts.
+3. *Naming what a contract talks about* — operations and values: slots and
+   places, introduced as how AIL points at the value an obligation concerns.
+4. *Every way a call can end* — outcomes (moved forward, because returned
+   ownership and validity are stated per outcome).
+5. *Entities and their lifecycles* — entities: resource, object and record
+   declarations, `lifecycle`, and figure G6. Member association and the named
+   receiver stay taught in `packages.md`'s containment example; link it rather
+   than teaching it twice. The patterns-and-laws material moves to follow
+   *Callbacks* unless the draft shows it belongs here.
+6. *Who owns what* — release responsibility. Figure G4.
+7. *How long a borrow lasts* — validity. Figure G5.
+8. *Buffers and strings* — storage.
+9. *Threads and sharing* — execution.
+10. *Callbacks* — callback schedules. Figure G7. Then *Patterns and laws*
+    (entities: recurring arrangements), unless kept in section 5.
+11. *Extending the language with profiles* — agreement and extension.
+
+*`explanation/packages.md`.* Open with the description-layer concepts
+(description; access; agreement): what a published description has to
+establish about scope, identity, dependencies, environments and reaching the
+code, recalled from `model.md` with the watch case. Then introduce the package
+shell and G9 as how AIL organizes that description's text; keep *Packages
+contain declarations* with its geometry/canvas model and reference table, now
+as the language-model view serving the description concept. The later
+sections keep their order and gain concept openings.
+
+*`explanation/choices.md`.* *How to read this page* states the criterion the
+human set: judge each language choice by how well it serves describing the
+model and the reader's task. Each choice section names the model concept it
+concerns and asks what the choice makes easy or hard for expressing and
+inspecting that concept. Q1–Q6 and the domain/API/language separation stay.
+
+*Canonical reading-aid routes.* A separate draft session of this run adds, on
+`language.md`, `contracts.md` and `profiles.md`: the model page in each
+page-one block's *Before this*, and a one-sentence model-concept route at the
+start of each rule section's first reading aid (for example, "The rules below
+express validity: how long …", with *validity* linked to
+`explanation/model.md#validity`). It uses only the
+existing bordered-aid convention and paired `reading-aid` comments, changes no
+rule text, anchor or grammar, and reruns the canonical preservation check
+against `87221b8c`. §9.7 records the convention.
+
+The run keeps every existing example, figure, anchor and incoming link. A
+renamed or reordered heading gets an explicit anchor preserving its old slug.
+
 **Emphasis.** Honest trade-offs: an awkward construct is shown and named, not
 hidden. Two examples for every concept, one taken from the conformance
 examples wherever possible. Explanations do not restate rule force.
@@ -752,7 +923,10 @@ text); the three examples and `conformance.md`; the design proposal's §2 and
 **Verification.** `docs:check` passes. Every normative claim cites a rule.
 Every AIL block carries its label. Every choice section names at least one
 alternative and one cost. Every question in the register cites where it
-arises.
+arises. After the model-first run: enumerate the construct introductions on
+the three pages and in the canonical aids, and record for each the §10
+concept it is tied to; every notation-introducing section links its concept
+anchor before its first snippet; the canonical preservation check passes.
 
 ### 9.3 Tutorial
 
@@ -824,6 +998,37 @@ current task. Preserve the existing access to each part's new material and the
 owned-snapshot exercise. Inspect all six pages, including the initial package
 shell and the distinction between declaration references and local places.
 
+**Model-first run (human direction, 2026-09-29).** The tutorial exercises the
+model: each part applies named model concepts to the label-card API, and the
+AIL is how the reader records them. Where this block and the lists above
+conflict, this block governs.
+
+- `tutorial/README.md`. *What you will describe* keeps its label-card story,
+  now told as the model's entities and obligations (a card with a lifetime; a
+  lent label; caller storage; a subscription and its teardown). The map table
+  gains a column naming each part's model concepts, linked to their anchors.
+  The index shell railroad and fragment follow the story, not precede it.
+  *Before this* names the model page.
+- Each part replaces *The domain obligation* with *The model*: the concept(s)
+  the part applies, in the model page's words and linked, the concrete
+  question about the label-card API they answer, and what the reader will be
+  able to say at the checkpoint.
+- Steps meet the model before the notation. Part 1 is the clearest case: the
+  card's entity, its creation outcomes and its release responsibility come
+  before the package's publication clauses and synthetic pins. The package
+  shell appears as the enclosing context of the first located snippet; the
+  step that writes `surface`, `exports` and the pins introduces them as the
+  description concept (what this description publishes and depends on).
+  Parts 2–5 already run concept-by-concept; there each step that introduces a
+  construct names the concept it expresses. Part 5 introduces `access` as the
+  access concept and keeps the owned-snapshot change framed as a change to
+  release responsibility, traced through every clause and rule it touches.
+- The complete checkpoint packages, their example files, the invalid variants
+  and the tutorial figures' facts are unchanged. Step order, headings and
+  explanatory prose may change; a renamed heading keeps its old slug through
+  an explicit anchor. The early routes to each part's new material and to the
+  owned-snapshot exercise remain.
+
 **Non-goals.** No installing, running or validating anything; no command
 lines; no APIAnyware. No coverage of profiles beyond the fixture.
 
@@ -833,7 +1038,11 @@ models; the survey's §4.3; and the audit's F7.
 **Verification.** `docs:check` passes, and every checkpoint block matches its
 file. Each checkpoint is checked by inspection against the grammar and every
 applicable rule. The check notes are kept in the draft's leaf, not on the
-page. Every invalid variant cites its rule.
+page. Every invalid variant cites its rule. After the model-first run, the six
+checkpoint files (`examples/tutorial/01-lifetime.ail` to `05-owned.ail`) are
+byte-identical to their pre-run revision; `reading-fragments.ail` may gain or
+reorder regions for relocated step snippets. Each step that introduces a
+construct names and links its §10 concept.
 
 ### 9.4 Reference
 
@@ -852,23 +1061,27 @@ rule. This is outcome 5.
 type entries use the subset that applies.
 
 1. Name, with an explicit anchor.
-2. Form: its production and clause syntax.
-3. Operands and their types.
-4. Applies to.
-5. Required or optional, and repeatability.
-6. Default.
-7. Meaning: a labelled non-normative summary with its rule identifier.
-8. Constraints.
-9. Rejected when: rule identifiers and mutation IDs.
-10. Example: labelled, and drawn from the examples or tutorial.
-11. Used by and see also: links both ways.
-12. Rationale: a link to the explanation.
+2. Expresses: the §10 model concept, linked to its `model.md` anchor, and a
+   phrase saying which part of the concept this construct states ("the region
+   bounding a returned borrow").
+3. Form: its production and clause syntax.
+4. Operands and their types.
+5. Applies to.
+6. Required or optional, and repeatability.
+7. Default.
+8. Meaning: a labelled non-normative summary with its rule identifier.
+9. Constraints.
+10. Rejected when: rule identifiers and mutation IDs.
+11. Example: labelled, and drawn from the examples or tutorial.
+12. Used by and see also: links both ways.
+13. Rationale: a link to the explanation.
 
 **Ordered sections**
 
 - `reference/README.md`: how the reference is organised; which files are
-  canonical; the rule-identifier index; the mutation-to-rule index; and the
-  alphabetical clause index.
+  canonical; the model-concept index (each §10 concept, linked to `model.md`,
+  with the entries that express it); the rule-identifier index; the
+  mutation-to-rule index; and the alphabetical clause index.
 - `notation.md`: the EBNF dialect; how the generic `clause` production
   defers vocabulary to prose; the BCP 14 convention as `language.md` states it,
   that `README.md` names all three rule files and the grammar as normative, and
@@ -908,6 +1121,16 @@ already added beside the canonical rules; do not replace them with links alone.
 Normative page-one blocks now land in §9.7; this increment verifies them and
 adds links to the new reference entries.
 
+Model-first (human direction, 2026-09-29): the reference is the exact-lookup
+path, separate from the learning route, and consumes the model account rather
+than restating it. Each entry's *Expresses* field names its concept in the
+model page's words; the entry does not re-explain the concept beyond the local
+context its answer needs. The concepts run lands the model-concept routes in
+the canonical reading aids (§9.2, §9.7); this increment preserves them and adds
+reference lookup routes beside them. `notation.md` introduces the grammar as
+the text form of the model's declarations and clauses, after a short pointer
+to the model page, and keeps G9 as the language-containment view.
+
 **Sources.** The normative files, the grammar, `conformance.md` N01–N33, and
 the survey's §4.5.
 
@@ -915,7 +1138,11 @@ the survey's §4.5.
 against the inventory, with every candidate classified (§7). Every "rejected
 when" field cites a rule. A sample of entries is spot-checked against its rule
 text, and every prose-defined clause named in audit F5 is confirmed to have an
-entry.
+entry. The disposition list records each entry-class item's §10 concept;
+`docs:coverage` fails on an entry-class item with no concept or with a concept
+that is not an anchor on `model.md`, and every §10 concept has at least one
+entry or a recorded reason (for example, a concept expressed only by a
+declaration's structure).
 
 ### 9.5 Review guide
 
@@ -924,6 +1151,32 @@ Pages: `review/README.md`, `review/walkthroughs.md` and `review/tasks.md`.
 **Reader and outcome.** The primary reader, who has taken the guided route or
 arrives with orientation only. They can evaluate AIL along the six dimensions
 in §1 and give feedback that cites examples and rules. This is outcome 4.
+
+**Model-first framing (human direction, 2026-09-29).** The review question is
+how well AIL serves as a tool for describing the model: the language is judged
+by that job, not for its own sake. Each dimension is stated against the model:
+
+- *Syntax and readability*: can a reader find, in a declaration, the facts for
+  one model concept (say, validity) without reading unrelated clauses?
+- *Conceptual consistency*: does each §10 concept have one recognisable form,
+  and does one form ever mean two concepts?
+- *Expressive scope*: which model concepts, and which variants of them (the
+  refresh-invalidated view; cancellation with acknowledgement), can draft 0.1
+  state, and which need a profile or a later version?
+- *Authoring burden*: how many clauses does describing one concept cost, and
+  which are repeated?
+- *Discoverability*: starting from a model question ("who releases this?"),
+  can the reviewer find the construct, and from a construct, its concept?
+- *Fitness for producers and consumers*: can an analysis tool emit, and a
+  binding generator or renderer recover, each concept's facts?
+
+Every task starts from a model question about a named example (what must the
+caller know, and when?) and then asks the reviewer to trace, change or judge
+the AIL that answers it. Walkthroughs group each declaration's clauses by
+model concept, naming and linking the concept at each group. `review/tasks.md`
+gains a *Model fit* task: for one concept, list the constructs that express it
+across the examples and judge the fit. The earlier task types below keep their
+purposes.
 
 **`review/README.md`: ordered sections**
 
@@ -958,6 +1211,9 @@ steps, expected observations and a feedback prompt:
 - *Stretch:* take a pressure case and state what 0.1 lacks.
 - *Author:* write the contract for a small C signature from
   `explanation/unsaid.md`, then count its clauses.
+- *Model fit:* for one §10 concept, collect every construct that expresses it
+  in the examples, and judge whether AIL states the concept clearly, once and
+  completely.
 
 **Emphasis.** The reviewer's real tasks, criticism-inviting prompts and
 expected observations that can be checked by inspection.
@@ -998,6 +1254,9 @@ and trace each audit finding to its resolution.
 1. *Landing page.* The document map is completed, now that every page exists.
 2. *Back-links.* "Used by" and "see also" links, in both directions, between
    rules, reference entries, explanations, tutorial parts and review tasks.
+   Model routes run both ways too: each `model.md` concept section and its §10
+   map row link the reference entries and review tasks that now exist, and
+   each of those links back to its concept.
 3. *Where next.* The footers are checked along the guided route.
 4. *Glossary.* Completed against every term in use.
 5. *Step 2: refactored output.* A section appended to the audit, listing the
@@ -1008,7 +1267,9 @@ and trace each audit finding to its resolution.
 **Emphasis.** No page is orphaned and every link has a return path. Include the
 rule-reading aids and the routes between model diagrams, syntax views, examples
 and exact rules in the 2026-09-28 first-introduction checks. A direct rule entry
-retains its local context when the final reference links are added.
+retains its local context when the final reference links are added. Walk the
+model-first route (§3) end to end, and from each model concept to its notation,
+tutorial part, rules and entries.
 
 **Non-goals.** No new content pages and no rewording outside navigation,
 except where a broken journey forces it.
@@ -1068,6 +1329,13 @@ reader to wait for the indexed reference.
    a relation or syntactic choice that needs one.
 6. Give each aid a route to its exact rule and fuller explanation, using only
    existing destinations. The later reference adds its lookup routes.
+7. Model-first routes (human direction, 2026-09-29; landed by the concepts
+   run, §9.2). Each page-one block's *Before this* names the model page. The
+   first reading aid of each rule section opens with one sentence naming the
+   §10 concept(s) its constructs express, linked to the `model.md` anchors; a
+   section with no aid gets a short new one. These are ordinary bordered aids
+   inside paired `reading-aid` comments, so
+   the preservation check strips them like the rest.
 
 **Emphasis.** The rule pages need local teaching support even when another
 page teaches the same concept. Explain the example before combining it with
@@ -1095,3 +1363,118 @@ normative text and grammar with the pre-edit version, separately from added
 reading aids. Inspect rendered diagrams beside their examples and walk a direct
 L2 entry plus the overview-to-rule route. These checks establish consistency;
 `first-path-reading-k64` owns the human assessment.
+
+### 9.8 The model account
+
+Pages: `explanation/model.md` and figure G11 (source plus generated SVG), with
+the routes to it from the landing page, the domain page and the glossary
+(§9.1). Owned by the orientation document's model-first run.
+
+**Reader and outcome.** The primary reader after *Using an API across
+languages*, or arriving directly from a link to one concept. They can name
+the entities an API description records and how they relate. For each
+concept they can say which question it answers for a caller or tool, which
+failure it prevents, and how it varies between APIs. They can tell the call
+layer (what happens when a program uses the API) from the description layer
+(what the published description establishes and how tools reach the code).
+From the closing map they can find where AIL writes each concept down. This
+is the first half of outcome 6 and the root brief's first completion
+condition.
+
+**Ordered sections**
+
+1. Page-one block. *Before this:* *Using an API across languages*. *Rules:*
+   the three rule files, cited per concept below.
+2. *What the model is for.* The facts a caller or tool needs to use an API
+   correctly, gathered into one account; AIL is a proposed notation for
+   recording them. Recall the watch API in a paragraph, then name the two
+   layers.
+3. *The model at a glance.* Figure G11, then a prose walk through it in
+   reading order that names every entity and relation. The prose carries
+   every fact the figure shows.
+4. One section per call-layer concept, in §10 order, each under an explicit
+   anchor from §10: *operations and their values*, *how a call finishes*,
+   *entities that outlive a call*, *release responsibility*, *validity*,
+   *storage*, *where and when calls run*, *callbacks and their schedules*.
+   Each section states the concept affirmatively; names its entities and the
+   relations to concepts already introduced; recalls the watch case in a
+   sentence or two and links the domain page's subsection for the failure;
+   says what a caller or tool can decide once it knows this; and names the
+   variants the model has to allow (unique or reference-counted release; an
+   owner's lifetime or an earlier invalidating call; one invocation or many).
+5. One section per description-layer concept, in §10 order: *the published
+   description*, *reaching the code*, *writers, checkers and users*. The same
+   pattern, using the landing page's workflow and the domain page's *A shared
+   description for API tools* and *Reaching the code*.
+6. *From the model to AIL.* The concept-to-notation map from §10 as a reader
+   table: concept, what AIL writes (construct names in code font, no syntax
+   lesson), where that notation is introduced (concept-page section and
+   tutorial part, linked), and the canonical rules. Explain in a paragraph
+   that the rest of the documentation introduces AIL in this order and that
+   AIL's choices are judged by how well they serve this map, linking
+   `choices.md`. The reference column is added by cross-set navigation.
+7. *Where next.* *How AIL states a contract* on the guided route; the tutorial;
+   and, for a direct notation entry, L1 and L2 with G9 described as the
+   language-containment view.
+
+**Emphasis.** The model comes before notation. Sections 2–5 show no AIL
+snippets; a construct name appears only in the closing map. The page is a
+synthesis, not a second domain page: it relates concepts the reader has met
+and links the failure cases instead of re-teaching them. Keep §4's density
+and positive-framing rules: explain one relationship, give its concrete case,
+then build on it. Use the watch API's names throughout, and the prose's names
+on G11's labels. Say plainly that the model explains what the rules describe
+and is not itself normative; any mismatch found between the model and the
+rules is an open question in `choices.md`, not a silent fix to either.
+
+The §10 concept set and order are the contract. A draft may merge or split a
+concept only with a recorded reason, and updates §10 and the anchors in the
+same session. Once landed, concept anchors are stable citation targets like
+rule identifiers.
+
+**Non-goals.** No clause-by-clause coverage, syntax lesson or railroad view;
+no new obligation beyond the rules; no resolution of Q1–Q6; nothing about
+APIAnyware's internal pipeline.
+
+**Sources.** `explanation/unsaid.md` and `README.md`; the rule files
+(`L2–L6`, `C1–C8`, `A1–A5`); the design proposal's §2–§4; the existing figures
+G1, G4–G7 and G9 for names and relations; the human's direction at
+first-path-reading-k64 (D12–D13).
+
+**Verification.** `docs:check` passes, including G11's regeneration. Every §10
+anchor exists on the page and every concept section cites its rules. Every
+construct named in the map appears in the rule text. Every "introduced in"
+link resolves. Two direct entries at concept anchors are read for local
+context. These checks establish consistency; `model-reading` owns the human
+assessment of the account.
+
+## 10. Model concepts and their notation
+
+This table is the concept-to-notation contract for every document. The
+anchors are those `explanation/model.md` will carry; they are written here as
+code, not links, until that page lands. "Introduced in" names the sections as
+the model-first runs will leave them. The construct lists identify the main
+forms for each concept; they are not the reference inventory, which
+`docs:coverage` enumerates from the sources (§7). The domain-case column names
+sections of `explanation/unsaid.md`.
+
+| Anchor | Concept | Question it answers for a caller or tool | Domain case | Main AIL constructs | Notation introduced in | Rules |
+|---|---|---|---|---|---|---|
+| `operations` | Operations and their values | Which operations exist, what values pass in and out, and which value or storage does each fact concern? | *A small API* | `fn` and callable signatures; value types (`record` with `field`, `alias`, `enum`/`flags`, scalars and pointers); parameter, result and thrown-value slots; `@operation::slot` references; places `$p`, `.*`, `[]`, `.field` | `contracts.md` *From signature to contract* and *Naming what a contract talks about*; L2 aids; tutorial 1 | L4, L5, C1 |
+| `outcomes` | How a call finishes | Which cases can the caller tell apart when the call ends, what does each mean, and which outputs are readable? | *What can the caller read when a call fails?* | `completions`, `outcome`, `when`, `null`/`nonnull`/`equal`/`range`, `meaning`, `state` | `contracts.md` *Every way a call can end*; tutorials 1 and 3 | C3, C5 |
+| `entities` | Entities that outlive a call | Which values stand for something with its own identity and lifetime, how is each released, and which operations belong to it? | *Who is responsible for releasing a value?* (the watch handle) | `resource`, `object`, `interface`; `global`, `constant`, `property`; `lifecycle`; `member`, `receiver`; `pattern`, `role`, `instance`, `law` | `contracts.md` *Entities and their lifecycles* and *Patterns and laws*; `packages.md` member example; tutorial 1 | L4–L6, C2, C7 |
+| `responsibility` | Release responsibility | Who must release this value, and does a call take, keep or hand back that duty? | *Who is responsible for releasing a value?* | `input` (`borrow`, `consume`), `retain`, `give` (`owned`, `borrow`) | `contracts.md` *Who owns what*; tutorials 1, 2 and 5 | C2, C3, C5 |
+| `validity` | Validity | For how long may borrowed access be used, and which events end it early? | *How long can the caller use a view?* | `valid`; regions `call`, `static`, `owner(...)`; `invalidated_by`; `mutation` | `contracts.md` *How long a borrow lasts*; tutorial 2 | C1, C3, C5 |
+| `storage` | Storage | How many elements exist, how much room is there, what do they contain, and who writes them? | *How many bytes exist, and what do they contain?* | `extent` (`one`, `buffer(...)`), `contents`, `direction`, `aliasing` | `contracts.md` *Buffers and strings*; tutorial 3 | C3, C4 |
+| `execution` | Where and when calls run | Where may a call start, may calls overlap or nest, and where may references travel? | *Which calls may run together, and where?* | `execution`, `executor`, `concurrency`, `reentrancy`; `sharing`, `isolation` | `contracts.md` *Threads and sharing*; tutorial 4 | C2, C3 |
+| `callbacks` | Callbacks and their schedules | When may a supplied function run, how often, with which state, and when is it safe to release that state? | *When is it safe to discard callback state?* | `callback` declarations; the callback-use block with `timing`, `count`, `scope`, `quiescence`; `outside_callback` | `contracts.md` *Callbacks*; tutorial 4 | C2, C6 |
+| `description` | The published description | Which part and release of an API is described, which declarations and dependencies does it need, and in which configurations does it hold? | *A shared description for API tools* | `language`, `package`, `surface`, `exports`, `import … digest … as`, declaration identity, `environment`, `available`, `deprecated` | `packages.md` opening, *Packages contain declarations* to *What it depends on*; L1–L3 aids; tutorial 1 | L1–L3 |
+| `access` | Reaching the code | How does a tool call the implementation, under which machine-level rules, and what keeps the path compatible? | *Reaching the code* | `use abi` and `use profile` dependencies; `access … in`, `abi`, `via`, `mapping`, `compatibility`, `representation`, `callback_abi` | `packages.md` *Reaching the code* and *Profiles and ABI entries*; tutorial 5 | A1–A4, F1 |
+| `agreement` | Writers, checkers and users | Who produces a description, what does checking establish, and how do consumers keep the same facts across presentations and extensions? | The landing page's workflow; *A shared description for API tools* | profile requirements; no single construct otherwise | `packages.md` *One contract, several views*; `contracts.md` *Extending the language with profiles* | L1, L3, C8, A1, A5 |
+
+Order: the call layer runs from what a call is (operations, outcomes) to what
+persists and who is responsible for it (entities, responsibility, validity,
+storage), then to time and threads (execution, callbacks). *How a call
+finishes* precedes release responsibility because returned obligations are
+stated per outcome. The description layer follows, because its facts only
+make sense once the reader knows what is being described.

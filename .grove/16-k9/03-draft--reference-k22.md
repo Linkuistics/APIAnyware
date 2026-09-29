@@ -1,8 +1,8 @@
-# reference-k23
+# reference-k22
 
 ## Goal
 
-Draft the clause entries for outcomes, callback use, access paths, patterns and the fixture profile, and complete the mutation-to-rule and alphabetical indexes.
+Draft the clause entries for callable effects and input obligations, including buffers and strings.
 
 ## Context
 
@@ -14,10 +14,9 @@ Draft the clause entries for outcomes, callback use, access paths, patterns and 
 
 ## Done when
 
-- Every remaining clause has an entry, and `task docs:coverage` passes with
-  nothing pending.
-- The indexes in `reference/README.md` are complete, and the concept pages,
-  tutorial and glossary link to entries where they name a clause.
+- Every clause assigned to this file has an entry with the §9.4 fields in
+  order, including *Expresses* with its plan §10 concept, and each fact
+  matches its rule text.
 - `reference/README.md` links this clause file, replacing its plain-text
   mention (plan §3, *Staging*).
 - `task docs:check` passes.
@@ -26,4 +25,4 @@ Draft the clause entries for outcomes, callback use, access paths, patterns and 
 
 The classified inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
 
-This is the node's last draft session, so its last act is `leaf-add` of the `copy-edit` leaf, unless a live later sibling already holds one.
+A later draft sibling finishes this document, so do not cut `copy-edit` here: the last draft session does.

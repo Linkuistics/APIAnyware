@@ -47,6 +47,35 @@ the plain-text mentions of the pages it lands into links. Only the second
 draft's last act cuts `copy-edit`. The first finds its later sibling live and
 cuts nothing.
 
+## Model-first run
+
+The human's 2026-09-29 direction (first-path-reading-k64, D12–D13): explain
+the model, then describe AIL by reference to it, because the language is a
+tool. After orientation lands the canonical model page and `model-reading`
+assesses it, this node's three pages become the account of how AIL writes each
+model concept down (plan §9.2, *Model-first run*; concepts in plan §10).
+
+This run also owns the canonical pages' model-concept routes (plan §9.7 item
+7). They cannot sit under rule-reading-k49, which the walk visits before the
+model page exists, and they point at the concepts this run's pages introduce.
+For this run the document is the three explanation pages plus those route
+additions; each stage reads the changed aids under the existing canonical
+preservation check.
+
+This new human direction authorizes exactly one ordered run: three draft
+sessions (concepts-k74 contracts; concepts-k75 packages and choices;
+concepts-k76 canonical routes), then concepts-k77 copy-edit, concepts-k78 art
+and concepts-k79 proof, all queued now. It is new scope, not a reset of the
+earlier correction runs below, and it authorizes no correction run inside it:
+residue that would send work back is recorded for the full-set checkpoint.
+
+Done when, for this run: the contracts page follows §10's order with a concept
+opening on every notation-introducing section; packages opens with the
+description-layer concepts before the shell; choices judges each choice by how
+it serves the model; every canonical rule section routes to its concept with
+the rule text byte-identical; every construct introduction is enumerated with
+its concept; `task docs:check` passes.
+
 ## Current human-directed correction
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires

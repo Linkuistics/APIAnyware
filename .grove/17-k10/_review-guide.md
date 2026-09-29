@@ -28,11 +28,15 @@ views to support the AIL task and explain its names, relationships and contract;
 omit generic instruction on how to follow railroad tracks and branches and
 the associated legend boxes.
 
-The human's 2026-09-29 priority is the model and how AIL serves it. Ground
-review tasks in describing API behavior and binding obligations, then ask how
-the language expresses those concepts and supports the task. Read the revised
-structure brief from model-first-documentation-k68 before drafting. Preserve
-the visually bordered non-normative aids and their stable anchors.
+The human's 2026-09-29 priority is the model and how AIL serves it. Plan
+§9.5, revised by model-first-documentation-k68, states the review question as
+how well AIL serves as a tool for describing the model in
+`explanation/model.md`, restates each of the six dimensions against the plan
+§10 concepts, starts every task from a model question about a named example,
+groups walkthrough clauses by concept, and adds a *Model fit* task. Use §10's
+concept names exactly as the model page does, including any change
+`model-reading` made. Preserve the visually bordered non-normative aids and
+their stable anchors.
 
 ## Pipeline
 
