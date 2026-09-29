@@ -26,7 +26,7 @@ publication, exact configurations, common clauses, members and nominal contracts
 [Callable effects and input clauses](clauses-callable.md) covers effects, input
 obligations, buffers and strings. [Outcome and callback schedule clauses](clauses-outcomes.md)
 covers output states, ownership and registration schedules.
-[Access, pattern and fixture clauses](clauses-access.md) covers provider paths,
+[Access, pattern and fixture clauses](clauses-access.md) covers [provider](../glossary.md#provider) paths,
 role bindings, laws and synthetic source facts.
 Their applicability and canonical rule destinations are available in the
 [table](declarations.md#applicability).
@@ -36,9 +36,9 @@ Their applicability and canonical rule destinations are available in the
 | Source | Determines |
 |---|---|
 | [Language rules](../language.md) | Text, identity, publication, types, declarations and patterns |
-| [Contract rules](../contracts.md) | Values, memory, effects, outcomes and callback schedules |
+| [Contract rules](../contracts.md) | Values, memory, effects, outcomes and [callback](../glossary.md#callback) schedules |
 | [Profile and access rules](../profiles.md) | Providers, access paths, representations, agreement and the synthetic fixture catalogue |
-| [Grammar](../grammar.ebnf) | Syntactic forms; clause vocabulary and validity come from the rule prose |
+| [Grammar](../grammar.ebnf) | Syntactic forms; [clause](../glossary.md#clause) vocabulary and validity come from the rule prose |
 
 The [conformance corpus](../conformance.md) supplies examples and rejection
 mutations. The [existing-model inventory](../baseline.md) records a bounded
@@ -73,26 +73,26 @@ rule and to the explanation of the concept it expresses.
 
 | Rule | Subject |
 |---|---|
-| [L1](../language.md#l1) | Text and syntax |
-| [L2](../language.md#l2) | Identity and dependencies |
-| [L3](../language.md#l3) | Publication and environments |
-| [L4](../language.md#l4) | Type expressions |
-| [L5](../language.md#l5) | Declarations and common clauses |
-| [L6](../language.md#l6) | Patterns |
-| [C1](../contracts.md#c1) | Slots and regions |
-| [C2](../contracts.md#c2) | Nominal lifetime and concurrency |
-| [C3](../contracts.md#c3) | Callable effects and input obligations |
-| [C4](../contracts.md#c4) | Buffers and strings |
-| [C5](../contracts.md#c5) | Outcomes and returned obligations |
-| [C6](../contracts.md#c6) | Callback schedules and teardown |
-| [C7](../contracts.md#c7) | Global storage |
-| [C8](../contracts.md#c8) | Obligation checking |
-| [A1](../profiles.md#a1) | Provider manifests |
-| [A2](../profiles.md#a2) | Access paths |
-| [A3](../profiles.md#a3) | Type representations and data access |
-| [A4](../profiles.md#a4) | Representation and compatibility |
-| [A5](../profiles.md#a5) | Consumer agreement |
-| [F1](../profiles.md#f1) | Synthetic fixture catalogue |
+| [`L1`](../language.md#l1) | Text and syntax |
+| [`L2`](../language.md#l2) | Identity and dependencies |
+| [`L3`](../language.md#l3) | Publication and environments |
+| [`L4`](../language.md#l4) | Type expressions |
+| [`L5`](../language.md#l5) | Declarations and common clauses |
+| [`L6`](../language.md#l6) | Patterns |
+| [`C1`](../contracts.md#c1) | Slots and regions |
+| [`C2`](../contracts.md#c2) | Nominal lifetime and [concurrency](../glossary.md#concurrency) |
+| [`C3`](../contracts.md#c3) | [Callable](../glossary.md#callable) effects and input obligations |
+| [`C4`](../contracts.md#c4) | Buffers and strings |
+| [`C5`](../contracts.md#c5) | Outcomes and returned obligations |
+| [`C6`](../contracts.md#c6) | Callback schedules and teardown |
+| [`C7`](../contracts.md#c7) | Global storage |
+| [`C8`](../contracts.md#c8) | Obligation checking |
+| [`A1`](../profiles.md#a1) | Provider manifests |
+| [`A2`](../profiles.md#a2) | Access paths |
+| [`A3`](../profiles.md#a3) | Type representations and data access |
+| [`A4`](../profiles.md#a4) | [Representation](../glossary.md#representation) and compatibility |
+| [`A5`](../profiles.md#a5) | [Consumer](../glossary.md#consumer) agreement |
+| [`F1`](../profiles.md#f1) | Synthetic fixture catalogue |
 
 <a id="mutations"></a>
 
@@ -100,50 +100,50 @@ rule and to the explanation of the concept it expresses.
 
 The [conformance corpus](../conformance.md#rejection-mutations) gives the exact
 mutation and starting example for each ID. These non-normative lookup summaries
-link to the controlling rules and the relevant entry. N11 checks implementation
-truth; N14's dynamic-size form creates runtime obligations.
+link to the controlling rules and the relevant entry. `N11` checks implementation
+truth; `N14`'s dynamic-size form creates runtime obligations.
 
 | Mutation | Rule and reason | Entry |
 |---|---|---|
-| <a id="n01"></a>N01 | [L3](../language.md#l3)/[L4](../language.md#l4): unresolved type, no unknown contract type. | [named-types](types.md#named-types) |
-| <a id="n02"></a>N02 | [C5](../contracts.md#c5): valid reference output lacks ownership. | [give](clauses-outcomes.md#give) |
-| <a id="n03"></a>N03 | [L2](../language.md#l2): duplicate parameter name. | [fn](declarations.md#fn) |
-| <a id="n04"></a>N04 | [L2](../language.md#l2)/[L4](../language.md#l4): reserved core type name. | [names](notation.md#names) |
-| <a id="n05"></a>N05 | [C5](../contracts.md#c5): uncovered nullable discriminator. | [when](clauses-outcomes.md#when) |
-| <a id="n06"></a>N06 | [C5](../contracts.md#c5): overlap and missing null case. | [when](clauses-outcomes.md#when) |
-| <a id="n07"></a>N07 | [C1](../contracts.md#c1)/[C5](../contracts.md#c5): escaped borrow expires at delivery. | [give](clauses-outcomes.md#give) |
-| <a id="n08"></a>N08 | [C1](../contracts.md#c1)/[L2](../language.md#l2): unresolved place. | [places](notation.md#places) |
-| <a id="n09"></a>N09 | [C2](../contracts.md#c2): no release protocol for owned handles. | [lifecycle](clauses-package.md#lifecycle) |
-| <a id="n10"></a>N10 | [C2](../contracts.md#c2): destructor signature/consumption mismatch. | [lifecycle](clauses-package.md#lifecycle) |
-| <a id="n11"></a>N11 | Authoring/implementation contract contradiction; prose cannot negate `state(valid)`. A syntax validator alone cannot detect a lying implementation; an implementation conformance test must. | [state](clauses-outcomes.md#state) |
-| <a id="n12"></a>N12 | [C5](../contracts.md#c5): invalid, non-scalar discriminator; also does not share the successful outcome's discriminator. | [when](clauses-outcomes.md#when) |
-| <a id="n13"></a>N13 | [C4](../contracts.md#c4): output requires writable pointer. | [direction](clauses-callable.md#direction) |
-| <a id="n14"></a>N14 | [C4](../contracts.md#c4): extent inequality. | [extent](clauses-callable.md#extent) |
-| <a id="n15"></a>N15 | [C6](../contracts.md#c6): impossible schedule/scope. | [scope](clauses-outcomes.md#scope) |
-| <a id="n16"></a>N16 | [C6](../contracts.md#c6): no complete teardown guarantee. | [quiescence](clauses-outcomes.md#quiescence) |
-| <a id="n17"></a>N17 | [C6](../contracts.md#c6): impossible bounds. | [count](clauses-outcomes.md#count) |
-| <a id="n18"></a>N18 | [C6](../contracts.md#c6): blocking quiescence lacks deadlock exclusion or supported reentrant protocol. | [requires](clauses-callable.md#requires) |
-| <a id="n19"></a>N19 | [C2](../contracts.md#c2): missing confinement executor. | [sharing](clauses-package.md#sharing) |
-| <a id="n20"></a>N20 | [L5](../language.md#l5): duplicate keyed clause; separate slots are allowed. | [input](clauses-callable.md#input) |
-| <a id="n21"></a>N21 | [L6](../language.md#l6): wrong participant kind. | [bind](clauses-access.md#bind) |
-| <a id="n22"></a>N22 | [L6](../language.md#l6): incomplete binding, including optional/many roles. | [bind](clauses-access.md#bind) |
-| <a id="n23"></a>N23 | [L2](../language.md#l2)/[A2](../profiles.md#a2): unresolved ABI alias. | [abi](clauses-access.md#abi) |
-| <a id="n24"></a>N24 | [L3](../language.md#l3)/[A2](../profiles.md#a2): unresolved configuration. | [access](declarations.md#access) |
-| <a id="n25"></a>N25 | [A2](../profiles.md#a2): declaration availability has no callable path. | [access](declarations.md#access) |
-| <a id="n26"></a>N26 | [A4](../profiles.md#a4): compiler name is not resolved build identity. | [compatibility](clauses-access.md#compatibility) |
-| <a id="n27"></a>N27 | [L1](../language.md#l1)/[A1](../profiles.md#a1): unknown normative vocabulary. | [clause](notation.md#clause) |
-| <a id="n28"></a>N28 | [L2](../language.md#l2): conflicting identity in resolution closure. | [import](declarations.md#import) |
-| <a id="n29"></a>N29 | [L2](../language.md#l2): conflicting provider identity. | [use](declarations.md#use) |
-| <a id="n30"></a>N30 | [C3](../contracts.md#c3)/[F1](../profiles.md#f1): unsupported required semantics; not an unknown fact. | [execution](clauses-callable.md#execution) |
-| <a id="n31"></a>N31 | [C1](../contracts.md#c1)/[C5](../contracts.md#c5): aggregate shape does not satisfy recursive ownership. | [give](clauses-outcomes.md#give) |
-| <a id="n32"></a>N32 | [C1](../contracts.md#c1): writable pointee borrows must also survive delivery. | [give](clauses-outcomes.md#give) |
-| <a id="n33"></a>N33 | [L2](../language.md#l2): outcome identity collision. | [outcome](declarations.md#outcome) |
+| <a id="n01"></a>`N01` | [`L3`](../language.md#l3)/[`L4`](../language.md#l4): unresolved type, no unknown contract type. | [named-types](types.md#named-types) |
+| <a id="n02"></a>`N02` | [`C5`](../contracts.md#c5): valid reference output lacks ownership. | [`give`](clauses-outcomes.md#give) |
+| <a id="n03"></a>`N03` | [`L2`](../language.md#l2): duplicate parameter name. | [fn](declarations.md#fn) |
+| <a id="n04"></a>`N04` | [`L2`](../language.md#l2)/[`L4`](../language.md#l4): reserved core type name. | [names](notation.md#names) |
+| <a id="n05"></a>`N05` | [`C5`](../contracts.md#c5): uncovered nullable [discriminator](../glossary.md#discriminator). | [`when`](clauses-outcomes.md#when) |
+| <a id="n06"></a>`N06` | [`C5`](../contracts.md#c5): overlap and missing null case. | [`when`](clauses-outcomes.md#when) |
+| <a id="n07"></a>`N07` | [`C1`](../contracts.md#c1)/[`C5`](../contracts.md#c5): escaped [borrow](../glossary.md#borrow) expires at delivery. | [`give`](clauses-outcomes.md#give) |
+| <a id="n08"></a>`N08` | [`C1`](../contracts.md#c1)/[`L2`](../language.md#l2): unresolved [place](../glossary.md#place). | [places](notation.md#places) |
+| <a id="n09"></a>`N09` | [`C2`](../contracts.md#c2): no release protocol for owned handles. | [`lifecycle`](clauses-package.md#lifecycle) |
+| <a id="n10"></a>`N10` | [`C2`](../contracts.md#c2): destructor signature/consumption mismatch. | [`lifecycle`](clauses-package.md#lifecycle) |
+| <a id="n11"></a>`N11` | Authoring/implementation contract contradiction; prose cannot negate `state(valid)`. A syntax validator alone cannot detect a lying implementation; an implementation conformance test must. | [`state`](clauses-outcomes.md#state) |
+| <a id="n12"></a>`N12` | [`C5`](../contracts.md#c5): invalid, non-scalar discriminator; also does not share the successful [outcome](../glossary.md#outcome)'s discriminator. | [`when`](clauses-outcomes.md#when) |
+| <a id="n13"></a>`N13` | [`C4`](../contracts.md#c4): output requires writable pointer. | [`direction`](clauses-callable.md#direction) |
+| <a id="n14"></a>`N14` | [`C4`](../contracts.md#c4): extent inequality. | [`extent`](clauses-callable.md#extent) |
+| <a id="n15"></a>`N15` | [`C6`](../contracts.md#c6): impossible schedule/scope. | [`scope`](clauses-outcomes.md#scope) |
+| <a id="n16"></a>`N16` | [`C6`](../contracts.md#c6): no complete teardown guarantee. | [`quiescence`](clauses-outcomes.md#quiescence) |
+| <a id="n17"></a>`N17` | [`C6`](../contracts.md#c6): impossible bounds. | [`count`](clauses-outcomes.md#count) |
+| <a id="n18"></a>`N18` | [`C6`](../contracts.md#c6): blocking [quiescence](../glossary.md#quiescence) lacks deadlock exclusion or supported reentrant protocol. | [`requires`](clauses-callable.md#requires) |
+| <a id="n19"></a>`N19` | [`C2`](../contracts.md#c2): missing confinement [executor](../glossary.md#executor). | [`sharing`](clauses-package.md#sharing) |
+| <a id="n20"></a>`N20` | [`L5`](../language.md#l5): duplicate keyed clause; separate slots are allowed. | [`input`](clauses-callable.md#input) |
+| <a id="n21"></a>`N21` | [`L6`](../language.md#l6): wrong participant kind. | [`bind`](clauses-access.md#bind) |
+| <a id="n22"></a>`N22` | [`L6`](../language.md#l6): incomplete binding, including optional/many roles. | [`bind`](clauses-access.md#bind) |
+| <a id="n23"></a>`N23` | [`L2`](../language.md#l2)/[`A2`](../profiles.md#a2): unresolved [ABI](../glossary.md#abi) alias. | [`abi`](clauses-access.md#abi) |
+| <a id="n24"></a>`N24` | [`L3`](../language.md#l3)/[`A2`](../profiles.md#a2): unresolved configuration. | [access](declarations.md#access) |
+| <a id="n25"></a>`N25` | [`A2`](../profiles.md#a2): [declaration](../glossary.md#declaration) [availability](../glossary.md#availability) has no callable path. | [access](declarations.md#access) |
+| <a id="n26"></a>`N26` | [`A4`](../profiles.md#a4): compiler name is not resolved build identity. | [`compatibility`](clauses-access.md#compatibility) |
+| <a id="n27"></a>`N27` | [`L1`](../language.md#l1)/[`A1`](../profiles.md#a1): unknown normative vocabulary. | [clause](notation.md#clause) |
+| <a id="n28"></a>`N28` | [`L2`](../language.md#l2): conflicting identity in [dependency closure](../glossary.md#dependency-closure). | [import](declarations.md#import) |
+| <a id="n29"></a>`N29` | [`L2`](../language.md#l2): conflicting provider identity. | [use](declarations.md#use) |
+| <a id="n30"></a>`N30` | [`C3`](../contracts.md#c3)/[`F1`](../profiles.md#f1): unsupported required semantics; not an unknown fact. | [`execution`](clauses-callable.md#execution) |
+| <a id="n31"></a>`N31` | [`C1`](../contracts.md#c1)/[`C5`](../contracts.md#c5): aggregate shape does not satisfy recursive ownership. | [`give`](clauses-outcomes.md#give) |
+| <a id="n32"></a>`N32` | [`C1`](../contracts.md#c1): writable pointee borrows must also survive delivery. | [`give`](clauses-outcomes.md#give) |
+| <a id="n33"></a>`N33` | [`L2`](../language.md#l2): outcome identity collision. | [outcome](declarations.md#outcome) |
 
-N11 is an authoring/implementation contradiction, not a parser rejection.
-[C5](../contracts.md#c5) defines valid output and [C8](../contracts.md#c8) limits
-what local checking can establish. N14 is statically rejected when contradictory
+`N11` is an authoring/implementation contradiction, not a parser rejection.
+[`C5`](../contracts.md#c5) defines valid output and [`C8`](../contracts.md#c8) limits
+what local checking can establish. `N14` is statically rejected when contradictory
 constants make the extent unsatisfiable; dynamic bounds remain caller/callee
-obligations under [C4](../contracts.md#c4).
+obligations under [`C4`](../contracts.md#c4).
 
 <a id="alphabetical-clauses"></a>
 
@@ -157,7 +157,7 @@ value constructors are described with their owning clause.
 | Clause | Entry group |
 |---|---|
 | [`abi`](clauses-access.md#abi) | Access, patterns and fixture |
-| [`accessors`](clauses-package.md#accessors) | Package, environment and declaration |
+| [`accessors`](clauses-package.md#accessors) | [Package](../glossary.md#package), [environment](../glossary.md#environment) and declaration |
 | [`aliasing`](clauses-callable.md#aliasing) | Callable effects and inputs |
 | [`available`](clauses-package.md#available) | Package, environment and declaration |
 | [`base`](clauses-package.md#base) | Package, environment and declaration |

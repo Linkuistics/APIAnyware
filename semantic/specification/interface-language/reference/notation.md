@@ -2,7 +2,7 @@
 
 > **Purpose:** reference — find AIL's syntax forms and the rules that give them meaning.
 > **Reader:** language designers, API authors and tool implementers familiar with grammars and railroad diagrams.
-> **Before this:** [A model of API behaviour and binding obligations](../explanation/model.md); [the language-containment view](../language.md#l2) locates packages, declarations and callable [slots](../glossary.md#slot).
+> **Before this:** [A model of API behaviour and binding obligations](../explanation/model.md); [the language-containment view](../language.md#l2) locates packages, declarations and [callable](../glossary.md#callable) [slots](../glossary.md#slot).
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -21,27 +21,27 @@ to start from a concept rather than a syntax form.
 [`grammar.ebnf`](../grammar.ebnf) is the authoritative syntax source.
 Its opening comment defines the dialect: comma concatenates, `|` alternates,
 `[]` marks an optional part and `{}` marks repetition. Quoted strings are
-terminals. [L1](../language.md#l1) defines lexical tokens, whitespace and
-comments; [L2](../language.md#l2) supplies scope and name resolution.
+terminals. [`L1`](../language.md#l1) defines lexical tokens, whitespace and
+comments; [`L2`](../language.md#l2) supplies scope and name resolution.
 
 The G10 views below reproduce selected productions. The complete grammar also
-contains the other declaration forms and type expressions. Each view links
+contains the other [declaration](../glossary.md#declaration) forms and type expressions. Each view links
 its source and the rules that constrain the form. The examples are independent
 fragments of invented APIs; their omission notes distinguish them from
 complete packages.
 
 | Form | Section |
 |---|---|
-| Document and package items | [Package shell](#shell) |
+| Document and [package](../glossary.md#package) items | [Package shell](#shell) |
 | Clauses and their values | [Clauses](#clause) |
 | Imports and declaration or slot references | [Names and references](#names) |
-| Functions and callback declarations | [Callables](#callable) |
+| Functions and [callback](../glossary.md#callback) declarations | [Callables](#callable) |
 | Values addressed inside a callable | [Places](#places) |
 | Exact deployment configurations | [Environments](#environment) |
 | Roles and their concrete participants | [Patterns and instances](#pattern) |
-| Observable completion cases | [Outcomes](#outcome) |
+| Observable [completion](../glossary.md#completion) cases | [Outcomes](#outcome) |
 | A callback registration's schedule | [Callback use](#callback-use) |
-| Profile and ABI definitions | [Dependencies](#dependency) |
+| [Profile](../glossary.md#profile) and [ABI](../glossary.md#abi) definitions | [Dependencies](#dependency) |
 | Routes to an implementation | [Access paths](#access) |
 
 <a id="shell"></a>
@@ -54,8 +54,8 @@ and locate its [declarations](../glossary.md#declaration).
 **Productions:** `document`, `item`, `clause`.
 
 Fragment — shows the invented geometry package and its `Point` record.
-A complete package also supplies an environment, availability, deprecation,
-sharing and isolation.
+A complete package also supplies an [environment](../glossary.md#environment), [availability](../glossary.md#availability), deprecation,
+sharing and [isolation](../glossary.md#isolation).
 
 <!-- ail-example: ../examples/rule-reading/syntax.ail region=shell -->
 ```ail
@@ -74,12 +74,12 @@ package example::geometry version "1" {
 The language version selects AIL draft 0.1; the package version identifies
 this API description independently. `surface` states its scope, and
 `exports` names `Point` as a [public root](../glossary.md#exports). These are summaries of
-[L1–L3](../language.md#l1); the [located shell example](../language.md#reading-aid-non-normative-a-document-contains-a-package)
+[`L1–L3`](../language.md#l1); the [located shell example](../language.md#reading-aid-non-normative-a-document-contains-a-package)
 connects the package items to those rules.
 
 ![G10 package shell: document, item and clause productions.](../figures/g10-shell.svg)
 
-Use this view to locate a declaration or clause within the package document.
+Use this view to locate a declaration or [clause](../glossary.md#clause) within the package document.
 
 [Diagram source](../figures/g10-shell.puml) · [Exact grammar](../grammar.ebnf)
 
@@ -109,7 +109,7 @@ package example::geometry version "2" {
 ```
 
 `deprecated` states the fact about `Point`; `since("2")` supplies the version
-at which deprecation began. The message guides the reader. [L5](../language.md#l5)
+at which deprecation began. The message guides the reader. [`L5`](../language.md#l5)
 defines these operands; the [clause example](../language.md#reading-aid-non-normative-clauses-contain-values)
 compares them with other values. [Vocabulary and validity](#vocabulary-and-validity)
 explains how rules constrain this generic syntax.
@@ -130,7 +130,7 @@ rules determine which values each named clause accepts.
 Use names to distinguish local declarations, imported declarations and the
 slots belonging to an operation. **Productions:** `import`, `reference`, `name`.
 
-Fragment — shows an import and member association in the invented canvas
+Fragment — shows an import and [member](../glossary.md#member) association in the invented canvas
 package. The all-zero digest is a placeholder, not a checked dependency pin.
 The [two-package language-containment view](../language.md#l2) supplies the
 imported `Point` definition; publication and other contracts are omitted here.
@@ -164,7 +164,7 @@ package. In a clause argument, `@Canvas` refers to the local declaration,
 `@Geometry::Point` to the imported one, and `@position::canvas` to the
 function's parameter. Inside `position`, `$canvas` addresses its local value.
 The same name syntax serves different referents, resolved by
-[L2](../language.md#l2); [L5](../language.md#l5) defines member association.
+[`L2`](../language.md#l2); [`L5`](../language.md#l5) defines member association.
 See the [reference and slot examples](../language.md#reading-aid-non-normative-names-references-and-callable-slots).
 
 ![G10 names: import, reference and name productions.](../figures/g10-names.svg)
@@ -184,7 +184,7 @@ contracts. **Productions:** `callable`, `parameters`, `parameter`.
 
 Fragment — shows a callback declaration in the canvas package. The header,
 `Geometry` import, publication context, invocation and nominal contracts, and
-callback representation are omitted.
+callback [representation](../glossary.md#representation) are omitted.
 
 <!-- ail-example: ../examples/rule-reading/canvas.ail region=callback -->
 ```ail
@@ -205,7 +205,7 @@ package example::canvas version "1" {
 callback invocation; `position` in [Names and references](#names) has a separate
 result. The `callable` production serves both declarations. Rules govern
 their contracts and the applicability of nested blocks:
-[C3](../contracts.md#c3), [C5–C6](../contracts.md#c5) and [A2](../profiles.md#a2).
+[`C3`](../contracts.md#c3), [`C5–C6`](../contracts.md#c5) and [`A2`](../profiles.md#a2).
 The [callable examples](../language.md#reading-aid-non-normative-names-references-and-callable-slots)
 compare their slots.
 
@@ -242,10 +242,10 @@ package example::canvas version "1" {
 }
 ```
 
-`$canvas` addresses the handle lent for this call. The callee retains no
+`$canvas` addresses the [handle](../glossary.md#handle) lent for this call. The callee retains no
 reference, and the caller keeps the input valid throughout the call
-([C3](../contracts.md#c3)). A longer place can select a field, single pointee
-or elements; [C1's located examples](../contracts.md#reading-aid-non-normative-address-a-value-inside-its-callable)
+([`C3`](../contracts.md#c3)). A longer place can select a field, single pointee
+or elements; [`C1`'s located examples](../contracts.md#reading-aid-non-normative-address-a-value-inside-its-callable)
 show the types and storage facts that make each selection meaningful.
 
 ![G10 places: the place production.](../figures/g10-places.svg)
@@ -266,7 +266,7 @@ in which declarations are available. **Production:** `environment`.
 
 Fragment — shows publication scope and availability in the canvas package.
 The import, providers and other contracts needed for a complete description
-are omitted. `fixture64` and `fixture` are synthetic [F1](../profiles.md#f1)
+are omitted. `fixture64` and `fixture` are synthetic [`F1`](../profiles.md#f1)
 configuration values.
 
 <!-- ail-example: ../examples/rule-reading/canvas.ail region=publication -->
@@ -293,7 +293,7 @@ package example::canvas version "1" {
 
 `test` is a local name for the exact target and platform configuration.
 Both declarations name it in their availability. The grammar admits an empty
-environment body; [L3](../language.md#l3) requires target and platform facts.
+environment body; [`L3`](../language.md#l3) requires target and platform facts.
 The [publication example](../language.md#reading-aid-non-normative-state-what-the-package-covers)
 explains how these configurations bound the package's claims.
 
@@ -307,7 +307,7 @@ Use this view to locate the clauses defining one named configuration.
 
 ## Patterns and instances
 
-**Expresses:** reusable relationships, such as the lifecycle relationships of
+**Expresses:** reusable relationships, such as the [lifecycle](../glossary.md#lifecycle) relationships of
 [Entities that outlive a call](../explanation/model.md#entities).
 Use a [pattern](../glossary.md#pattern) to name participant roles and an
 instance to bind them to declarations or slots.
@@ -335,7 +335,7 @@ package example::canvas version "1" {
 each identified with its callable. This pattern declares no lifecycle law.
 The [role and lifecycle examples](../language.md#reading-aid-non-normative-bind-roles-to-participants)
 also show a pattern connecting a resource and its destructor.
-[L6](../language.md#l6) defines role kinds, cardinalities, binding and laws.
+[`L6`](../language.md#l6) defines role kinds, cardinalities, binding and laws.
 
 ![G10 patterns: pattern, role and instance productions.](../figures/g10-pattern.svg)
 
@@ -379,9 +379,9 @@ package example::buffers version "1" {
 ```
 
 The caller can read the Boolean result in either case. The destination
-elements are valid only in `copied`. [C5](../contracts.md#c5) supplies the
+elements are valid only in `copied`. [`C5`](../contracts.md#c5) supplies the
 required clauses and checks coverage and exclusivity; the grammar locates each
-outcome inside its [callable](#callable). See the
+outcome inside its [`callable`](#callable). See the
 [outcome example](../contracts.md#reading-aid-non-normative-use-an-observable-result-to-choose-the-output-contract).
 
 ![G10 outcomes: the outcome production.](../figures/g10-outcome.svg)
@@ -401,7 +401,7 @@ callback and when that registration reaches [quiescence](../glossary.md#quiescen
 
 Fragment — shows registration and teardown in the synthetic callbacks API.
 The [complete callbacks package](../examples/callbacks.ail) supplies the
-header, `Handler`, `Subscription`, publication context, input retention,
+header, `Handler`, `Subscription`, publication context, input [retention](../glossary.md#retention),
 effects, outcomes and access contracts omitted here.
 
 <!-- ail-example: ../examples/rule-reading/contracts.ail region=callback-use -->
@@ -432,7 +432,7 @@ package example::callbacks version "1" {
 Within `subscribe(handler: Handler) -> Subscription`, `$handler` is the
 callback parameter. Its schedule permits invocation after the registration
 returns and ties its scope to the returned owner. `@unsubscribe` names the
-quiescent teardown operation. [C6](../contracts.md#c6) checks these facts
+quiescent teardown operation. [`C6`](../contracts.md#c6) checks these facts
 together; its [registration example](../contracts.md#reading-aid-non-normative-separate-one-callback-invocation-from-its-registration)
 shows the surrounding callable and teardown. The `callback` declaration
 form in [Callables](#callable) describes one invocation and the callable value.
@@ -457,7 +457,7 @@ tools need to interpret the package. **Production:** `dependency`.
 Fragment — shows dependencies and an environment in the invented objects
 package. The complete [objects example](../examples/objects.ail) also supplies
 publication clauses and declarations. The repeated `a` and `b` digests are
-synthetic [F1](../profiles.md#f1) test resolution tokens, not production hashes.
+synthetic [`F1`](../profiles.md#f1) test resolution tokens, not production hashes.
 
 <!-- ail-example: ../examples/rule-reading/providers.ail region=dependencies -->
 ```ail
@@ -478,7 +478,7 @@ package example::objects version "1" {
 
 `fixture` and `native` are local aliases for external definitions selected by
 identifier, version and digest. Their manifests supply meaning and supported
-capabilities ([A1](../profiles.md#a1)); the dependency form identifies those
+capabilities ([`A1`](../profiles.md#a1)); the dependency form identifies those
 definitions. The [provider example](../profiles.md#reading-aid-non-normative-name-the-definitions-the-package-depends-on)
 connects the aliases to clauses that use them.
 
@@ -500,7 +500,7 @@ an implementation in a named environment. **Production:** `access`.
 Fragment — shows a path in the invented canvas package. The header, import,
 synthetic `fixture` and `native` provider pins, `test` environment, `Canvas`
 and other contracts are omitted. The mechanism and convention use
-[F1's synthetic definitions](../profiles.md#f1).
+[`F1`'s synthetic definitions](../profiles.md#f1).
 
 <!-- ail-example: ../examples/rule-reading/canvas.ail region=spellings -->
 ```ail
@@ -521,7 +521,7 @@ package example::canvas version "1" {
 
 `direct` names the path; `test` names its environment. The source spelling
 `"Canvas.position"` identifies the API member, while `"canvas_position"`
-selects the symbol used to reach it. [A2](../profiles.md#a2) defines the
+selects the symbol used to reach it. [`A2`](../profiles.md#a2) defines the
 required access clauses and environment coverage. Its
 [two-path example](../profiles.md#reading-aid-non-normative-read-one-declaration-with-two-ways-to-reach-it)
 shows another operation with two supported ways to reach the same behaviour.
@@ -538,13 +538,13 @@ the clauses defining that route.
 The generic `clause` production admits a name and arguments. The three rule
 files define which clauses exist, their operand types, where they apply and
 which combinations form a valid description. Recognised profiles supply
-equally closed, typed extensions ([L1](../language.md#l1), [A1](../profiles.md#a1)).
+equally closed, typed extensions ([`L1`](../language.md#l1), [`A1`](../profiles.md#a1)).
 
 For example, `deprecated(since("2"), "Use Position instead.");` above uses
-values defined by [L5](../language.md#l5). Replacing `since("2")` with a
+values defined by [`L5`](../language.md#l5). Replacing `since("2")` with a
 made-up `maybe` would still fit the `value` production, but would violate the
 closed vocabulary. Similarly, an environment can have no clauses according
-to its production, while [L3](../language.md#l3) requires a target and platform.
+to its production, while [`L3`](../language.md#l3) requires a target and platform.
 The grammar describes forms; the rules establish a complete, valid contract.
 
 Return to [the documentation map](../README.md#paths-through-the-documentation),
@@ -590,6 +590,6 @@ the explanation. Type and declaration entries use the fields that apply.
 
 The [reference index](README.md) offers model and rule routes.
 [Types](types.md) and [declarations](declarations.md) include semantic
-restrictions beyond the generic grammar. For clauses whose entries are
-forthcoming, the [applicability table](declarations.md#applicability) supplies
-scope and canonical rule links.
+restrictions beyond the generic grammar. The
+[applicability table](declarations.md#applicability) links each clause to its
+entry and canonical rules, grouped by scope.

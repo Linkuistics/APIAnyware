@@ -6,13 +6,13 @@
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
-> **Rules:** [L1](../language.md#l1), [L2](../language.md#l2), [L3](../language.md#l3), [L4](../language.md#l4), [L5](../language.md#l5), [L6](../language.md#l6), [C1](../contracts.md#c1), [C2](../contracts.md#c2), [C3](../contracts.md#c3), [C4](../contracts.md#c4), [C5](../contracts.md#c5), [C6](../contracts.md#c6), [C7](../contracts.md#c7), [A1](../profiles.md#a1), [A2](../profiles.md#a2), [A3](../profiles.md#a3) are canonical; this page is non-normative.
+> **Rules:** [`L1`](../language.md#l1), [`L2`](../language.md#l2), [`L3`](../language.md#l3), [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`L6`](../language.md#l6), [`C1`](../contracts.md#c1), [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4), [`C5`](../contracts.md#c5), [`C6`](../contracts.md#c6), [`C7`](../contracts.md#c7), [`A1`](../profiles.md#a1), [`A2`](../profiles.md#a2), [`A3`](../profiles.md#a3) are canonical; this page is non-normative.
 
 A type describes the value passed or stored. A [reference leaf](../glossary.md#reference-leaf)
 also needs clauses describing ownership and validity. The entries below separate
-the type's meaning from those obligations; an [access provider](../glossary.md#access-path)
-supplies its native representation ([L4](../language.md#l4), [C1](../contracts.md#c1),
-[A3](../profiles.md#a3)). [Type expressions](../grammar.ebnf) use `type` and
+the type's meaning from those obligations; a [provider](../glossary.md#provider)
+supplies its native [representation](../glossary.md#representation) ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1),
+[`A3`](../profiles.md#a3)). [Type expressions](../grammar.ebnf) use `type` and
 `type_argument`; [the notation reference](notation.md#callable) places them in signatures.
 
 | Core form | Lookup |
@@ -38,17 +38,17 @@ supplies its native representation ([L4](../language.md#l4), [C1](../contracts.m
 
 **Operands and types:** No operands.
 
-**Applies to:** A callable result type.
+**Applies to:** A [callable](../glossary.md#callable) result type.
 
 **Required and repeatability:** Each type occurrence selects one type; constructor arity is exact.
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4)):** The call returns no value. Its completion and effects still have contracts.
+**Meaning (non-normative; [`L4`](../language.md#l4)):** The call returns no value. Its [completion](../glossary.md#completion) and effects still have contracts.
 
-**Constraints:** A field, parameter, array element or pointer pointee cannot have type `unit`. ([L4](../language.md#l4)).
+**Constraints:** A field, parameter, array element or pointer pointee cannot have type `unit` ([`L4`](../language.md#l4)).
 
-**Rejected when:** `unit` is stored or pointed to. ([L4](../language.md#l4)).
+**Rejected when:** `unit` is stored or pointed to ([`L4`](../language.md#l4)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -63,7 +63,7 @@ package example::canvas version "1" {
 }
 ```
 
-The result of `inspect` has no value slot requiring output state; the `Canvas` input still has reference obligations ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
+The result of `inspect` has no value [slot](../glossary.md#slot) requiring output state; the `Canvas` input still has reference obligations ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 **Used by and see also:** [Functions](declarations.md#fn); [reference/value distinction](#value-and-reference-types).
 
@@ -85,11 +85,11 @@ The result of `inspect` has no value slot requiring output state; the `Canvas` i
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [C5](../contracts.md#c5)):** A Boolean carries a logical truth value; the provider supplies its representation.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`C5`](../contracts.md#c5)):** A Boolean carries a logical truth value; the provider supplies its representation.
 
-**Constraints:** Outcome equality may test a Boolean value, and the cases cover both values. ([L4](../language.md#l4), [C5](../contracts.md#c5)).
+**Constraints:** [Outcome](../glossary.md#outcome) equality may test a Boolean value, and the cases cover both values ([`L4`](../language.md#l4), [`C5`](../contracts.md#c5)).
 
-**Rejected when:** The type is used with arguments or an outcome partition omits a possible Boolean value. ([L4](../language.md#l4), [C5](../contracts.md#c5)).
+**Rejected when:** The type is used with arguments or an outcome partition omits a possible Boolean value ([`L4`](../language.md#l4), [`C5`](../contracts.md#c5)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -127,11 +127,11 @@ package example::geometry version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L1](../language.md#l1), [L4](../language.md#l4), [A3](../profiles.md#a3)):** These are fixed-width signed and unsigned integers. Decimal integer tokens have arbitrary precision during parsing; their use still has to fit the selected type.
+**Meaning (non-normative; [`L1`](../language.md#l1), [`L4`](../language.md#l4), [`A3`](../profiles.md#a3)):** These are fixed-width signed and unsigned integers. Decimal integer tokens have arbitrary precision during parsing; their use still has to fit the selected type.
 
-**Constraints:** Enum cases fit their underlying core integer type. Array sizes use nonnegative integer arguments. ([L1](../language.md#l1), [L4](../language.md#l4), [A3](../profiles.md#a3)).
+**Constraints:** Enum cases fit their underlying core integer type. Array sizes use nonnegative integer arguments ([`L1`](../language.md#l1), [`L4`](../language.md#l4), [`A3`](../profiles.md#a3)).
 
-**Rejected when:** A case value is outside its underlying type or a core integer type is given arguments. ([L1](../language.md#l1), [L4](../language.md#l4), [A3](../profiles.md#a3)).
+**Rejected when:** A case value is outside its underlying type or a core integer type is given arguments ([`L1`](../language.md#l1), [`L4`](../language.md#l4), [`A3`](../profiles.md#a3)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/syntax.ail). The header, publication
@@ -147,7 +147,7 @@ package example::geometry version "1" {
 
 `x` and `y` each carry a signed 32-bit value. Their order is semantic; native offsets come from the representation provider.
 
-**Used by and see also:** [Enums](declarations.md#enum); [arrays](#array); [record representation](declarations.md#record).
+**Used by and see also:** [Enums](declarations.md#enum); [`arrays`](#array); [record representation](declarations.md#record).
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 
@@ -167,11 +167,11 @@ package example::geometry version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [C5](../contracts.md#c5)):** These types record floating values independently of the selected native calling mechanism.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`C5`](../contracts.md#c5)):** These types record floating values independently of the selected native calling mechanism.
 
-**Constraints:** The core outcome predicates do not compare floating values. ([L4](../language.md#l4), [C5](../contracts.md#c5)).
+**Constraints:** The core outcome predicates do not compare floating values ([`L4`](../language.md#l4), [`C5`](../contracts.md#c5)).
 
-**Rejected when:** An outcome discriminator uses a floating comparison or the type has arguments. ([L4](../language.md#l4), [C5](../contracts.md#c5)).
+**Rejected when:** An outcome [discriminator](../glossary.md#discriminator) uses a floating comparison or the type has arguments ([`L4`](../language.md#l4), [`C5`](../contracts.md#c5)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -207,11 +207,11 @@ This is a scalar adaptation of the teaching fragment’s `complex<f32>` field: a
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [C1](../contracts.md#c1), [C3](../contracts.md#c3), [C4](../contracts.md#c4)):** Both forms are non-null references to readable storage; `mutptr` also permits writes. Ownership, validity, extent and contents are separate contracts.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)):** Both forms are non-null references to readable storage; `mutptr` also permits writes. Ownership, validity, extent and contents are separate contracts.
 
-**Constraints:** Every pointer leaf needs extent. Pointer parameters also need direction, aliasing and contents. Writable output storage uses `mutptr`; `ptr<Resource>` addresses storage holding a handle. ([L4](../language.md#l4), [C1](../contracts.md#c1), [C3](../contracts.md#c3), [C4](../contracts.md#c4)).
+**Constraints:** Every pointer leaf needs extent. Pointer parameters also need direction, aliasing and contents. Writable output storage uses `mutptr`; `ptr<Resource>` addresses storage holding a [handle](../glossary.md#handle) ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)).
 
-**Rejected when:** A pointer has the wrong arity, points to `unit`, lacks applicable contracts or uses `ptr` for `out`/`inout` storage (N13). ([L4](../language.md#l4), [C1](../contracts.md#c1), [C3](../contracts.md#c3), [C4](../contracts.md#c4)).
+**Rejected when:** A pointer has the wrong arity, points to `unit`, lacks applicable contracts or uses `ptr` for `out`/`inout` storage (`N13`) ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -240,7 +240,7 @@ package example::canvas version "1" {
 
 **Form:** `nullable<T>` (one type argument).
 
-**Operands and types:** `T` is a pointer, object, resource, interface or callback reference type.
+**Operands and types:** `T` is a pointer, object, resource, interface or [callback](../glossary.md#callback) reference type.
 
 **Applies to:** Reference type positions.
 
@@ -248,11 +248,11 @@ package example::canvas version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [C1](../contracts.md#c1), [C4](../contracts.md#c4), [C5](../contracts.md#c5)):** Null has no ownership obligation. The declaration’s outcomes determine whether null signals failure; nullability alone does not.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C4`](../contracts.md#c4), [`C5`](../contracts.md#c5)):** Null has no ownership obligation. The [declaration](../glossary.md#declaration)’s outcomes determine whether null signals failure; nullability alone does not.
 
-**Constraints:** Nested nullable is invalid. A null pointer has zero length and capacity. Contracts for nullable references apply when non-null. ([L4](../language.md#l4), [C1](../contracts.md#c1), [C4](../contracts.md#c4), [C5](../contracts.md#c5)).
+**Constraints:** Nested nullable is invalid. A null pointer has zero length and capacity. Contracts for nullable references apply when non-null ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C4`](../contracts.md#c4), [`C5`](../contracts.md#c5)).
 
-**Rejected when:** `T` is a value type or nullable type, or a nullable discriminator’s outcomes are incomplete (N05). ([L4](../language.md#l4), [C1](../contracts.md#c1), [C4](../contracts.md#c4), [C5](../contracts.md#c5)).
+**Rejected when:** `T` is a value type or nullable type, or a nullable discriminator’s outcomes are incomplete (`N05`) ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C4`](../contracts.md#c4), [`C5`](../contracts.md#c5)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -289,11 +289,11 @@ package example::canvas version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [C1](../contracts.md#c1), [C5](../contracts.md#c5)):** An array contains exactly `N` elements by value. A pointer with buffer extent instead refers to separately described storage.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)):** An array contains exactly `N` elements by value. A pointer with [buffer extent](../glossary.md#buffer-extent) instead refers to separately described storage.
 
-**Constraints:** Elements cannot be `unit`. Reference-containing elements require recursive slot contracts; by-value recursion is invalid. ([L4](../language.md#l4), [C1](../contracts.md#c1), [C5](../contracts.md#c5)).
+**Constraints:** Elements cannot be `unit`. Reference-containing elements require recursive slot contracts; by-value recursion is invalid ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-**Rejected when:** The count is negative, the arity is wrong or nested reference obligations are absent (N31). ([L4](../language.md#l4), [C1](../contracts.md#c1), [C5](../contracts.md#c5)).
+**Rejected when:** The count is negative, the arity is wrong or nested reference obligations are absent (`N31`) ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -331,11 +331,11 @@ package example::geometry version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L4](../language.md#l4), [A3](../profiles.md#a3)):** A complex value contains real and imaginary components; the provider defines native representation.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`A3`](../profiles.md#a3)):** A complex value contains real and imaginary components; the provider defines native representation.
 
-**Constraints:** The argument is one of the two core floating types. Semantic components do not establish a native layout. ([L4](../language.md#l4), [A3](../profiles.md#a3)).
+**Constraints:** The argument is one of the two core floating types. Semantic components do not establish a native layout ([`L4`](../language.md#l4), [`A3`](../profiles.md#a3)).
 
-**Rejected when:** The argument or arity is unsupported, or an access boundary lacks a complete representation. ([L4](../language.md#l4), [A3](../profiles.md#a3)).
+**Rejected when:** The argument or arity is unsupported, or an access boundary lacks a complete representation ([`L4`](../language.md#l4), [`A3`](../profiles.md#a3)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -373,11 +373,11 @@ package example::geometry version "1" {
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L2](../language.md#l2), [L4](../language.md#l4), [C2](../contracts.md#c2)):** A nominal type keeps its identity. An alias expands for semantic typing; `source` may preserve its source identity.
+**Meaning (non-normative; [`L2`](../language.md#l2), [`L4`](../language.md#l4), [`C2`](../contracts.md#c2)):** A nominal type keeps its identity. An alias expands for semantic typing; `source` may preserve its source identity.
 
-**Constraints:** Names resolve under L2 without `@`; no implicit package lookup occurs. Aliases agree with their expanded type and cannot form cycles. ([L2](../language.md#l2), [L4](../language.md#l4), [C2](../contracts.md#c2)).
+**Constraints:** Names resolve under `L2` without `@`; no implicit [package](../glossary.md#package) lookup occurs. Aliases agree with their expanded type and cannot form cycles ([`L2`](../language.md#l2), [`L4`](../language.md#l4), [`C2`](../contracts.md#c2)).
 
-**Rejected when:** A name is unresolved, a core name is shadowed (N04), or expansion forms a by-value/alias cycle. ([L2](../language.md#l2), [L4](../language.md#l4), [C2](../contracts.md#c2)).
+**Rejected when:** A name is unresolved, a core name is shadowed (`N04`), or expansion forms a by-value/alias cycle ([`L2`](../language.md#l2), [`L4`](../language.md#l4), [`C2`](../contracts.md#c2)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
@@ -404,7 +404,7 @@ package example::geometry version "1" {
 
 ## Value types and reference types
 
-In summary (non-normative; [L4](../language.md#l4), [C1](../contracts.md#c1)):
+In summary (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1)):
 records, enums, flags, arrays and complex types are value types; objects,
 resources, interfaces and callbacks are reference types. Pointers are also
 reference leaves for contract checking. An aggregate's value classification
@@ -414,7 +414,7 @@ Compare `array<u16, 4>` above with `ptr<Canvas>` in the
 [pointer teaching example](../language.md#l4): the array holds scalar values,
 while the pointer addresses storage containing a resource handle. Copying that
 storage does not create a second owned handle. Recursive contracts state what
-happens to each reference leaf ([C1](../contracts.md#c1), [C3](../contracts.md#c3)).
+happens to each reference leaf ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)).
 
 <a id="profile-types"></a>
 
@@ -424,7 +424,7 @@ happens to each reference leaf ([C1](../contracts.md#c1), [C3](../contracts.md#c
 
 **Form:** `profileAlias::Type<...>` (production `type`).
 
-**Operands and types:** A declared profile alias, its type name and provider-defined arguments.
+**Operands and types:** A declared [profile](../glossary.md#profile) alias, its type name and provider-defined arguments.
 
 **Applies to:** The positions admitted by that profile’s type schema.
 
@@ -432,11 +432,11 @@ happens to each reference leaf ([C1](../contracts.md#c1), [C3](../contracts.md#c
 
 **Default:** None; the occurrence states its type.
 
-**Meaning (non-normative; [L2](../language.md#l2), [L4](../language.md#l4), [A1](../profiles.md#a1), [A3](../profiles.md#a3), [F1](../profiles.md#f1)):** A profile supplies additional types, their representations and contract applicability. Core AIL assigns no implicit meaning to a familiar source-language type spelling.
+**Meaning (non-normative; [`L2`](../language.md#l2), [`L4`](../language.md#l4), [`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1)):** A profile supplies additional types, their representations and contract applicability. Core AIL assigns no implicit meaning to a familiar source-language type spelling.
 
-**Constraints:** The package pins the profile; its manifest closes and types the vocabulary and supplies all required semantics. ([L2](../language.md#l2), [L4](../language.md#l4), [A1](../profiles.md#a1), [A3](../profiles.md#a3), [F1](../profiles.md#f1)).
+**Constraints:** The package pins the profile; its manifest lists the permitted vocabulary and operand types and supplies all required semantics ([`L2`](../language.md#l2), [`L4`](../language.md#l4), [`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1)).
 
-**Rejected when:** The profile is unresolved or unsupported, the schema is violated or required representation/contract rules are absent. ([L2](../language.md#l2), [L4](../language.md#l4), [A1](../profiles.md#a1), [A3](../profiles.md#a3), [F1](../profiles.md#f1)).
+**Rejected when:** The profile is unresolved or unsupported, the schema is violated or required representation/contract rules are absent ([`L2`](../language.md#l2), [`L4`](../language.md#l4), [`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1)).
 
 **Example.** Fragment — an invented API, adapted from the
 [teaching fragments](../examples/rule-reading/types.ail). The header, publication
