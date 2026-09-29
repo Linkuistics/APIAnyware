@@ -21,19 +21,33 @@ then [check yourself](#check-yourself). The subscription is a separate part
 of the synthetic label-card API: notifications carry change numbers, while
 the label lifetimes from parts 2–3 still govern label access.
 
-## The domain obligation
+<a id="the-domain-obligation"></a>
 
-The library keeps the stored callback usable for every permitted invocation
-and finishes all callback use before returning from watch destruction
-([callback schedules and teardown](../explanation/contracts.md#callbacks)).
+## The model
+
+[Callbacks and their schedules](../explanation/model.md#callbacks) asks when
+the library may notify the program and when that use ends. Here registration
+returns a watch, and notifications may start afterwards. The library keeps
+the handler available until watch destruction ends all callback use.
+
+[Where and when calls run](../explanation/model.md#execution) asks which
+execution contexts the handler can support and whether invocations may
+overlap or nest. This subscription permits entry on any thread, with serial,
+non-nested invocations. At the checkpoint, you can explain those permissions
+and distinguish the transfer of the watch's
+[Release responsibility](../explanation/model.md#responsibility) at
+destruction entry from the end of callback use at destruction return.
 
 ## Steps
 
 ### 1. Describe one notification invocation
 
-Start with the [callable](../glossary.md#callable) type that the program's
-handler will satisfy. It is a package-level declaration alongside the resources
-and functions.
+Start with [Callbacks and their schedules](../explanation/model.md#callbacks):
+describe what happens in one notification before deciding when notifications
+may occur. The library passes a change number to the program's handler and
+waits for that invocation to finish. Declare the handler's
+[callable](../glossary.md#callable) type at package level alongside the
+resources and functions.
 
 Fragment — shows one callback invocation in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies availability,
@@ -76,8 +90,10 @@ specify when the library can start these invocations in a later step
 
 ### 2. Describe the state the callback can use
 
-A callback can carry saved program state needed when it runs. Those saved
-values are its [captures](../glossary.md#callback-captures). For example,
+Apply [Where and when calls run](../explanation/model.md#execution) to the
+handler and the state it uses. A callback can carry saved program state
+needed when it runs. Those saved values are its
+[captures](../glossary.md#callback-captures). For example,
 a handler could read immutable saved state and return. A different handler
 could require state usable only on the main thread. The permitted execution
 context determines which of these can satisfy the callback type.
@@ -120,8 +136,10 @@ the same callback value is registered more than once
 
 ### 3. Select the callback's synthetic representation
 
-The callback declaration also names how the program passes the handler to
-the library and how the library invokes it.
+For [Reaching the code](../explanation/model.md#access), specify how the
+program passes the handler to the library and how the library invokes it.
+The callback declaration carries these facts because the program supplies
+the callable value.
 
 Fragment — shows callback representation in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the two provider
@@ -155,8 +173,12 @@ invoke it ([`A2`](../profiles.md#a2)).
 
 ### 4. Return a watch for the subscription
 
-The watch type and registration function are siblings in the package.
-Registration's result makes the program responsible for that watch.
+The watch is one of the [Entities that outlive a call](../explanation/model.md#entities):
+it identifies the subscription after registration returns. Define its
+lifecycle and the registration result's
+[Release responsibility](../explanation/model.md#responsibility), so the
+program knows how to end that subscription. The watch type and registration
+function are siblings in the package.
 
 Fragment — shows the watch lifecycle and registration result. The
 [complete checkpoint](#checkpoint-package) also supplies the destructor,
@@ -205,8 +227,10 @@ delivers only the `u64` change number.
 
 ### 5. Keep the handler for later notifications
 
-Registration describes what happens to the handler input as well as the watch
-result. Their lifetime relationship is visible in the retention clause.
+Apply [Release responsibility](../explanation/model.md#responsibility) to
+the handler input: record how the library keeps its own reference for later
+notifications while the program keeps its existing ownership. Also state
+the input's [Validity](../explanation/model.md#validity) during registration.
 
 Fragment — shows handler retention in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the owned result,
@@ -245,6 +269,9 @@ available for later notifications ([`C2–C3`](../contracts.md#c2), [`F1`](../pr
 
 ### 6. Specify when this registration may invoke the handler
 
+Now describe the schedule in
+[Callbacks and their schedules](../explanation/model.md#callbacks): state
+when this registration may invoke its handler and which event ends that use.
 The schedule is a block inside the registration function. Its `$handler`
 selects that function's input, giving this particular use of the callback
 its own invocation rules.
@@ -274,16 +301,10 @@ signature. The second addresses a value in the enclosing function and
 describes when the library may invoke it. `$result` here is still the
 registration's watch result ([`C1`](../contracts.md#c1), [`C6`](../contracts.md#c6)).
 
-![Callback-use railroad shows callback followed by a place, then braces enclosing repeated clauses.](../figures/g10-callback-use.svg)
-
-Trace `callback`, substitute `$handler` for `place`, then follow the braced
-clause loop for the seven schedule clauses. The grammar permits an empty
-callback-use body. The
-[`callback_use` production](../grammar.ebnf) gives this shape;
-[`C6`](../contracts.md#c6) requires the schedule's actual facts.
-
-[Callback-use diagram source](../figures/g10-callback-use.puml) ·
-[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
+For the block's syntax and railroad, see the
+[callback-use grammar](../reference/notation.md#callback-use).
+[`C6`](../contracts.md#c6) requires the schedule's seven facts shown here;
+the grammar alone does not establish a complete schedule.
 
 Inside `watch_labels`, add a `callback $handler` block. Write
 `timing(after_return)` so notifications can start only after registration
@@ -311,9 +332,11 @@ call ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 
 ### 7. End the subscription through its destructor
 
-The schedule's `quiescence` clause names `destroy_watch`, the destructor from
-the watch's lifecycle. This function takes over the program's obligation to
-destroy the watch.
+Connect [Release responsibility](../explanation/model.md#responsibility)
+with [Callbacks and their schedules](../explanation/model.md#callbacks).
+Describe the destructor taking over the watch at entry and ending callback
+use before return. The schedule's `quiescence` clause names `destroy_watch`,
+the destructor from the watch's lifecycle.
 
 Fragment — shows watch consumption in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the teardown
@@ -350,8 +373,12 @@ the caller can rely on quiescence at return ([`C6`](../contracts.md#c6)).
 
 ### 8. Require teardown from outside the callback
 
-Teardown's precondition refers back to the handler use in registration.
-The two declarations below locate both ends of that reference.
+For [Callbacks and their schedules](../explanation/model.md#callbacks),
+state where the program may begin teardown so it can wait for callback use
+to finish. The precondition refers back to the handler use in registration.
+[Operations and their values](../explanation/model.md#operations) supplies
+the named parameter slot that identifies that use. The two declarations
+below locate both ends of the reference.
 
 Fragment — shows a reference to another function's parameter in
 `tutorial::callbacks`. The [complete checkpoint](#checkpoint-package) also
@@ -408,9 +435,10 @@ contracts ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
 
 ### 9. Include the subscription in the package
 
-The package's [exports](../glossary.md#exports) now include the watch,
-callback type, registration and destructor. List them alongside the earlier
-public declarations.
+Update [The published description](../explanation/model.md#description)
+to include the subscription's types and operations. Add the watch, callback
+type, registration and destructor to the package's
+[exports](../glossary.md#exports), alongside the earlier public declarations.
 
 Fragment — shows publication in `tutorial::callbacks`. The
 [complete checkpoint](#checkpoint-package) also supplies the header,

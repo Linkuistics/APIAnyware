@@ -157,3 +157,16 @@ the card's ownership of its label separate from the caller's ownership of
 its destination allocation. Keep these facts through k81 and the queued
 editorial stages. `task docs:check` passed; this is consistency evidence,
 not a human comprehension assessment.
+
+## Later parts in the model-first run
+
+`tutorial-k81` revises parts 4–5. Both now have *The model* sections with
+their old `the-domain-obligation` anchors retained. Each step connects its
+notation to a named concept. Part 4 follows the callback's execution,
+retention, schedule and teardown; part 5 follows access and the snapshot's
+new release responsibility through the affected contract and implementation.
+The early exercise route, all example blocks, answers, invalid variants and
+semantic figures remain. G10 links now point to the grammar reference.
+All six checkpoints still match `7891f92a`; `task docs:check` passed.
+There is no outstanding draft handoff. Copy-edit, art and proof remain the
+queued stages for the whole tutorial.

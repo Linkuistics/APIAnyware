@@ -28,18 +28,33 @@ defined by [`F1`](../profiles.md#f1). This part explains the access clauses
 already present in parts 1–4, then creates a separate API variant for the
 ownership exercise.
 
-## The domain obligation
+<a id="the-domain-obligation"></a>
 
-The code reached through an access path fulfils the described operation's
-whole contract, including who destroys a returned value
-([reaching the code](../explanation/packages.md#reaching-the-code)).
+## The model
+
+[Reaching the code](../explanation/model.md#access) asks how a tool calls
+the implementation of `current_label`. The access path names that code and
+the machine-level definitions needed to pass a card and receive a label.
+The implementation fulfils the operation's whole contract, including the
+result's ownership.
+
+The exercise changes [Release responsibility](../explanation/model.md#responsibility):
+the caller receives an independent label and becomes responsible for
+destroying it. That changes the result's [Validity](../explanation/model.md#validity)
+relationship with the card: refresh and card destruction end use of the
+original borrow, while the snapshot has its own lifetime. At the checkpoint,
+you can trace a contract to its implementation. After the exercise, you can
+explain how the new responsibility changes the result clauses, which
+destructor fulfils it and why a different implementation is needed.
 
 ## Steps
 
 ### 1. Identify the operation and its implementation
 
-Here is the access block in its containing function and package. Follow the
-package and declaration names first, then the nested path to its symbol.
+Apply [Reaching the code](../explanation/model.md#access) to `current_label`:
+find the implementation that supplies its borrowed result. First identify
+the operation within [The published description](../explanation/model.md#description),
+then follow its access path to the symbol.
 
 Fragment — shows `current_label`'s access path. The
 [complete checkpoint](#checkpoint-package) also supplies publication,
@@ -60,21 +75,14 @@ package tutorial::finished version "1" {
 }
 ```
 
-The outer braces contain the function declaration. Its braces contain the
-contract and access path; the innermost braces contain facts about that path.
-`Card` and `Label` name local resource types without `@`
+The package declares `current_label`; that function owns both the contract
+and its access path. `Card` and `Label` name local resource types without `@`
 ([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
-![Access railroad shows a path name, in, a nonempty list of environment names and a braced sequence of clauses.](../figures/g10-access.svg)
-
-Read the track using `direct` as the first identifier and `test` as the first
-environment identifier. The comma loop admits further environments; the
-clause loop contains the four clauses shown above.
-The [`access` grammar](../grammar.ebnf) describes this shape;
-[`A2`](../profiles.md#a2) supplies the required clauses and coverage rules.
-
-[Access diagram source](../figures/g10-access.puml) ·
-[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
+For the block's syntax and railroad, see the
+[access-path grammar](../reference/notation.md#access).
+[`A2`](../profiles.md#a2) supplies the required clauses and the rule that
+paths cover every environment where the function is available.
 
 Find `current_label` in the [finished file](../examples/tutorial/05-finished.ail)
 or [checkpoint below](#checkpoint-package). A tool identifies this operation
@@ -91,8 +99,10 @@ implementation ([`A2`](../profiles.md#a2)).
 
 ### 2. Follow the definitions that govern the call
 
-The aliases used by the path are introduced at package level. They identify
-catalogues of calling and representation rules.
+For [Reaching the code](../explanation/model.md#access), identify the
+definitions that tell a tool how to make this call. The path uses aliases
+introduced at package level; they select catalogues of calling and
+representation rules.
 
 Fragment — shows provider selections in `tutorial::finished`. The
 [complete checkpoint](#checkpoint-package) also supplies the environment,
@@ -129,6 +139,8 @@ the synthetic catalogue.
 
 ### 3. Check how the path preserves the contract
 
+Continue [Reaching the code](../explanation/model.md#access) by checking
+that the path accounts for the declared call and keeps its values compatible.
 Read `mapping(identity)` next. A [mapping](../glossary.md#mapping) describes
 how the consumer passes the declared inputs through the selected path. It
 also accounts for the results and the ways the call can finish, its
@@ -164,8 +176,11 @@ synthetic example (non-normative; [`A2–A4`](../profiles.md#a2),
 
 ### 4. Check the other declarations' access facts
 
-The callback carries its representation facts directly in its declaration.
-Compare their location with the function's nested access block in step 1.
+Apply [Reaching the code](../explanation/model.md#access) to the rest of
+the package. Check a path for each function the program calls, then the
+representation of the callback value it supplies to the library. The callback
+carries those facts directly in its declaration; compare their location
+with the function's nested access block in step 1.
 
 Fragment — shows the callback's calling facts in `tutorial::finished`.
 The [complete checkpoint](#checkpoint-package) also supplies the callback's
@@ -499,8 +514,14 @@ package tutorial::finished version "1" {
 
 ### Guided change: an owned snapshot
 
+Change [Release responsibility](../explanation/model.md#responsibility)
+for the result of `current_label`. Follow that change from the caller's
+actions through the published contract to the implementation that fulfils it.
+
 #### 1. Compare what the caller does with each result
 
+Compare [Release responsibility](../explanation/model.md#responsibility)
+and [Validity](../explanation/model.md#validity) in the two cases.
 Begin with the existing borrow. A program obtains the card's label and uses
 it while keeping the card alive. Before refreshing or destroying the card,
 it finishes using that label. The card keeps ownership of the label, so the
@@ -544,8 +565,10 @@ continuing responsibility.
 
 #### 2. Give the changed API a separate package
 
-The variant has its own package identity and keeps the declarations needed
-to describe the label's lifetime.
+Give [The published description](../explanation/model.md#description) an
+identity for the changed contract. The variant keeps the label's lifecycle
+declaration: as one of the [Entities that outlive a call](../explanation/model.md#entities),
+the snapshot needs a defined way for its new owner to release it.
 
 Fragment — shows the owned variant's package context. The
 [complete owned package](../examples/tutorial/05-owned.ail) also supplies
@@ -581,9 +604,11 @@ to that package, even though the other uses the same local spelling
 
 #### 3. Give the caller ownership of the `current_label` result
 
-Read the result clauses in their containing operation before changing them.
-The first fragment is the existing contract; the second is the exercise's
-replacement.
+Express the new [Release responsibility](../explanation/model.md#responsibility)
+in the returned outcome, and remove the old borrow's
+[Validity](../explanation/model.md#validity) cutoff. Read the result clauses
+in their containing operation before changing them. The first fragment is
+the existing contract; the second is the exercise's replacement.
 
 Fragment — shows the borrowed result in `tutorial::finished`. The
 [complete finished package](../examples/tutorial/05-finished.ail) also
@@ -642,7 +667,9 @@ after return; the caller still satisfies the existing input conditions
 
 #### 4. Select the implementation that supplies the snapshot
 
-The changed symbol stays inside `current_label`'s access path.
+Return to [Reaching the code](../explanation/model.md#access): select an
+implementation that supplies the newly promised ownership. The changed
+symbol stays inside `current_label`'s access path.
 
 Fragment — shows the owned variant's access block in `tutorial::owned`.
 The [complete owned package](../examples/tutorial/05-owned.ail) also supplies
@@ -673,7 +700,10 @@ reached by the changed symbol supplies the independently owned snapshot
 
 #### 5. Compare your changed operation
 
-Use the complete [owned-snapshot file](../examples/tutorial/05-owned.ail)
+Check [Release responsibility](../explanation/model.md#responsibility)
+from end to end: the returned obligation, the label's destructor and the
+implementation supplying the snapshot. Use the complete
+[owned-snapshot file](../examples/tutorial/05-owned.ail)
 as the answer to the exercise. It contains the changed package identity and
 surface as well as every declaration and the synthetic dependencies.
 The extract below lets you compare `current_label`'s input and output directly.
