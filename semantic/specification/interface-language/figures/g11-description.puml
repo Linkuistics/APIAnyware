@@ -1,0 +1,42 @@
+@startuml
+!include style/ail.puml
+allowmixing
+title G11b · The description layer: recording the calls and reaching their code
+top to bottom direction
+hide circle
+hide empty methods
+skinparam classAttributeIconSize 0
+skinparam nodesep 35
+skinparam ranksep 45
+
+$package(description, "The published description\nWatch declarations and contracts (G11a)\nStated API subset and release\nDependencies and supported configurations")
+class "Writers, checkers and users" as agreement #EAF2F8 {
+  Writers supply the required facts
+  Checkers establish completeness and consistency
+  Users retain access to the same contracts
+}
+class "Operations and their values (G11a)" as operations #EAF2F8 {
+  watch_open · watch_view · watch_close
+}
+class "Reaching the code" as access #E8F3EB {
+  An access path connects an operation to code
+  A mapping accounts for its inputs and outputs
+  Compatibility states when representations agree
+}
+$catalogue(definitions, "Selected machine-level definitions\nValue representations\nCalling rules and runtime facilities")
+
+agreement -down-> description : carry the same facts\nthrough publication and use
+description -down-> operations : describes these operations\nand their obligations
+operations -down-> access : has a path to\nits implementation
+access -right-> definitions : selects the rules\nfor crossing the boundary
+
+legend bottom
+  Folder = package; boxes = related facts; cylinder = shared definitions.
+  Labelled arrows show description and access relations, not native calls.
+  G11a expands the call facts; G1 expands the publication workflow.
+  Checking a description needs complete, consistent facts.
+  Establishing library behaviour needs separate implementation evidence.
+  No complete access mapping for the watch header is supplied here.
+  Non-normative overview; proposed tools remain future work.
+endlegend
+@enduml

@@ -84,6 +84,10 @@ For a concrete introduction to the obligations those tools use, continue to
 
 ![API authors and tools write a description. A validator checks required facts and consistency before publication. The package selects exact profile and ABI definitions and supplies the same facts to binding generators, documentation renderers and LLM tools. Library behaviour requires separate evidence.](figures/g1-context.svg)
 
+**G1 — Writers, checkers and users.** Follow how the same API facts reach
+each consumer. [The model at a glance (G11)](explanation/model.md#the-model-at-a-glance)
+shows the entities and obligations those facts describe.
+
 [Diagram source](figures/g1-context.puml) ·
 [Figure vocabulary and regeneration](figures/style/vocabulary.txt)
 

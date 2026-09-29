@@ -1,6 +1,6 @@
 @startuml
 !include style/ail.puml
-title G4 · Ownership sequences: who closes the watch?
+title G4 · Release responsibility: who closes the watch?
 hide footbox
 $caller(caller, "Program\n(caller)")
 $callee(callee, "Library function\n(callee)")

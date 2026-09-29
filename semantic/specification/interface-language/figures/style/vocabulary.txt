@@ -49,3 +49,12 @@ railroad-caption.puml supplies an unboxed non-normative status caption.
 Syntax views retain
 all alternatives, including provider-dependent forms; semantic constraints
 remain in the adjacent prose and canonical rules.
+
+API model (G11):
+G11a shows the call layer; G11b gathers those operations and obligations into
+the description layer. Compartmented boxes group related model facts, using
+the model page's concept names. G11b retains the package folder and definition
+cylinder. Labelled solid arrows name conceptual relations, not ownership
+transfers, callback invocations or a time sequence. The watch contracts are
+alternatives, not a complete API implementation. G1 remains the publication
+workflow; G9 remains the separate language-containment view.

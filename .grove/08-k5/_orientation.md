@@ -49,6 +49,14 @@ available for reuse by `explanation/contracts.md`. Both use
 `task docs:check` includes `docs:diagrams`, which compares regenerated SVG bytes.
 Use `task docs:diagrams:write` after source or style edits, then inspect the SVGs.
 
+G11 uses two linked views: `figures/g11-calls.{puml,svg}` for the call layer
+and `figures/g11-description.{puml,svg}` for the description and access layer.
+Both are embedded in `explanation/model.md` under *The model at a glance*,
+with alt text and captions. The outcome-to-responsibility arrow concerns
+returned obligations; the watch lifetime and callback schedules remain
+alternative contracts. G1 and G4 now use the model's concept names in their
+titles and orientation captions. G9 retains its language-containment role.
+
 ## Model-first run
 
 The human's 2026-09-29 direction (first-path-reading-k64, D12–D13) makes the
@@ -70,28 +78,6 @@ G11 is committed as source plus SVG; the landing page, domain page and
 glossary route to the model page; the k64 residues named in orientation-k69
 are repaired; proof walks landing → domain → model and two direct concept
 entries; `task docs:check` passes.
-
-## Handed forward
-
-- **art — G11**, `explanation/model.md`, *The model at a glance*: insert the
-  API-model overview at the source comment before the prose walk. Use the
-  eleven concept names from §10 and the watch names from the page, not AIL
-  keywords. The prose establishes these relations: operations receive inputs
-  and deliver results/write output storage; outcomes identify observable
-  finishes, meanings and readable outputs; handles identify persistent
-  entities; lifecycles govern release and call contracts move responsibility;
-  a borrowed view depends on an owner's lifetime and any earlier invalidator;
-  storage has bounds and contents; execution rules govern entry, overlap and
-  nesting; registration connects a callback to its schedule, saved state and
-  quiescence. The published description gathers declarations/contracts for a
-  surface, dependencies and configurations; access paths connect operations
-  to code through machine-level definitions; writers submit descriptions,
-  checkers establish completeness/consistency, and users retain the same
-  facts. Implementation behaviour needs separate evidence. Keep the watch
-  alternatives distinct, especially refresh versus no earlier invalidator and
-  call-scoped versus owner-scoped callback use. One overview or two linked
-  views (call layer; description layer) are admitted. Commit source plus SVG,
-  with caption and alt text; no other new figure is requested by this draft.
 
 ## Current human-directed correction
 

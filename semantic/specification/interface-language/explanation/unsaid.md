@@ -105,7 +105,8 @@ consumption rule transfers responsibility at entry, including when a consuming
 operation later reports failure. The callee then discharges the obligation
 unless it explicitly returns it as an owned output ([`C3`](../contracts.md#c3)).
 
-Use the figure to identify who closes the watch in three separate cases:
+**G4 — Release responsibility.** Use the figure to identify who closes the
+watch in three separate cases:
 `watch_view` borrows it, `watch_close` consumes it, and `watch_open` returns a
 new owned watch. Time runs downward within each case. A non-null
 owned result gives the caller one obligation; null gives none. The cases

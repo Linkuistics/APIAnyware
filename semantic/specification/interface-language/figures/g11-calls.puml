@@ -1,0 +1,63 @@
+@startuml
+!include style/ail.puml
+title G11a · The call layer: what a watch contract records
+top to bottom direction
+hide circle
+hide empty methods
+skinparam classAttributeIconSize 0
+skinparam nodesep 35
+skinparam ranksep 45
+
+class "Operations and their values" as operations #EAF2F8 {
+  watch_view receives a watch and length address
+  Returns a byte pointer; can write the length
+}
+class "How a call finishes" as outcomes #FFF1D6 {
+  Observable finish and its meaning
+  Which outputs the caller may read
+}
+class "Entities that outlive a call" as entities #F2EDF7 {
+  A handle identifies the live watch
+  Its lifecycle governs release
+}
+class "Release responsibility" as responsibility #FFF1D6 {
+  Who owes the release
+  Calls keep or transfer that duty
+}
+class "Validity" as validity #E8F3EB {
+  Borrowed view: watch must remain alive
+  Any earlier invalidator also limits use
+}
+class "Storage" as storage #E8F3EB {
+  The view's bytes have bounds and contents
+  The length output has its own storage
+}
+class "Where and when calls run" as execution #FFF1D6 {
+  Permitted entry, overlap and nesting
+}
+class "Callbacks and their schedules" as callbacks #F2EDF7 {
+  notice uses saved context
+  Schedule bounds use and states quiescence
+}
+
+execution -down-> operations : governs calls
+execution -right-> callbacks : governs each\ninvocation
+operations -right-> outcomes : each observable finish\nhas an outcome
+operations -down-> entities : handles identify
+entities -right-> responsibility : lifecycle defines\nhow to discharge the duty
+entities -down-> validity : owner's lifetime\nbounds borrowed access
+validity -right-> storage : limits when the caller\nmay use the borrowed bytes
+operations -up-> callbacks : watch_open registers notice\nand supplies context
+callbacks -[hidden]down-> outcomes
+outcomes -down-> responsibility : returned obligations\ndepend on the outcome
+responsibility -[hidden]down-> storage
+
+legend bottom
+  Concept boxes record related facts; labelled arrows read as sentences.
+  Arrows show relationships, not transfers, invocations or a timeline.
+  Watch contracts are alternatives: a view can have no earlier invalidator,
+  or a refreshing watch_view can end it at entry. Callback use can end
+  within watch_open or at quiescent destruction of its returned owner.
+  Non-normative overview. G11b gathers these facts into a description.
+endlegend
+@enduml

@@ -39,7 +39,34 @@ for review.
 
 ## The model at a glance
 
-<!-- G11 slot: API-model overview. The orientation node brief holds the art handoff. -->
+**G11a — the call layer.** Start at *Operations and their values*, then follow
+the labelled relations to connect values and outcomes to the obligations
+governing their use.
+An outcome determines any returned release obligation.
+The watch cases remain alternatives: a lent view can last until watch
+destruction or end earlier at a refreshing `watch_view` entry. Callback use
+can end within `watch_open` or at quiescent destruction of its returned owner;
+quiescence means no invocation is running or can start.
+
+![Operations receive values and have observable outcomes, which determine returned release obligations. Watch handles identify persistent entities whose lifecycles govern release; calls assign the release duty. A borrowed view depends on the watch's lifetime and any earlier invalidator, while storage has bounds and contents. Execution rules govern calls and callback invocations; watch_open registers notice and context under a callback schedule.](../figures/g11-calls.svg)
+
+[Diagram source](../figures/g11-calls.puml) ·
+[Figure vocabulary and regeneration](../figures/style/vocabulary.txt)
+
+**G11b — the description layer.** Follow the same operations into their
+published description, then through access paths to the machine-level
+definitions needed to call their implementation. Writers supply the facts,
+checkers establish completeness and consistency, and users retain the same
+contracts. Evidence of the library's behaviour is a separate requirement.
+A mapping accounts for the operation's inputs and outputs; compatibility
+states when the selected representations can be used together.
+These two views are non-normative; the sections below give each concept's
+details and canonical rules.
+
+![A published description gathers the watch operations and their contracts for a stated API subset, release and configurations, with dependencies. Writers, checkers and users carry the same facts through publication and use. An operation's access path uses a mapping and compatibility agreement with selected machine-level definitions.](../figures/g11-description.svg)
+
+[Diagram source](../figures/g11-description.puml) ·
+[Publication workflow (G1)](../README.md#who-writes-and-uses-an-ail-description)
 
 Start with an **operation**, such as `watch_view`. Its parameters identify
 values the caller supplies; its result and writable output storage identify

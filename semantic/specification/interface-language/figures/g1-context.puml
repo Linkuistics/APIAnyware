@@ -1,6 +1,6 @@
 @startuml
 !include style/ail.puml
-title G1 · Workflow: who writes, checks and uses an AIL description
+title G1 · Writers, checkers and users: the publication workflow
 top to bottom direction
 $producer(producers, "API authors · Analysis tools · Third-party tools\nWrite an API description (producers)")
 $validator(validation, "Validator\nChecks required facts\nand their consistency")
