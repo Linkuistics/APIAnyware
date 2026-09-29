@@ -305,6 +305,29 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+The model-first tutorial run is proofed (`tutorial-k84`, closing
+`tutorial-k7`). The index and five parts connect each construct-introducing
+step to named model concepts. Part 1 now teaches the card's lifecycle,
+creation outcomes and release transfer before publication and provider pins.
+For reference and review-guide links, use `01-lifetime.md#card-lifetime`,
+`#3-describe-creations-success-and-failure`,
+`#4-transfer-responsibility-when-destruction-begins` and
+`#5-name-the-package-and-the-api-it-covers`, under `tutorial/`.
+Part 2 also offers `02-lending.md#label-lifecycle`; the part-5 exercise stays
+at `05-access-and-change.md#guided-change-an-owned-snapshot`. Old renamed
+heading slugs and each part's `the-domain-obligation` anchor remain available.
+
+The tutorial's five semantic figures stay beside their examples, with model
+links in their captions. Exact-syntax routes now go to the grammar home.
+All six complete checkpoints match pre-run `7891f92a`; the owned variant
+continues to describe an independent Label snapshot, its caller's destruction
+duty and a changed implementation symbol. The Watch subscription remains
+independent of Card. Whole-document proof found no actionable defect or
+outstanding handoff. `task docs:check` passed, including all 26 SVGs; canonical
+rules and grammar are unchanged. No correction run or full-set checkpoint
+residue was added. These findings establish consistency and preservation,
+not human comprehension; the full-set checkpoint still owns that assessment.
+
 The model-first concepts run is proofed (`concepts-k79`, closing
 `concepts-k6`). The expanded document comprises the three explanations,
 `reference/notation.md`, the canonical reading aids and affected glossary
@@ -328,8 +351,8 @@ For the following tutorial, reference and review-guide work:
   `clause`, `names`, `callable`, `places`, `environment`, `pattern`, `outcome`,
   `callback-use`, `dependency` and `access`. All eleven G10 views are embedded
   there; the concepts pages, canonical aids and glossary link to those sections
-  while keeping local examples. Tutorial's existing embeds migrate in its
-  queued run. Reference extends this page and preserves these anchors.
+  while keeping local examples. The tutorial now uses those grammar links
+  too. Reference extends this page and preserves these anchors.
 - Canonical first-aid routes use this model-anchor mapping: L1 → description,
   agreement; L2 → description; L3 → description, agreement; L4 → operations,
   entities; L5 → operations, entities, description; L6 → entities;
