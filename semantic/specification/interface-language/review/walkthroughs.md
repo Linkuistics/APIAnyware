@@ -186,6 +186,14 @@ remains a returned null value ([C3](../contracts.md#c3), [C5](../contracts.md#c5
 result. On the null [outcome](../glossary.md#outcome) the same annotation creates no obligation: null
 carries none ([C1](../contracts.md#c1), [C5](../contracts.md#c5)).
 
+Compare the two returned values to see why the same ownership annotation
+creates a destruction duty only in the non-null case.
+
+| Outcome | Value the caller may inspect | Destruction duty received |
+|---|---|---|
+| `created` | A valid, non-null `Store` | One duty to call `destroy` |
+| `allocation_failed` | A valid null result | None; null carries no duty |
+
 **[Where and when calls run](../explanation/model.md#execution).**
 `execution(sync)` completes this invocation before control returns;
 `executor(any)` permits entry on any executor. `concurrency(parallel)`
@@ -444,6 +452,14 @@ and convey no readable initialized output. Failure therefore supplies no
 permission to inspect the bytes, even if their addresses remain accessible
 ([C5](../contracts.md#c5)).
 
+Use the returned Boolean to decide which output the caller may read; an
+accessible destination address alone does not establish readable output.
+
+| Outcome | Boolean result | Destination elements |
+|---|---|---|
+| `copied` | Valid `true`; the caller may test it | Sixteen valid elements; the caller may read them |
+| `failed` | Valid `false`; the caller may test it | Invalid output; the caller has no permission to read them |
+
 **[Release responsibility](../explanation/model.md#responsibility)** and
 **[Validity](../explanation/model.md#validity).**
 For both `store` and `destination`, `input(..., borrow)` transfers no duty,
@@ -508,6 +524,14 @@ local `@Store` and `@destroy`. Both participants apply in `test`, giving the
 instance a nonempty common availability. The pattern records a checked
 relationship already supported by `Store`'s lifecycle; it does not invent a
 new release function ([L6](../language.md#l6)).
+
+Follow each role to the participant selected by `store_lifetime`; the law
+checks that the selected operation is the selected resource's destructor.
+
+| Role in `lifetime` | Required participant | Binding in `store_lifetime` |
+|---|---|---|
+| `resource_type` | Exactly one type | Local `@Store` |
+| `release` | Exactly one operation | Local `@destroy`, already named by `Store`'s lifecycle |
 
 Exact syntax: [patterns and instances](../reference/notation.md#pattern).
 
@@ -913,6 +937,18 @@ callback remains active or can start; the provider releases the stored
 callback representation under its lifetime rules
 ([C2–C3](../contracts.md#c2), [C6](../contracts.md#c6), [F1](../profiles.md#f1)).
 
+Follow these boundaries in order to separate receiving the subscription,
+transferring its destruction duty and establishing quiescence.
+
+| Boundary for this registration | Release responsibility | Callback guarantee |
+|---|---|---|
+| `subscribe` returns | The caller receives an owned subscription; the subscription keeps a separate retained handler reference | Notifications may now start; zero or more are permitted |
+| `unsubscribe` begins outside the callback | The caller transfers the subscription's destruction duty | Entry alone does not establish that active invocations have finished |
+| `unsubscribe` returns, if it returns | The subscription's destruction duty has been discharged | No invocation is running or can begin |
+
+The sequence promises neither eventual notification delivery nor eventual
+return from teardown ([C6](../contracts.md#c6)).
+
 ### Trace the callback obligations
 
 Using [the registration and teardown above](#subscribe-retain-the-handler-for-a-returned-owner):
@@ -1150,6 +1186,14 @@ A consumer chooses a path explicitly or through configuration; source order
 chooses neither, and the source recipe establishes compatibility for that
 build ([A2–A4](../profiles.md#a2), [F1](../profiles.md#f1)).
 
+Compare the two routes to the same getter: each preserves its contract,
+while the calling convention and compatibility evidence differ.
+
+| Getter path in `test` | Convention and implementation identity | Compatibility |
+|---|---|---|
+| `objc_like` | `native` / `object-message`; selector `currentCount` | Stable fixture ABI domain |
+| `swift_like` | `native` / `source`; `Outer.Counter.currentCount.get` | Source recipe `fixture-build`, using `fixture-compiler` version `1` |
+
 For the relationship between members and their parameters, see
 [the language-containment view and member example](../language.md#l2).
 For the two paths, see [Reaching the code](../explanation/packages.md#reaching-the-code);
@@ -1264,6 +1308,14 @@ The property is available in `test` and not deprecated. Its accessor
 references name local declarations; the property's spelling does not create
 an additional access mechanism ([L2–L3](../language.md#l2),
 [L5](../language.md#l5), [A2](../profiles.md#a2)).
+
+Follow `count`'s accessor references to the two functions; their ordinary
+receiver parameters both identify the same nominal owner, `Counter`.
+
+| Accessor selected by `count` | Receiver slot | Property value carried by the call |
+|---|---|---|
+| Getter `@read_count` | `@read_count::receiver`, type `Counter` | `@read_count::result` returns `u64` |
+| Setter `@write_count` | `@write_count::receiver`, type `Counter` | `@write_count::value` accepts `u64`; the call returns `unit` |
 
 ### Fixed bytes: take the address of storage
 
@@ -1391,6 +1443,14 @@ address would instead point at the storage holding the pointer. The common
 [L5](../language.md#l5), [A2–A4](../profiles.md#a2), [F1](../profiles.md#f1)).
 
 ### Plain-language view of the object API
+
+Use this comparison to choose the retrieval action from the declared access
+mechanism: the shared `ptr<u8>` type does not determine that action.
+
+| Data declaration | Consumer action at the symbol | Value obtained |
+|---|---|---|
+| `fixed_bytes` | Take the address of `fixture_fixed_bytes` | A pointer to its four bytes |
+| `pointer_value` | Load the pointer stored at `fixture_pointer_value` | The stored pointer's value, addressing its four-byte pointee storage |
 
 The host supplies reference-counted counters whose use and release stay on
 the main executor. Reading borrows a counter and returns its count; writing

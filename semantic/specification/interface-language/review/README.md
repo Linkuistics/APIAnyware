@@ -57,6 +57,14 @@ question. The glossary explains [places](../glossary.md#place) and
 [outcomes](../glossary.md#outcome); the [place](../reference/notation.md#places)
 and [outcome](../reference/notation.md#outcome) grammar is available for exact lookup.
 
+Use these two rows to keep the input's call duration separate from the
+returned view's owner duration when judging the clause placement.
+
+| Value in `view` | What keeps it usable | When that obligation or permission ends |
+|---|---|---|
+| Input `store` | The caller keeps the handle valid | The input's `valid(..., call)` obligation lasts through the call |
+| Returned bytes | The caller keeps the owning store alive | The borrow ends when the owner is destroyed; the empty list promises no earlier invalidator |
+
 Choose a route through the guide:
 
 - [Read the conformance examples](walkthroughs.md) for clause-by-clause

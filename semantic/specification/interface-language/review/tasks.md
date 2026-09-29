@@ -87,6 +87,16 @@ reference. The caller keeps the canvas usable during the call
 [names and references](../reference/notation.md#names) and
 [callables](../reference/notation.md#callable).
 
+Use this language-containment view to locate `position` beside its member
+owner and follow its result type through the import. Each callable owns its
+own slots; the additional `Filter` callback shows that contrast and is not
+part of this task's fragment. Its `point` parameter has type `Geometry::Point`
+and its result is Boolean; `Point` itself has `i32` fields `x` and `y`.
+The view supports **The published description** and **Operations and their values**;
+contracts and other package items are omitted.
+
+![The canvas package contains the sibling declarations Canvas, position and Filter. A member arrow connects position to Canvas. The import Geometry leads to Point in the geometry package. Each callable box contains its own parameter and result slots.](../figures/g9-model.svg)
+
 **Steps**
 
 1. Write the package/version/declaration identity of `Canvas`, `position`
@@ -194,6 +204,15 @@ while reading its bytes. An empty invalidator list promises no earlier
 invalidating operation, while the owner-lifetime bound still applies
 ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 
+Compare the delivery boundary with each region's end to see why the mutation
+fails while the input's use of `call` remains appropriate.
+
+| Contract fact | Required duration or region | Consequence |
+|---|---|---|
+| Original input `valid($store, call)` | Through the invocation | Covers the callee's use of the input |
+| Original output `borrow(owner($store))` | While the owner lives | Can cover use after result delivery |
+| Mutated output `borrow(call)` | Ends with the producing call | Cannot cover the escaping result; N07 is rejected |
+
 **Feedback prompt:** Does the split between input and output facts help you
 answer the **Validity** question? Cite a clause in this fragment or the
 escaping-borrow rule in [C1](../contracts.md#c1), and propose an alternative
@@ -278,6 +297,19 @@ input storage; disjointness forbids overlap with the other accessed memory.
 The [extent](../glossary.md#buffer-extent) requires four initialized elements in capacity for four, and
 binary [contents](../glossary.md#contents) add no terminator ([C3](../contracts.md#c3), [C4](../contracts.md#c4)).
 
+Match each new clause to the supplied exercise fact before deciding which
+parts of the added contract are costly or repetitive.
+
+| Clause for `$tag` | Fact it records |
+|---|---|
+| `input(..., borrow)` | The caller keeps its release duty |
+| `retain(..., none)` | The callee stores no tag reference |
+| `valid(..., call)` | The caller keeps the input usable through the call |
+| `direction(..., in)` | The callee reads the storage |
+| `aliasing(..., disjoint)` | The tag overlaps no other memory accessed by the call |
+| `extent(..., buffer(4, 4, elements))` | Four initialized elements in capacity for four |
+| `contents(..., binary)` | Raw bytes with no text terminator |
+
 The tag contains scalar bytes and is input-only. Its addition creates no
 returned reference or writable pointee needing output `state` or `give`.
 The existing outcomes still cover the Boolean result and destination bytes.
@@ -355,6 +387,16 @@ Both descriptions lend bytes whose use depends on a live store. The sketch
 also names replacement as an invalidator. The empty invalidator list in
 draft 0.1's immutable `view` describes different API behaviour; it is not
 evidence that the newer language lost that capability.
+
+Compare each lifetime fact separately so that differences in API behaviour
+do not pass for differences in the language's expressive scope.
+
+| Fact | Earlier sketch, not draft 0.1 syntax | Draft 0.1's immutable `view` |
+|---|---|---|
+| Borrowing | `borrow` appears in the signature | `input` and the outcome's `give` state borrowing |
+| Owner bound | `lifetime result within store` | `borrow(owner($store))` bounds returned access |
+| Earlier invalidation | `replace(store)` ends access | The empty `invalidated_by` list promises no earlier invalidator |
+| Owner destruction | The sketch explicitly names `close(store)` | Destruction ends the owner region through the declared lifecycle |
 
 In draft 0.1, `input` and `give` state transfer, `owner($store)` bounds the
 output borrow, and `invalidated_by` names earlier invalidating operations.
@@ -448,6 +490,16 @@ In the hypothetical sequence, the acknowledgement is the promised boundary.
 The current quiescence clause would instead assert that cancellation return
 already ended every possible invocation. That false description could cause
 a caller to release state while it is in use ([C6](../contracts.md#c6)).
+
+Follow the hypothetical sequence to the acknowledgement: it is the first
+event here that promises callback state is no longer in use.
+
+| Event, in order | What the caller knows about callback state |
+|---|---|
+| Handler starts | An invocation is using the state |
+| `cancel` requests a stop and returns | The handler is still running; the return does not establish quiescence |
+| That handler finishes | This invocation has ended; the promised acknowledgement is still pending |
+| Acknowledgement arrives | No invocation is running or can begin; the promised release boundary is reached |
 
 The profile needs explicit cancellation and acknowledgement events, their
 ordering relative to invocations, and rules for keeping and releasing the
@@ -567,6 +619,19 @@ example, the effect clauses include both **How a call finishes** and
 **Where and when calls run**. The count covers this function only
 ([L3](../language.md#l3), [L5](../language.md#l5),
 [C3](../contracts.md#c3), [C5](../contracts.md#c5), [A2](../profiles.md#a2)).
+
+Use this breakdown to account for all 17 statements before judging their
+authoring cost; the groups describe where statements occur, not one model
+concept each.
+
+| Statement group | Clause names | Count |
+|---|---|---|
+| Availability and deprecation | `available`, `deprecated` | 2 |
+| Callable effects | `execution`, `completions`, `executor`, `concurrency`, `reentrancy`, `mutation`, `variadic` | 7 |
+| Input transfer and retention | `input`, `retain` | 2 |
+| Inside `outcome closed` | `when`, `meaning` | 2 |
+| Inside `access direct` | `abi`, `via`, `mapping`, `compatibility` | 4 |
+| Total for this function | Declarations, block headers and comments excluded | 17 |
 
 Its supporting `Watch` needs `lifecycle(unique, @watch_close)` and nominal
 sharing/isolation consistent with the unrestricted executor and unique
