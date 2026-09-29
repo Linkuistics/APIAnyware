@@ -299,6 +299,31 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+The model-first orientation run is proofed (`orientation-k72`, closing
+`orientation-k5`). Later runs use the canonical account at
+`semantic/specification/interface-language/explanation/model.md` and its
+stable concept anchors, in order: `operations`, `outcomes`, `entities`,
+`responsibility`, `validity`, `storage`, `execution`, `callbacks`,
+`description`, `access`, `agreement`. The closing `#from-the-model-to-ail`
+map connects them to current notation introductions and tutorial exercises.
+The concept set and order in plan §10 are unchanged; drafting added L5 to
+the published-description citations because it defines advisory deprecation.
+
+G11's call and description views are
+`figures/g11-calls.{puml,svg}` and `figures/g11-description.{puml,svg}`, relative
+to the interface-language directory. Both are embedded under the model page's
+*The model at a glance*. G1 remains the publication workflow, G4 the separate
+ownership cases and G9 the language-containment view. Preserve these distinct
+roles and the watch API's alternative possible contracts.
+
+Whole-document proof found no actionable defect or outstanding handoff. The
+landing → domain → model route and direct validity/callback entries carry
+local context and onward links. `task docs:check` passed, including all 26
+SVGs. Earlier orientation examples and anchors are preserved; canonical
+rules, grammar and frozen fixtures are unchanged from `793cd745`. This
+establishes consistency, not comprehension: `model-reading-k73` remains the
+human assessment before the dependent concepts and tutorial runs.
+
 The first reading stopped with actionable human feedback, before a full-path
 assessment. Its first corrections completed. At `first-path-reading-k48`, the
 human quoted two L2 paragraphs about identity and dependencies, requested local

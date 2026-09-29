@@ -129,3 +129,10 @@ places. The domain page keeps its separate watch examples and domain-first
 route. Whole-document proof found no actionable defect or outstanding handoff.
 The node's document, glossary, figure and navigation obligations are satisfied;
 first-path-reading-k64 still owns the human comprehension assessment.
+
+The model-first run is proofed in orientation-k72. All four pages meet the
+run's structure and routing contract; the eleven concept anchors and map rows
+match §10. G11's two views, G1/G4 and the glossary's G9 agree with the prose.
+The original examples and anchors remain intact, the k64 presentation residues
+are repaired, and `task docs:check` passes. There is no outstanding handoff or
+residue for another stage. model-reading-k73 owns the human assessment.
