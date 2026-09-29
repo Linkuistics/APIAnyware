@@ -157,8 +157,9 @@ lifetime and calling mechanisms.
 The [intended scope](../README.md#apis-and-languages-in-scope) spans source
 languages and platforms, with an emphasis on libraries with typed contracts.
 The comparison therefore asks how each notation serves that common model
-and the tools using it. Programs calling the described APIs can use different
-languages again, including interpreted and dynamically typed languages.
+and the [consumers](../glossary.md#consumer) that use it. Programs calling the
+described APIs can be written in still other languages, including interpreted
+and dynamically typed ones.
 
 The synthetic store gives its owner a [handle](../glossary.md#handle) to
 destroy once. The synthetic counter uses reference counting: each holder of an
@@ -183,13 +184,15 @@ Another alternative is to adopt a source language's declaration syntax and
 extend it with the missing contract facts. That would keep descriptions close
 to declarations in that language and familiar to its authors. The comparison
 needs to distinguish reusable notation from the language's assumptions about
-types, lifetimes and calls. Authors and tools would need to express the other
-APIs' contracts faithfully wherever those assumptions differ. This is a test
-for any candidate source language; no one language defines the common model.
+types, lifetimes and calls. Wherever those assumptions differ, authors and
+consumers would still need to express the contracts of APIs from other
+sources faithfully. This test applies to any candidate source language; no one
+language defines the common model.
 These are trade-offs to assess; neither alternative is established to be
 impossible.
 
-Dedicated syntax avoids inheriting all the meanings and assumptions of either notation.
+Dedicated syntax avoids inheriting all the meanings and assumptions of an existing interface
+language or a source language.
 Its cost is a new vocabulary, a conformance corpus and future tooling to learn
 and maintain. Familiar braces and function arrows do not remove that cost:
 `Store` already denotes a handle, while ownership is stated in separate

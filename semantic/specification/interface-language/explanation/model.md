@@ -35,8 +35,9 @@ or one of the synthetic AIL fixture packages.
 
 The watch's C header supplies a concrete teaching example. Other APIs can need
 different ways to reach their code, as [Reaching the code](#access) explains.
-Applying the model to them requires suitable provider definitions; the draft's
-synthetic examples establish no production support for those ecosystems.
+Applying the model to them requires suitable [provider](../glossary.md#provider)
+definitions. The draft's synthetic examples illustrate the model without
+supplying production support for those ecosystems.
 
 The **call layer** describes what happens when the program uses the API:
 values pass between [caller and callee](../glossary.md#caller-and-callee), some

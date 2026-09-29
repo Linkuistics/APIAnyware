@@ -38,18 +38,19 @@ platforms. That includes .NET libraries, APIs in the Linux, Wayland, GTK and
 KDE ecosystems, Rust libraries and other libraries with typed contracts.
 The common description records each API's own promises and requirements.
 
-The library being described and the program calling it have separate roles.
+The library being described and the program that calls it play separate roles.
 Programs in interpreted and dynamically typed languages are among the intended
-callers. The current emphasis for described libraries is on typed contracts;
-there is a tentative preference to leave interpreted or untyped libraries
-outside that initial focus. Interpretation and typing are separate properties,
-and that preference establishes no language-level exclusion.
+callers. For the libraries being described, the initial emphasis is on typed
+contracts, and there is a tentative preference to leave interpreted or untyped
+libraries for later. Interpretation and typing are separate properties, so the
+preference rules out no language as such.
 
 This breadth is an intended use of the model. Applying it to a particular API
 requires definitions for that API's types, access mechanisms and representations.
-Each API has its own access requirements; the model assumes no common C ABI
-across these ecosystems. Draft 0.1 supplies a synthetic fixture catalogue for
-review, with real provider development still ahead
+Each API states its own access requirements, and the model does not assume one
+C ABI shared across these ecosystems. Draft 0.1 supplies a synthetic fixture
+catalogue for review. Real [provider](glossary.md#provider) development is
+future work
 ([scope and current limits](#scope-of-draft-01), [provider rules](profiles.md#a1)).
 
 <a id="the-problem-in-brief"></a>

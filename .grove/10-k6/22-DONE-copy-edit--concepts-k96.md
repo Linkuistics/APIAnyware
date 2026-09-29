@@ -33,3 +33,18 @@ syntax design are later work. Preserve Q7's open status, rules and examples.
 
 concepts-k97 and concepts-k98 are already queued. Do not grow a duplicate tail
 or another correction run. Record earlier-stage residue for the human.
+
+## Decisions (running log)
+
+D1 — Read the three pages' k95 changes (jj diff of concepts-k95) against plan
+§4. Fixes: negative or stative phrasings recast positively in the README scope
+section ("assumes no common C ABI" → "does not assume one C ABI shared…",
+"establishes no exclusion" → "rules out no language as such"); "provider" and
+"consumer" linked to the glossary at first use on the page (README, model,
+choices) so each term keeps one meaning; "different languages again" and "the
+other APIs' contracts" replaced by concrete wording; "either notation" in
+choices now names the two alternatives it refers to. Actors stay distinct:
+caller (program), consumer (tool), producer, provider.
+D2 — No restructuring, no rule/grammar/example change, Q7 untouched.
+`task docs:check` passes (0 pending, 0 errors). No later-stage defect found;
+art (k97) and proof (k98) already stand, so no leaf added.
