@@ -305,6 +305,47 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+The model-first concepts run is proofed (`concepts-k79`, closing
+`concepts-k6`). The expanded document comprises the three explanations,
+`reference/notation.md`, the canonical reading aids and affected glossary
+and landing routes. Proof found no actionable defect or outstanding handoff;
+`task docs:check` passed, including byte-identical regeneration of 26 SVGs.
+Canonical rule text still matches `87221b8c` after removing paired aids;
+grammar and frozen fixtures are unchanged. These are consistency checks,
+not evidence of human comprehension. Q1–Q6 remain open for the review guide
+and full-set checkpoint. No new correction run or checkpoint residue was cut.
+
+For the following tutorial, reference and review-guide work:
+
+- The eleven model concepts and their order in plan §10 are unchanged.
+  `explanation/contracts.md` now places outcomes before lifecycle and release
+  responsibility, and execution before callbacks. Link lifecycle material at
+  `#entities-and-their-lifecycles`, and relationships at `#patterns-and-laws`.
+  The old `#lifecycles-and-patterns` anchor still reaches lifecycle material.
+  `#extending-the-language-with-profiles` retains its old
+  `#what-the-core-leaves-to-profiles` alias. Other existing anchors survive.
+- The grammar home is `reference/notation.md`, with stable anchors `shell`,
+  `clause`, `names`, `callable`, `places`, `environment`, `pattern`, `outcome`,
+  `callback-use`, `dependency` and `access`. All eleven G10 views are embedded
+  there; the concepts pages, canonical aids and glossary link to those sections
+  while keeping local examples. Tutorial's existing embeds migrate in its
+  queued run. Reference extends this page and preserves these anchors.
+- Canonical first-aid routes use this model-anchor mapping: L1 → description,
+  agreement; L2 → description; L3 → description, agreement; L4 → operations,
+  entities; L5 → operations, entities, description; L6 → entities;
+  C1 → operations, validity; C2 → entities, responsibility, execution,
+  callbacks; C3 → outcomes, responsibility, validity, storage, execution;
+  C4 → storage; C5 → outcomes, responsibility, validity; C6 → callbacks;
+  C7 → entities; C8 → agreement; A1 → access, agreement; A2–A4 → access;
+  A5 → agreement; F1 → access. Additional local links cover the specific
+  constructs in later aids. Keep the border, paired comments and rule text.
+- G2–G7 and G9 remain with their examples; their captions route to the model.
+  G9 is the language-containment view, and G11 is the API-model overview.
+  Preserve the synthetic fixture boundary, placeholder import warning and
+  separate declaration, source and access identities. The grammar reference
+  defines its EBNF dialect; other prose explains meaning without punctuation
+  or railroad-reading lessons.
+
 The model-first orientation run is proofed (`orientation-k72`, closing
 `orientation-k5`). Later runs use the canonical account at
 `semantic/specification/interface-language/explanation/model.md` and its
