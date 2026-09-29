@@ -13,6 +13,8 @@ shell, and choices judges each language choice by how well it serves the model.
   agreement for packages; every concept for choices). Prose contract: plan §4.
 - The landed `explanation/model.md`, `model-reading`'s outcome, and
   concepts-k74's revised contracts page.
+- Model-reading-k73's example-led refinement and the grammar/railroad home
+  landed by concepts-k85 at `reference/notation.md`.
 
 ## Done when
 
@@ -31,8 +33,12 @@ shell, and choices judges each language choice by how well it serves the model.
 - Construct introductions on both pages are enumerated here with their §10
   concepts. Examples, figures G2/G3/G9 and anchors are kept; renamed headings
   keep their old slugs.
+- Replace G10 embeds with links to their grammar-reference sections. Examples
+  show familiar syntax; prose explains AIL-specific meaning and relationships
+  without elementary punctuation narration. Preserve the local/imported,
+  member/receiver and declaration-reference/place distinctions.
 - `task docs:check` passes.
 
 ## Notes
 
-Second of three draft sessions in the bounded run. Cut nothing at the end.
+Third of four draft sessions in the bounded run. Cut nothing at the end.

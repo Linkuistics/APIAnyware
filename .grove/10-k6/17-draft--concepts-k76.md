@@ -5,10 +5,13 @@
 Give every direct rule entry a route to the model: add the model page to the
 canonical pages' page-one blocks and a one-sentence model-concept route to the
 first reading aid of each rule section, preserving the rule text exactly.
+Apply the example-led refinement to the non-normative aids, glossary and
+landing-page routes so they explain meaning and link to the grammar.
 
 ## Context
 
-- Structure briefs: plan §9.7 item 7 and §9.2's *Canonical reading-aid routes*.
+- Structure briefs: plan §9.7 items 7–8 and §9.2's *Canonical reading-aid routes*
+  and *Example-led refinement*. Human direction: model-reading-k73.
   Concepts and anchors: plan §10 (its *Rules* column maps rule sections to
   concepts).
 - Aid convention and preservation check: rule-reading-k49's brief (*Draft
@@ -16,6 +19,8 @@ first reading aid of each rule section, preserving the rule text exactly.
   bold label, explicit anchors, comparison against revision `87221b8c`.
 - concepts-k74 and concepts-k75 for the concept-page sections those routes
   may also name.
+- Concepts-k85's grammar home and migrated canonical G10 links; retain its
+  section anchors and all local examples.
 
 ## Done when
 
@@ -29,8 +34,14 @@ first reading aid of each rule section, preserving the rule text exactly.
   byte for byte from `87221b8c`; the grammar, conformance record and frozen
   examples are unchanged. The check has been seen to fail on a deliberate
   mutation before its clean result is credited.
-- The landing page's direct notation route and the glossary's links to the
-  canonical aids still resolve.
+- The non-normative aids and glossary explain AIL-specific meaning and
+  relationships, without teaching familiar punctuation. Canonical rule text
+  is never reworded to remove syntax commentary. Every local example and
+  semantic distinction stays; moving the railroads does not turn an aid into
+  links alone.
+- The landing page and glossary link the grammar-reference sections for
+  exact syntax and the canonical aids for meaning; previous anchors and
+  incoming links still resolve. No G10 embed remains on these pages.
 - `task docs:check` passes.
 
 ## Notes

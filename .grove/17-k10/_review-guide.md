@@ -16,17 +16,23 @@ every stage. The gate is `task docs:check`, plus any task this document adds.
 
 The 2026-09-28 requirements in first-path-reading-k48 apply to task prompts
 and walkthroughs: show the introduced syntax in a small explained snippet with
-its enclosing declaration/package, and use the existing model/railroad views
-where they help. Include concrete tasks following imported versus local
+its enclosing declaration/package, and use the existing language-model views
+where they help. Link to `reference/notation.md` for grammar/railroad views.
+Include concrete tasks following imported versus local
 declarations and a member's owner and callable slots. Preserve open design
-questions and expected observations by inspection. The next checkpoint,
-first-path-reading-k64, precedes this node; read its actual assessment and
-incorporate its decisions before drafting.
+questions and expected observations by inspection. First-path-reading-k64 and
+model-reading-k73 precede this node; read their actual assessments and
+incorporate their decisions before drafting.
 
 Assume familiarity with railroad diagrams (first-path-reading-k64). Use syntax
-views to support the AIL task and explain its names, relationships and contract;
+links to support the AIL task and explain its names, relationships and contract;
 omit generic instruction on how to follow railroad tracks and branches and
 the associated legend boxes.
+
+Model-reading-k73 also excludes elementary punctuation narration: examples
+show familiar syntax, and prose explains meaning and consequences. Keep
+railroad embeds with their grammar description in `reference/notation.md`;
+the review pages link to the relevant sections and retain local snippets.
 
 The human's 2026-09-29 priority is the model and how AIL serves it. Plan
 §9.5, revised by model-first-documentation-k68, states the review question as

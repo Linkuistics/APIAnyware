@@ -17,6 +17,9 @@ parts.
   label-card program and library.
 - Conditions precede actions in steps; the repeated context introductions
   still let a continuing reader find the new material quickly.
+- Across all six pages, examples carry familiar syntax; prose explains
+  AIL-specific meaning and consequences without narrating punctuation.
+  Grammar links clearly name the relevant reference section.
 - `task docs:check` passes.
 
 ## Notes

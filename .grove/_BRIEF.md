@@ -95,8 +95,9 @@ concept-to-notation map; every later document names and links those
 concepts. The cut, in walk order: one bounded orientation run that lands the
 model page and its routes (orientation-k69–k72); `model-reading`, one human
 read of the model account before anything is organized around it; one bounded
-concepts run, including the canonical aids' model-concept routes
-(concepts-k74–k79); one bounded tutorial run (tutorial-k80–k84); then the
+concepts run, including the grammar/railroad home (concepts-k85, first) and
+the canonical aids' model-concept routes (concepts-k74–k79); one bounded
+tutorial run (tutorial-k80–k84); then the
 reference, review guide, reviewer journey and full-set checkpoint, whose
 briefs now consume the model. Each run is authorized once by the human's
 direction and grows no automatic correction run. The existing correction
@@ -106,8 +107,12 @@ automatic repetition policy.
 ## Reader and structure brief
 
 The primary reader knows language design and is familiar with railroad diagrams,
-but is new to API binding concepts. Assume that familiarity when using syntax
-views: explain AIL's productions and examples. Railroad figures use an unboxed
+but is new to API binding concepts. Explain the examples' AIL-specific meaning
+and relationships; let the examples show familiar syntax. Omit prose lessons
+on parentheses, commas, semicolons, braces and other self-evident notation
+(human refinement, model-reading-k73). Keep railroad diagrams with the grammar
+description in `reference/notation.md`, and link to its relevant section from
+other pages. Railroad figures use an unboxed
 status caption and omit instructional keys. Omit generic instruction on
 following railroad tracks, branches, optional paths and repetition (human
 clarification, first-path-reading-k64).
@@ -131,8 +136,9 @@ small explained snippet with its enclosing context. Establish the package,
 declaration, import, member and slot relationships before using syntax that
 assumes them. The human explicitly needs local versus imported declarations,
 a member example, and context for `@` references. Use a language-model diagram
-for those relationships and selected railroad diagrams for syntax, alongside
-the same concrete examples. Apply this to all reader-facing forms, including
+for those relationships alongside the concrete examples. For exact syntax,
+link to the grammar and railroad reference. Apply this to all reader-facing
+forms, including
 direct entries into the canonical rules and later reference/review pages.
 Retain the domain-first explanations and complete checkpoint packages.
 
@@ -321,8 +327,30 @@ landing → domain → model route and direct validity/callback entries carry
 local context and onward links. `task docs:check` passed, including all 26
 SVGs. Earlier orientation examples and anchors are preserved; canonical
 rules, grammar and frozen fixtures are unchanged from `793cd745`. This
-establishes consistency, not comprehension: `model-reading-k73` remains the
-human assessment before the dependent concepts and tutorial runs.
+establishes consistency, not comprehension. At `model-reading-k73` the human
+said the material was "looking good" and praised the example fragments, then
+requested the audience and grammar-placement refinement above. The quoted
+passage was in `explanation/contracts.md`, *From signature to contract*;
+the full reading extent was not reported. Keep §10's concepts and order and
+continue the queued work under that refinement. This is not a whole-path
+comprehension finding.
+
+The concepts run lands `reference/notation.md` before other pages link to it:
+concepts-k85 gathers the existing G10 views with their grammar description;
+k74–k75 revise the explanations; k76 revises non-normative canonical aids,
+the glossary and landing routes. The tutorial run applies the same requirement
+to its six pages. The reference run extends the existing notation page.
+Preserve local examples, AIL-specific meaning, semantic diagrams, canonical
+rule wording and stable anchors. Do not replace local teaching support with
+links alone or reword normative text to remove syntax explanations.
+
+For local VS Code reading, open `semantic/specification/interface-language/`
+or the workspace root as a folder before opening a Markdown preview. At
+`model-reading-k73`, opening the model page alone left `../figures/` outside
+the preview's allowed resource directories and both G11 requests returned
+401. Opening the containing folder restored both diagrams with Restricted
+Mode still enabled. This resolves the image-loading finding; the subsequent
+human feedback and its reading-extent limit are recorded above.
 
 The first reading stopped with actionable human feedback, before a full-path
 assessment. Its first corrections completed. At `first-path-reading-k48`, the
@@ -337,6 +365,23 @@ this process be added to the existing Grove GitHub issues: #14 (overview),
 #15 (draft), #16 (copy-edit), #17 (art), #18 (proof/reader testing) and #12
 (writing for understanding) in `Linkuistics/grove`, as applicable. Record actual
 observations and distinguish them from proposed remedies and general claims.
+The human reaffirmed this at model-reading-k73: preserve everything learned
+for later conversion into skills and agent guidance. Each checkpoint keeps
+the human's words and reported reading extent in its leaf, promotes the
+current document contract here and in the plan, and links its observations to
+the relevant existing Grove issues. Preserve refinements and counterexamples
+to earlier guidance, not just the latest rule. Stage proposals must retain the
+audience, task and evidence limits that make them applicable; recording them
+does not mean they have already been implemented in Grove's skills.
+
+Model-reading-k73's durable guidance record is
+<https://github.com/Linkuistics/grove/issues/14#issuecomment-5885384609>, with
+drafting details at
+<https://github.com/Linkuistics/grove/issues/15#issuecomment-5885388298>, figure
+placement at
+<https://github.com/Linkuistics/grove/issues/17#issuecomment-5885388607>, and the
+verified VS Code handoff repair at
+<https://github.com/Linkuistics/grove/issues/18#issuecomment-5884943848>.
 
 The orientation correction run completed (`orientation-k39`, node
 `orientation-k5`). Its three pages

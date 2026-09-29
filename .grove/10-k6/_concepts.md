@@ -58,13 +58,18 @@ model concept down (plan §9.2, *Model-first run*; concepts in plan §10).
 This run also owns the canonical pages' model-concept routes (plan §9.7 item
 7). They cannot sit under rule-reading-k49, which the walk visits before the
 model page exists, and they point at the concepts this run's pages introduce.
-For this run the document is the three explanation pages plus those route
-additions; each stage reads the changed aids under the existing canonical
-preservation check.
+Model-reading-k73 adds an example-led refinement: explain the examples'
+AIL-specific meaning, omit obvious punctuation commentary, and keep railroads
+with the grammar description in `reference/notation.md`. Link there from
+other pages. For this run the document is the three explanation pages, the
+new grammar page, the non-normative canonical aids and the affected glossary
+and landing-page prose/routes. Each stage reads these changes; the existing
+canonical preservation check protects every rule paragraph.
 
-This new human direction authorizes exactly one ordered run: three draft
-sessions (concepts-k74 contracts; concepts-k75 packages and choices;
-concepts-k76 canonical routes), then concepts-k77 copy-edit, concepts-k78 art
+This human direction authorizes exactly one ordered run: four draft
+sessions (concepts-k85 grammar home and canonical figure links, first;
+concepts-k74 contracts; concepts-k75 packages and choices;
+concepts-k76 canonical prose/model routes and glossary), then concepts-k77 copy-edit, concepts-k78 art
 and concepts-k79 proof, all queued now. It is new scope, not a reset of the
 earlier correction runs below, and it authorizes no correction run inside it:
 residue that would send work back is recorded for the full-set checkpoint.
@@ -74,9 +79,12 @@ opening on every notation-introducing section; packages opens with the
 description-layer concepts before the shell; choices judges each choice by how
 it serves the model; every canonical rule section routes to its concept with
 the rule text byte-identical; every construct introduction is enumerated with
-its concept; `task docs:check` passes.
+its concept; all eleven G10 views are with the grammar and linked from their
+former locations; examples and semantic diagrams remain; non-normative prose
+omits familiar punctuation lessons; `task docs:check` passes. Reference-k16
+extends the grammar page later without replacing it or its anchors.
 
-## Current human-directed correction
+## Second human reading correction (completed)
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires
 examples as constructs are introduced, plus language-model and selected

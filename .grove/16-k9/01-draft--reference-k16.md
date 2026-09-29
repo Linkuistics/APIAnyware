@@ -2,7 +2,11 @@
 
 ## Goal
 
-Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` with the applicability table. Verify and extend the normative pages' existing reading routes, add page-one blocks to the supporting files, and add `task docs:coverage` with its enumerated inventory.
+Draft `reference/README.md`, `types.md` and `declarations.md` with the
+applicability table; extend the existing `notation.md` with entry conventions
+and index routes. Verify and extend the normative pages' existing reading
+routes, add page-one blocks to the supporting files, and add `task
+docs:coverage` with its enumerated inventory.
 
 ## Context
 
@@ -12,8 +16,10 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
 - Prose contract, labels, figures and checks: `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md` §4–§7.
 - Evidence: the audit (`semantic/docs/research/interface-language-documentation-audit.md`) and the survey's §9 criteria D1–D8.
 - Read first-path-reading-k48 and first-path-reading-k64 for the human's
-  assessments. Rule-reading-k49 supplies the normative pages' context blocks,
-  local examples and language-model/railroad views. Preserve and reuse them.
+  assessments, then model-reading-k73's example-led refinement. Rule-reading-k49
+  supplies the normative pages' context blocks, local examples and language
+  model; concepts-k85 supplies the grammar/railroad home. Preserve and reuse
+  them, with syntax figures kept on `reference/notation.md`.
 
 ## Done when
 
@@ -29,6 +35,11 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
   `reference/README.md`, which links every reference page that exists and
   names the clause files as plain text until they land.
 - Declaration and type entries use the §9.4 fields that apply.
+- The existing grammar description, all eleven G10 views, section anchors
+  and incoming links survive the extension of `notation.md`. The reference
+  index adopts this already-landed page. Other entries show their forms and
+  examples, link to its grammar sections, and omit elementary punctuation
+  narration while explaining AIL-specific meaning.
 - Normative wording, anchors and grammar remain unchanged. Existing labelled
   reading aids remain available; only their context/navigation is extended
   to the new reference. The entries illustrate local/imported declarations,

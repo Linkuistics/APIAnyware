@@ -21,6 +21,10 @@ each introduced by the concept it applies.
 - `examples/tutorial/04-callbacks.ail`, `05-finished.ail` and `05-owned.ail`
   are byte-identical; invalid variants and answers stay; renamed headings keep
   their old slugs.
+- Both parts retain snippets and semantic figures but replace G10 embeds
+  with links to the grammar-reference sections at `reference/notation.md`.
+  Apply model-reading-k73's example-led requirement: explain meaning and
+  consequences, omitting elementary punctuation narration.
 - `task docs:check` passes.
 
 ## Notes

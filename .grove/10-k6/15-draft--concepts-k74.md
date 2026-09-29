@@ -15,6 +15,8 @@ and then shows how AIL expresses it, in the model's concept order.
   *Domain before notation*).
 - The landed model page `explanation/model.md` and the outcome of
   `model-reading`: use the concept set as the human left it.
+- Model-reading-k73's example-led refinement, plan §9.2. Concepts-k85 lands
+  the grammar/railroad sections in `reference/notation.md` before this leaf.
 
 ## Done when
 
@@ -27,15 +29,20 @@ and then shows how AIL expresses it, in the model's concept order.
   two, and only then shows a located snippet. No section re-teaches the model.
 - Every construct introduction on the page is enumerated in this leaf with its
   §10 concept.
-- Existing examples, figures G4–G7 and G10 views, rule citations and anchors
-  are kept; moved or renamed headings keep their old slugs via explicit
+- The prose explains AIL-specific meaning and model consequences. Remove the
+  quoted punctuation walkthrough in *From signature to contract* and similar
+  elementary syntax narration elsewhere, retaining useful explanations of
+  reference/place meaning and context.
+- Existing examples, figures G4–G7, rule citations and anchors are kept.
+  Replace G10 embeds with links to the relevant grammar-reference sections;
+  moved or renamed headings keep their old slugs via explicit
   anchors, and incoming links across the set still resolve.
 - The model page's closing map links the renamed sections.
 - `task docs:check` passes.
 
 ## Notes
 
-First of three draft sessions in the one bounded model-first run authorized by
+Second of four draft sessions in the one bounded model-first run authorized by
 the human's 2026-09-29 direction (node brief). Later drafts, copy-edit, art
 and proof are already queued, so cut nothing at the end. Do not change rule
 semantics or examples' contracts; a model/rule mismatch becomes a question in

@@ -13,6 +13,8 @@ reader writes the AIL that records them.
   contract: plan §4.
 - The landed model page, `model-reading`'s outcome, and the concepts run's
   renamed sections (concepts-k74 to k79) for links.
+- Model-reading-k73's example-led refinement and concepts-k85's grammar
+  reference at `reference/notation.md`.
 
 ## Done when
 
@@ -32,6 +34,9 @@ reader writes the AIL that records them.
   reordering regions. Invalid variants, answers and early routes to each
   part's new material stay. Renamed headings keep their old slugs.
 - The model page's map links the tutorial parts as they now stand.
+- The index and parts 1–3 retain snippets and semantic figures but replace
+  G10 embeds with links to the grammar-reference sections. Prose explains
+  meaning and consequences without teaching familiar punctuation.
 - `task docs:check` passes.
 
 ## Notes

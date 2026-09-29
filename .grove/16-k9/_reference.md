@@ -19,18 +19,22 @@ every stage. The gate is `task docs:check`, plus any task this document adds.
 
 The 2026-09-28 requirements in first-path-reading-k48 apply to every entry:
 locate each introduced form within a small explained example, and reuse the
-language-model/railroad aids landed by rule-reading-k49. Local/imported
+language-model aids landed by rule-reading-k49. Link to the grammar/railroad
+home landed by concepts-k85 at `reference/notation.md`. Local/imported
 declarations, a top-level member with its receiver, and declaration/slot/place
 references are explicit acceptance cases. Normative page-one blocks and labelled
 reading aids now land in rule-reading; preserve them, verify their routes and
 add links to the new reference. Normative wording and grammar stay unchanged.
-The next human checkpoint, first-path-reading-k64, precedes this node; read and
-incorporate its decisions before drafting.
+The first-path-reading-k64 and model-reading-k73 checkpoints precede this node;
+read and incorporate their decisions before drafting.
 
 The reader is familiar with railroad diagrams (first-path-reading-k64).
-Explain the AIL productions and their example spellings; omit generic lessons
-on reading tracks, alternatives, optional paths and repetition. Use the syntax
-figures without instructional legend boxes. Preserve the language-model context
+Model-reading-k73 further clarifies that examples already show familiar syntax:
+explain AIL-specific meaning, operands and relationships, omitting prose lessons
+on punctuation. Keep all G10 figures with the grammar description on the
+existing `notation.md`; other entries link to its relevant sections. Omit
+generic lessons on reading railroads and instructional legend boxes. Preserve
+the language-model context
 and the explanations of AIL's name resolution and semantic constraints.
 
 The human's 2026-09-29 priority is to explain the model and describe AIL by
@@ -83,6 +87,9 @@ Four draft sessions, in order. Only the last cuts `copy-edit`.
    page-one blocks on supporting files, and `task docs:coverage` with its candidate extraction
    and disposition list. Its classified inventory fixes the entry list for the
    remaining sessions.
+   The grammar/railroad portion of `notation.md` already exists from
+   concepts-k85; extend it with entry conventions and index routes, preserving
+   every syntax-section anchor and all incoming links. Do not recreate it.
 2. Clauses for package, environment and common declaration scope.
 3. Clauses for callable effects and input obligations, including buffers and
    strings.

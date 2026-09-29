@@ -3,12 +3,14 @@
 ## Goal
 
 Copy-edit the concepts document after its model-first drafts: the three
-explanation pages and the model-concept routes added to the canonical aids.
+explanation pages, grammar reference, non-normative canonical aids and the
+affected glossary/landing prose and routes.
 
 ## Context
 
-- Drafts: concepts-k74, concepts-k75, concepts-k76. Structure brief: plan
-  §9.2 (*Model-first run*), §9.7 item 7; concepts: plan §10; prose contract:
+- Drafts: concepts-k85, concepts-k74, concepts-k75, concepts-k76. Structure brief: plan
+  §9.2 (*Model-first run* and *Example-led refinement*), §9.4 grammar portion,
+  §9.7 items 7–8; concepts: plan §10; prose contract:
   plan §4.
 - The node brief's `## Handed forward` list.
 
@@ -20,6 +22,10 @@ explanation pages and the model-concept routes added to the canonical aids.
 - Each concept opening develops the reader's task and case in connected
   sentences, positively framed, without re-teaching the model or compressing
   it into terminology.
+- Across this document, examples show familiar syntax and prose explains
+  meaning and consequences without lessons on punctuation. Grammar links
+  name their destination clearly. Preserve AIL-specific distinctions and
+  local example context, including in canonical aids and glossary entries.
 - The canonical preservation check still passes after the last edit.
 - `task docs:check` passes.
 

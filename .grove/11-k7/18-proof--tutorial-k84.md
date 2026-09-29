@@ -19,6 +19,9 @@ with their figures and checkpoints.
   checkpoint still passes inspection against the grammar and rules; invalid
   variants cite their rules; direct entries into parts 2, 4 and 5 and the
   owned-snapshot route work.
+- The examples retain their context and meaning; no elementary punctuation
+  lesson or G10 embed remains on these pages. Walk the new grammar links to
+  their reference sections, including the shell, places, callbacks and access.
 - `task docs:check` passes and no handed-forward entry remains open.
 - Residue that would need another stage is recorded for the full-set
   checkpoint rather than cut as a correction run.

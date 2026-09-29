@@ -75,7 +75,7 @@ normative and supporting files keep their current paths.
 | `tutorial/README.md` and `tutorial/01-…md` to `05-…md` | Describing a small API | Tutorial in five parts | Can I read, write and change a real AIL contract? | Tutorial |
 | `examples/tutorial/*.ail` | — | Checkpoint packages | — | Tutorial |
 | `reference/README.md` | Reference | Reference map and indexes | Where is the exact rule for this? | Reference |
-| `reference/notation.md` | Reading the grammar and the rules | Reference: notation | How do I read the EBNF, rule identifiers and entries? | Reference |
+| `reference/notation.md` | Reading the grammar and the rules | Reference: grammar, railroad views and notation | Where is the exact grammar, and how do rules and reference entries describe it? | Grammar and G10 views: Concepts; entry conventions: Reference |
 | `reference/types.md` | Types | Reference entries | What does this type mean, and where may it appear? | Reference |
 | `reference/declarations.md` | Declarations | Reference entries, plus the applicability table | What must this declaration contain? | Reference |
 | `reference/clauses-*.md` | Clauses, grouped by scope | Reference entries | What does this clause take, where does it apply, and when is it rejected? | Reference |
@@ -121,9 +121,9 @@ learning route has three stages, and each answers a different question:
    reading aids and the reference introduce each construct by the model
    concept it expresses. Each introduction names the concept and the reader's
    task, links the concept's anchor, then shows the notation in a located
-   snippet. The package/declaration containment model (G9) and railroad views
-   appear where the syntax needs them; they support the account and do not
-   organize it.
+   snippet. The package/declaration containment model (G9) appears where the
+   relationships need it. Exact syntax is reached through links to the
+   grammar and railroad sections in `reference/notation.md`.
 
 Exact lookup is separate from this route. The reference answers "what exactly
 does this clause take and when is it rejected?"; it links each entry back to
@@ -174,7 +174,8 @@ across several draft sessions and the reference's clause files:
   the page, not as a link. The session that lands that page converts every
   such mention into a link, and replaces the interim next route that pointed
   past it.
-- Where a document's index lands after its pages (the review guide's
+- Where a document's index lands after its pages (`reference/notation.md`
+  before the reference index, or the review guide's walkthrough before
   `review/README.md`), the map links the earlier pages directly until the
   index lands and takes over.
 
@@ -246,9 +247,13 @@ metrics (survey §6).
 - **Show constructs as they are introduced** (human decision, 2026-09-28).
   Put a small, explained snippet beside a construct's first substantive
   introduction on each standalone page. Show enough of its enclosing package,
-  declaration or callable to locate it, and explain what each new name and
-  punctuation mark addresses. A complete package later on the page and a
-  glossary link serve different purposes; they do not supply this local
+  declaration or callable to locate it, and explain what its names refer to
+  and which model facts it records. Let the example show familiar punctuation;
+  omit prose lessons on parentheses, commas, semicolons, braces and other
+  self-evident notation (model-reading-k73). Explain AIL-specific distinctions
+  such as declaration references versus callable-local places, whose meaning
+  the reader cannot infer from general language fluency. A complete package
+  later on the page and a glossary link serve different purposes; they do not supply this local
   introduction. Build from a small example to the relationship and rule,
   retaining complete examples for later inspection. Domain-only passages can
   use their C example or concrete actions without introducing AIL prematurely.
@@ -269,9 +274,10 @@ metrics (survey §6).
   parameter, and how a type name is written without `@`. Give the syntax a
   visible containing context and explain its use, rather than listing tokens.
 - **Use figures to teach the relevant structure.** A language-model diagram
-  shows containment and named relations; a railroad diagram shows a selected
-  grammar production. Pair both with the same small examples. Explain the
-  language model's relationships and connect AIL spellings to the productions.
+  shows containment and named relations beside the example that needs them.
+  Railroad diagrams live with the grammar description in `reference/notation.md`;
+  other pages link to the relevant section for exact syntax. Explain the
+  language model's relationships and the examples' meaning and consequences.
   Assume the reader can read railroads; omit generic lessons on tracks,
   branches, optional paths and repetition. Explain name resolution,
   applicability and semantic validity through the examples and rules. Follow
@@ -370,8 +376,10 @@ Distinguish literal tokens and nonterminals, and represent alternatives,
 optional parts and repetition accurately. Assume familiarity with railroad
 diagrams (human clarification at first-path-reading-k64). Omit the instructional
 legend boxes; a plain caption identifies the non-normative syntax view.
-Accompanying prose explains AIL's productions and examples, without teaching
-how to follow a railroad. Check every
+The grammar reference names the productions and their scope, links the exact
+EBNF, and keeps the existing G10 views together. Examples carry familiar
+surface syntax; prose explains AIL-specific meaning without restating obvious
+punctuation or teaching how to follow a railroad. Check every
 path against the named EBNF production. Keep semantic constraints in prose with
 rule links.
 
@@ -407,7 +415,7 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 | G7 | Contract | When may a registered callback run relative to registration and quiescent teardown? | Timing or sequence | `explanation/contracts.md`, tutorial part 4 |
 | G8 | Navigation | Which page answers which question? | Table, not a diagram | Landing page |
 | G9 | Language model | Where do declarations and slots live, and how do imports and member ownership relate them? | Structure, with concrete names shared by the examples | `language.md` L2; linked or reused by `explanation/packages.md` |
-| G10 | Syntax | How does the reader follow the package shell, imports, references and clauses? | Small railroad views tied to named EBNF productions | At the relevant introductions in `language.md`; reused in reference notation |
+| G10 | Syntax | What forms do the package shell, imports, references and clauses admit? | Small railroad views tied to named EBNF productions | `reference/notation.md`, with the grammar description; linked from other pages |
 
 G11 sits between G1 and the detail figures in the C4-style order: G1 shows
 who writes and uses a description, G11 what it records, and G2–G7 and G9–G10
@@ -418,7 +426,9 @@ language-containment view and is never substituted for G11.
 
 The drafts decide which figure slots a page needs and record each unfilled
 slot in the document node's handed-forward list for `art`. Prose carries every
-fact that a figure shows.
+semantic fact that a figure shows. The textual grammar is the exact alternative
+to a railroad image; this does not require prose to narrate each punctuation
+mark or path through the diagram.
 
 Start diagram labels and captions with the same concrete actors and actions
 the prose has introduced. Order views from overview to detail across the
@@ -609,6 +619,30 @@ aids, reference and review guide are organized around it? Record the human's
 words and actual reading extent; a changed concept set becomes an edit to §10
 and the later briefs, and a defect in the model page becomes work for the human
 to direct. The full-set checkpoint still follows cross-set navigation.
+
+At `model-reading-k73`, the human said the material was "looking good", praised
+the example fragments, and requested less syntax narration: familiar
+punctuation needs no prose lesson, and railroad diagrams belong with the
+grammar description, linked from other pages. They quoted *From signature to
+contract* in `explanation/contracts.md`; the full reading extent was not
+reported. The concept set and order remain unchanged. This assessment permits
+the queued work to continue with the presentation refinement; it does not
+establish comprehension of unreported sections. The concepts run adds one
+early draft, concepts-k85, to establish the grammar destination before its
+consumers. Its existing copy-edit, art and proof cover that addition; the
+bounded-run rule remains. For local VS Code handoffs, open the interface-language
+directory or workspace root as a folder before previewing Markdown so sibling
+figure resources load.
+
+Preserve reader evidence for the Grove skills and agent-guidance work (human
+reminder at model-reading-k73). Keep verbatim feedback and its reading extent
+in the checkpoint leaf, the resulting requirements in this plan and the root
+brief, and links to observations and stage-specific proposals in Grove's
+existing guidance issues. Retain how new evidence refined earlier advice:
+"explain examples" requires meaning and context appropriate to the audience,
+not a narration of every visible token. Distinguish proposed guidance from
+guidance already implemented and a verified presentation repair from evidence
+that the prose was understood.
 
 ## 9. Structure briefs
 
@@ -849,6 +883,25 @@ ordered lists above conflict, this block governs. The three pages become the
 account of how AIL writes down the model in `model.md`; they stop teaching
 the model from scratch.
 
+**Example-led refinement (model-reading-k73).** Keep the located examples and
+explain what they say about the API model. Omit elementary syntax narration,
+including the punctuation walkthrough in *From signature to contract*.
+Replace embedded G10 views with links to the relevant grammar-reference
+section. Preserve the examples, AIL-specific meaning, rule links and semantic
+figures G2–G7/G9. This applies to non-normative prose throughout the set,
+including canonical aids, glossary entries and later reference/review pages.
+
+The first draft of this run, concepts-k85, lands the grammar portion of
+`reference/notation.md` (§9.4): the EBNF source and dialect, the eleven existing
+G10 views with stable anchors and named productions, and links back to rules
+and examples. It links the page from the landing map before a reference index
+exists and replaces the canonical aids' G10 embeds with section links. The
+remaining drafts own the explanations (k74–k75) and the canonical aids'
+meaning-focused prose and model routes, plus glossary/landing adjustments
+(k76). Copy-edit, art and proof cover this expanded document. Tutorial embeds
+move to links in its already-queued run. Reference-k16 later extends the same
+notation page with entry conventions and index routes, preserving its anchors.
+
 *`explanation/contracts.md`, revised order.* Sections follow §10's concept
 order for the call layer. Each section opens with the model concept (its
 `model.md` name and link), the reader's task and a one-paragraph recall of
@@ -900,8 +953,10 @@ existing bordered-aid convention and paired `reading-aid` comments, changes no
 rule text, anchor or grammar, and reruns the canonical preservation check
 against `87221b8c`. §9.7 records the convention.
 
-The run keeps every existing example, figure, anchor and incoming link. A
-renamed or reordered heading gets an explicit anchor preserving its old slug.
+The run keeps every existing example, figure source/SVG, anchor and incoming
+link; G10 embeds move to the grammar reference. A renamed or reordered heading
+gets an explicit anchor preserving its old slug. Moving a figure does not
+remove the local example or the explanation of its meaning.
 
 **Emphasis.** Honest trade-offs: an awkward construct is shown and named, not
 hidden. Two examples for every concept, one taken from the conformance
@@ -927,6 +982,10 @@ arises. After the model-first run: enumerate the construct introductions on
 the three pages and in the canonical aids, and record for each the §10
 concept it is tied to; every notation-introducing section links its concept
 anchor before its first snippet; the canonical preservation check passes.
+Walk the grammar links from a concept page, a canonical aid and the glossary;
+all eleven G10 views are reachable with their named grammar productions.
+Within this run's pages, G10 is embedded only in `reference/notation.md`;
+familiar punctuation is not retaught in non-normative prose.
 
 ### 9.3 Tutorial
 
@@ -993,8 +1052,9 @@ while allowing a continuing reader to find the new material quickly.
 For the 2026-09-28 correction, each step introduces its construct with a short
 explained excerpt before asking the reader to use it. Locate the excerpt within
 the package or callable and connect it to the unchanged complete checkpoint.
-Use the rule-reading model and selected railroad views when they explain the
-current task. Preserve the existing access to each part's new material and the
+Use the rule-reading language model when it explains the current task and link
+to the grammar reference for railroad views. Preserve the existing access to
+each part's new material and the
 owned-snapshot exercise. Inspect all six pages, including the initial package
 shell and the distinction between declaration references and local places.
 
@@ -1007,7 +1067,8 @@ conflict, this block governs.
   now told as the model's entities and obligations (a card with a lifetime; a
   lent label; caller storage; a subscription and its teardown). The map table
   gains a column naming each part's model concepts, linked to their anchors.
-  The index shell railroad and fragment follow the story, not precede it.
+  The index shell fragment follows the story, with a link to the grammar
+  reference's shell view.
   *Before this* names the model page.
 - Each part replaces *The domain obligation* with *The model*: the concept(s)
   the part applies, in the model page's words and linked, the concrete
@@ -1028,6 +1089,10 @@ conflict, this block governs.
   explanatory prose may change; a renamed heading keeps its old slug through
   an explicit anchor. The early routes to each part's new material and to the
   owned-snapshot exercise remain.
+- Apply model-reading-k73's example-led refinement to the index and all five
+  parts: explain the AIL facts and their consequences, omit commentary on
+  self-evident punctuation, and replace G10 embeds with links to the relevant
+  section of `reference/notation.md`. Keep the snippets and semantic figures.
 
 **Non-goals.** No installing, running or validating anything; no command
 lines; no APIAnyware. No coverage of profiles beyond the fixture.
@@ -1042,7 +1107,9 @@ page. Every invalid variant cites its rule. After the model-first run, the six
 checkpoint files (`examples/tutorial/01-lifetime.ail` to `05-owned.ail`) are
 byte-identical to their pre-run revision; `reading-fragments.ail` may gain or
 reorder regions for relocated step snippets. Each step that introduces a
-construct names and links its §10 concept.
+construct names and links its §10 concept. Grammar links resolve to the
+reference sections, no G10 image remains embedded on a tutorial page, and
+non-normative prose does not teach familiar punctuation.
 
 ### 9.4 Reference
 
@@ -1082,12 +1149,20 @@ type entries use the subset that applies.
   canonical; the model-concept index (each §10 concept, linked to `model.md`,
   with the entries that express it); the rule-identifier index; the
   mutation-to-rule index; and the alphabetical clause index.
-- `notation.md`: the EBNF dialect; how the generic `clause` production
-  defers vocabulary to prose; the BCP 14 convention as `language.md` states it,
+- `notation.md`: a short pointer to the API model; the authoritative
+  `grammar.ebnf` and its EBNF dialect; the eleven existing G10 views grouped
+  by shell, clauses, names, callables, places, environments, patterns, outcomes,
+  callback use, dependencies and access, each with a stable anchor and its
+  named productions; how the generic `clause` production defers vocabulary to
+  prose. These grammar sections land early in concepts-k85. The reference run
+  extends this same page with the BCP 14 convention as `language.md` states it,
   that `README.md` names all three rule files and the grammar as normative, and
   that lowercase wording keeps its ordinary meaning and can still state a
   requirement. The page does not say lowercase text lacks force; it links the
-  presentation question Q1 (audit F10). Then how to read an entry.
+  presentation question Q1 (audit F10). Then how to read an entry. The grammar
+  description and railroad views remain together here; entries elsewhere
+  show their form and examples and link to the relevant section. The page
+  assumes language and railroad fluency and does not narrate punctuation.
 - `types.md`: the core types and type constructors; value against reference
   types; and profile types.
 - `declarations.md`: one entry per declaration kind and block, including
@@ -1113,11 +1188,13 @@ citations.
 resolution of open questions. No tutorials inside entries.
 
 The 2026-09-28 requirements apply to each entry: give the introduced notation
-an enclosing context and an explained short example. Reuse the model and syntax
-views from §9.7, with local orientation for direct entry. The notation and
+an enclosing context and an explained short example. Reuse language-model
+views where the relationships need them and link to `notation.md` for grammar
+and railroad views, with local orientation for direct entry. The notation and
 declaration entries must include local/imported declarations, a top-level member
 and receiver, and declaration/slot/place references. Preserve the reading aids
-already added beside the canonical rules; do not replace them with links alone.
+already added beside the canonical rules; their examples and semantic
+explanations remain local when the syntax figures move to the grammar reference.
 Normative page-one blocks now land in §9.7; this increment verifies them and
 adds links to the new reference entries.
 
@@ -1225,8 +1302,11 @@ language; this guide applies §4's corrections to its prompts and explanations
 and records the extent of a reader's progress honestly.
 
 For the 2026-09-28 requirements, introduce every task's notation through a
-small located snippet and, where helpful, the existing language-model or
-railroad view before asking the reader to trace or change it. In walkthroughs,
+small located snippet and, where helpful, the existing language-model view
+before asking the reader to trace or change it. Explain what the example
+records and why it matters; link to the grammar reference's railroad sections
+for exact syntax, without embedding those views or narrating punctuation.
+In walkthroughs,
 show the clause beside the explanation with its enclosing declaration named.
 Include concrete tasks distinguishing local/imported declarations and following
 a member's owner and slots. Cite canonical rules and preserve the separation
@@ -1278,12 +1358,19 @@ except where a broken journey forces it.
 the landing page's map or its parent index. The reviewer journey is walked
 from each entry type in §3.
 
+The final journey also checks model-reading-k73's syntax-lookup requirement:
+the grammar description and all G10 embeds are in `reference/notation.md`;
+concept, tutorial, canonical-aid, glossary and review entries link to its
+relevant sections and retain their local examples and semantic context.
+
 ### 9.7 Reading the rules through examples and diagrams
 
 Pages: non-normative additions within `language.md`, `contracts.md` and
 `profiles.md`, their checked example fragments and figure sources/SVGs. The
-grammar remains the source for syntax diagrams. No new reference page is
-required for this increment.
+grammar remains the source for syntax diagrams. The original rule-reading
+increment added no reference page. Model-reading-k73's refinement moves the
+G10 embeds to the grammar description in `reference/notation.md`, landed by
+the concepts run before the aids link to it; local examples remain here.
 
 **Reader and outcome.** The primary reader arrives directly at a rule or
 follows a citation from the overview. They can place a newly introduced
@@ -1303,9 +1390,9 @@ reader to wait for the indexed reference.
    a blockquote's left border, with a bold label and explicit stable anchors;
    the aid has no visible end marker.
 2. At L1, introduce a small document/package shell, distinguish declarations
-   from clauses, and show a selected railroad view tied to `document`, `item`
-   and `clause`. Relate the code's AIL tokens to those productions and explain
-   the purpose of the code, assuming the reader knows how to read a railroad.
+   from clauses, and link to the grammar views tied to `document`, `item`
+   and `clause`. Explain the example's purpose and AIL-specific meaning;
+   familiar punctuation is already visible in the snippet.
 3. At L2, place G9 before notation depending on it. Use named packages and
    versions, a declaration in each, an import alias and reference uses. Explain
    local/imported relative to the package being read. Show the declaration
@@ -1315,9 +1402,9 @@ reader to wait for the indexed reference.
    `@name`, `@Alias::name`, `@operation::parameter`, `@operation::result`,
    callback slots and bare type names in those examples; contrast `@` references
    with `$` places in their enclosing callable. Show scope and collision rules
-   with small valid/invalid cases. Tie syntax views to `import`, `reference`,
-   `name`, `callable`, `parameter` and `place` as needed, without claiming the
-   grammar enforces semantic restrictions.
+   with small valid/invalid cases. Link to the grammar views for `import`,
+   `reference`, `name`, `callable`, `parameter` and `place` as needed, without
+   claiming the grammar enforces semantic restrictions.
 4. Continue through L3–L6 in rule order. Introduce environments, types,
    declarations, clauses, patterns and roles with small located examples.
    Existing complete examples remain available for the combined contract.
@@ -1325,8 +1412,8 @@ reader to wait for the indexed reference.
    lifetime and effects; buffers and outcomes; callback-use blocks; relations;
    provider references and access blocks. Introduce one relationship at a
    time, with enough enclosing context to read the snippet. Reuse existing
-   examples and figures where they answer the question; add a figure only for
-   a relation or syntactic choice that needs one.
+   examples and semantic figures where they answer the question; link to the
+   grammar reference for syntactic choices.
 6. Give each aid a route to its exact rule and fuller explanation, using only
    existing destinations. The later reference adds its lookup routes.
 7. Model-first routes (human direction, 2026-09-29; landed by the concepts
@@ -1336,6 +1423,11 @@ reader to wait for the indexed reference.
    section with no aid gets a short new one. These are ordinary bordered aids
    inside paired `reading-aid` comments, so
    the preservation check strips them like the rest.
+8. Example-led refinement (model-reading-k73; landed by concepts-k85 and
+   concepts-k76). Replace G10 embeds with links to their new grammar home,
+   retain every local example and meaningful AIL explanation, and remove
+   non-normative commentary on obvious punctuation. Preserve all rule text
+   and anchors even where the normative wording itself discusses syntax.
 
 **Emphasis.** The rule pages need local teaching support even when another
 page teaches the same concept. Explain the example before combining it with
@@ -1360,9 +1452,10 @@ packages, glossary and the human's verbatim feedback in `first-path-reading-k48`
 source fragments. Every railroad path agrees with its named production, and
 every semantic example is checked against its rule. Compare the preserved
 normative text and grammar with the pre-edit version, separately from added
-reading aids. Inspect rendered diagrams beside their examples and walk a direct
-L2 entry plus the overview-to-rule route. These checks establish consistency;
-`first-path-reading-k64` owns the human assessment.
+reading aids. Inspect semantic diagrams beside their examples and railroads
+with their grammar description; walk a direct L2 entry, its syntax-lookup link
+and the overview-to-rule route. These checks establish consistency; the human
+assessments and their limits are recorded in §8.
 
 ### 9.8 The model account
 
@@ -1450,9 +1543,11 @@ assessment of the account.
 
 ## 10. Model concepts and their notation
 
-This table is the concept-to-notation contract for every document. The
-anchors are those `explanation/model.md` will carry; they are written here as
-code, not links, until that page lands. "Introduced in" names the sections as
+This table is the concept-to-notation contract for every document. Its concept
+set and order are unchanged after model-reading-k73's positive assessment and
+example-led presentation refinement; that read did not report full coverage
+of the model page. The anchors are those on `explanation/model.md`.
+"Introduced in" names the sections as
 the model-first runs will leave them. The construct lists identify the main
 forms for each concept; they are not the reference inventory, which
 `docs:coverage` enumerates from the sources (§7). The domain-case column names

@@ -14,10 +14,13 @@ and the emphasis and non-goals. The same plan's §4 (prose contract), §5
 (page-one block and example labels), §6 (figures) and §7 (checks) govern
 every stage. The gate is `task docs:check`, plus any task this document adds.
 
-Include the rule-reading model, railroad views and local examples in the final
+Include the rule-reading model, grammar-reference routes and local examples in the final
 routes. The 2026-09-28 feedback at language.md L2 shows why a direct rule entry
 needs its own context. Preserve those aids when adding reference back-links,
-and incorporate the actual assessment recorded by first-path-reading-k64.
+and incorporate the actual assessments recorded by first-path-reading-k64
+and model-reading-k73. G10 embeds belong only with the grammar description in
+`reference/notation.md`; other pages link there, retain meaningful local
+examples and omit familiar punctuation lessons. Walk those routes explicitly.
 
 The model-first route (plan §3) is part of the journey: landing → domain page
 → `explanation/model.md` → concepts → tutorial → review guide. Plan §9.6 adds

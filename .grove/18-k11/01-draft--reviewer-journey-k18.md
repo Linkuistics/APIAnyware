@@ -18,6 +18,10 @@ Integrate navigation across the finished set and append the Step 2 index to the 
   between rules, entries, explanations, tutorial parts and review tasks run
   both ways, and so do the model routes: the model page's concept sections and
   map rows link their reference entries and review tasks, which link back.
+- The final syntax routes follow model-reading-k73: G10 embeds and the
+  grammar description live in `reference/notation.md`; every other page's
+  syntax links reach the relevant section while its local example context
+  remains. Walk this from explanations, tutorial, canonical aids and review.
 - The audit's "Step 2: refactored output" section maps F1–F12 to their
   resolving pages, gives the status of Q1–Q6 and any added questions, and
   names what remains unresolved.

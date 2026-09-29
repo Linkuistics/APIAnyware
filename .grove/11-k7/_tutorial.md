@@ -59,8 +59,9 @@ or new failure mode is introduced. The Watch subscription is independent of
 Card and delivers only a scalar change number. Preserve that boundary.
 
 The five tutorial diagram sources and generated SVGs live under `figures/`
-with the `tutorial-` prefix. Part 1's package model precedes its shell railroad
-and distinguishes declaration containment from the lifecycle reference.
+with the `tutorial-` prefix. Part 1's package model distinguishes declaration
+containment from the lifecycle reference. Its shell snippet links to the
+railroad at `reference/notation.md` after this run's refinement.
 Part 5 compares borrowed and owned results in a
 table beside the guided change. The tutorial links to the overview's G1 rather
 than repeating the figure. Each detail diagram has a route back to that wider
@@ -76,6 +77,13 @@ applies, and each step meets a concept before its notation (plan §9.3,
 outcomes and release responsibility ahead of the publication clauses and pins.
 The six checkpoint files stay byte-identical.
 
+Model-reading-k73 refines this run: retain the located example fragments and
+explain their AIL-specific meaning and consequences, omitting elementary
+punctuation narration. Replace every G10 embed in the six tutorial pages with
+a link to the relevant grammar section in `reference/notation.md`, landed by
+concepts-k85. Keep the semantic figures, name-resolution distinctions and
+local enclosing context. All four stages carry this contract.
+
 This new human direction authorizes exactly one ordered run: tutorial-k80
 (index and parts 1–3) and tutorial-k81 (parts 4–5), then tutorial-k82
 copy-edit, tutorial-k83 art and tutorial-k84 proof, all queued now. It is new
@@ -88,7 +96,7 @@ concepts before the notation; the checkpoint files are byte-identical; the
 early routes to new material and the owned-snapshot exercise survive;
 `task docs:check` passes.
 
-## Current human-directed correction
+## Second human reading correction (completed)
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires
 examples as constructs are introduced, plus language-model and selected

@@ -42,6 +42,9 @@ any) the tree should hold.
 ## Notes
 
 HITL. The same proxy-labelling rule as checkpoint 1 applies. Include direct
-rule entries and their model/snippet/railroad support in the reading route.
+rule entries, their model/snippet support and links to the grammar/railroad
+reference in the reading route. Assess model-reading-k73's example-led
+refinement as well as the model-first structure. For VS Code preview, open
+the interface-language folder or workspace root first so sibling figures load.
 Further correction runs require the human's direction at this checkpoint;
 the bounded runs authorized on 2026-09-28 do not authorize an unattended loop.
