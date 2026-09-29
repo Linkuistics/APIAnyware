@@ -37,7 +37,7 @@ head:input	entry	reference/clauses-callable.md#input	responsibility	ready	refere
 head:invalidated_by	entry	reference/clauses-outcomes.md#invalidated_by	validity	ready	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:isolation	entry	reference/clauses-package.md#isolation	execution	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:law	entry	reference/clauses-access.md#law	entities	ready	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
-head:lifecycle	entry	reference/clauses-package.md#lifecycle	responsibility	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:lifecycle	entry	reference/clauses-package.md#lifecycle	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:link	entry	reference/clauses-package.md#link	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:literal	entry	reference/clauses-package.md#literal	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:mapping	entry	reference/clauses-access.md#mapping	access	ready	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.

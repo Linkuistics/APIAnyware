@@ -305,6 +305,19 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+Cross-set navigation is proofed (`reviewer-journey-k94`, closing
+`reviewer-journey-k11`). Every page has a direct inbound link from the landing
+map or its parent index, and the guided footers run landing → domain → model →
+concepts → tutorial → review guide. Each model section and §10 map row links
+its reference entries and a review task, and those destinations link back.
+Task links use one gloss per task across the set. Proof moved `lifecycle`'s
+reference entry, index row and disposition from *Release responsibility* to
+*Entities*, matching §10, the model page and the glossary. The audit's closing
+*Step 2: refactored output* indexes the set, maps F1–F12, keeps Q1–Q6 open and
+separates these consistency checks from the unassessed full-set human reading.
+`task docs:check` passed, with 229 coverage candidates and no pending entries.
+The full-set checkpoint still owns comprehension.
+
 The three-page review guide is proofed (`review-guide-k91`, closing
 `review-guide-k10`). `review/README.md` is the landing-map and guided-route
 destination; it links the six dimensions, feedback template, complete

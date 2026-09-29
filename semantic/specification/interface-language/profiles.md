@@ -652,7 +652,7 @@ facts within F1's supported scope. Optional members, generic families or thrown
 completion would require capabilities this catalogue does not supply; the
 language's ability to spell them does not extend the catalogue.
 
-Review: [Review the fixture's limits](review/README.md#limits).
+Review: [Assess the fixture's limits](review/README.md#limits).
 
 </blockquote>
 <!-- /reading-aid -->

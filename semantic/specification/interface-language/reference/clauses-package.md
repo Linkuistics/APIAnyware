@@ -542,7 +542,7 @@ package example::objects version "1" {
 
 ## `lifecycle`
 
-**Expresses:** [Release responsibility](../explanation/model.md#responsibility) — how an owned [handle](../glossary.md#handle) or reference is released.
+**Expresses:** [Entities that outlive a call](../explanation/model.md#entities) — how an owned [handle](../glossary.md#handle) or reference is released.
 
 **Form:** `lifecycle(unique, @destroy);` or `lifecycle(refcounted, runtime(profileAlias, "retain"), runtime(profileAlias, "release"));` ([clause and constructor grammar](notation.md#clause)).
 
@@ -584,7 +584,7 @@ The caller releases an owned `Store` through `destroy`; `input($store, consume)`
 
 **Used by and see also:** [Resource](declarations.md#resource); [`runtime`](#runtime); [`isolation`](#isolation); [`N09`/`N10`](../conformance.md#rejection-mutations); review tasks: [Author a complete call contract](../review/tasks.md#author).
 
-See also [Entities that outlive a call](../explanation/model.md#entities) for the lifecycle's place in the model.
+See also [Release responsibility](../explanation/model.md#responsibility) for which calls take, keep or hand back the release duty.
 
 **Rationale:** [How AIL states a contract](../explanation/contracts.md).
 

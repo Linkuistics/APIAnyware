@@ -372,9 +372,9 @@ the model and three explanations, then the tutorial and review guide.
 | Orientation and vocabulary | [README.md](../../specification/interface-language/README.md), [glossary.md](../../specification/interface-language/glossary.md) |
 | Domain and model | [explanation/unsaid.md](../../specification/interface-language/explanation/unsaid.md), [explanation/model.md](../../specification/interface-language/explanation/model.md) |
 | AIL's account of the model and its choices | [explanation/contracts.md](../../specification/interface-language/explanation/contracts.md), [explanation/packages.md](../../specification/interface-language/explanation/packages.md), [explanation/choices.md](../../specification/interface-language/explanation/choices.md) |
-| Tutorial and lifetime | [tutorial/README.md](../../specification/interface-language/tutorial/README.md), [tutorial/01-lifetime.md](../../specification/interface-language/tutorial/01-lifetime.md) |
-| Lending and storage | [tutorial/02-lending.md](../../specification/interface-language/tutorial/02-lending.md), [tutorial/03-storage.md](../../specification/interface-language/tutorial/03-storage.md) |
-| Callbacks and access | [tutorial/04-callbacks.md](../../specification/interface-language/tutorial/04-callbacks.md), [tutorial/05-access-and-change.md](../../specification/interface-language/tutorial/05-access-and-change.md) |
+| Tutorial index and part 1, lifetime | [tutorial/README.md](../../specification/interface-language/tutorial/README.md), [tutorial/01-lifetime.md](../../specification/interface-language/tutorial/01-lifetime.md) |
+| Tutorial parts 2–3, lending and storage | [tutorial/02-lending.md](../../specification/interface-language/tutorial/02-lending.md), [tutorial/03-storage.md](../../specification/interface-language/tutorial/03-storage.md) |
+| Tutorial parts 4–5, callbacks, access and change | [tutorial/04-callbacks.md](../../specification/interface-language/tutorial/04-callbacks.md), [tutorial/05-access-and-change.md](../../specification/interface-language/tutorial/05-access-and-change.md) |
 | Reference indexes and grammar | [reference/README.md](../../specification/interface-language/reference/README.md), [reference/notation.md](../../specification/interface-language/reference/notation.md) |
 | Type and declaration lookup | [reference/types.md](../../specification/interface-language/reference/types.md), [reference/declarations.md](../../specification/interface-language/reference/declarations.md) |
 | Publication and input clauses | [reference/clauses-package.md](../../specification/interface-language/reference/clauses-package.md), [reference/clauses-callable.md](../../specification/interface-language/reference/clauses-callable.md) |
@@ -421,7 +421,7 @@ recorded in the following sections.
 | F9 — checkout-local links | [The existing-model inventory](../../specification/interface-language/baseline.md) names the external workspace paths as text. | The historical temporary checker remains a record, not a runnable tool supplied here. |
 | F10 — force signals | [Normative wording](../../specification/interface-language/reference/notation.md#normative-wording) explains the convention and routes readers to authoritative text. | Editorial work preserves case and requirements; uniform presentation is still the authors' Q1 decision. |
 | F11 — missing relationship figures | [Model views](../../specification/interface-language/explanation/model.md#the-model-at-a-glance), [ownership and validity figures](../../specification/interface-language/explanation/contracts.md), [containment/access views](../../specification/interface-language/explanation/packages.md) and [grammar views](../../specification/interface-language/reference/notation.md) sit beside prose or productions serving the same question. | The figures illustrate stated contracts and syntax; they do not establish implementation behaviour. |
-| F12 — sentence-level patterns | The [domain](../../specification/interface-language/explanation/unsaid.md), [explanations](../../specification/interface-language/explanation/contracts.md), [tutorial](../../specification/interface-language/tutorial/README.md) and [review guide](../../specification/interface-language/review/README.md) name actors and develop affirmative accounts, under the plan's prose contract. | The canonical rules are preserved. The final navigation additions still pass through copy-edit, art and proof. |
+| F12 — sentence-level patterns | The [domain](../../specification/interface-language/explanation/unsaid.md), [explanations](../../specification/interface-language/explanation/contracts.md), [tutorial](../../specification/interface-language/tutorial/README.md) and [review guide](../../specification/interface-language/review/README.md) name actors and develop affirmative accounts, under the plan's prose contract. | The canonical rules are preserved. The navigation additions have passed copy-edit, art and whole-document proof. |
 
 ### Language questions still open
 
@@ -473,8 +473,9 @@ question its destination answers; only the human checkpoint assesses usability.
 
 ### Reader evidence and unresolved work
 
-At the earlier reading checkpoint, the human confirmed that the improvement was good. They then asked for the model to lead the learning
-route, because the language serves as a tool. They also requested removal of
+At the earlier reading checkpoint, the human confirmed that the improvement
+was good. They then asked for the model to lead the learning route, because
+the language serves as a tool. They also requested removal of
 railroad-reading instruction boxes and asked for visible boundaries around
 reading aids. At the later model-reading checkpoint, they said the material was
 “looking good”, praised the example fragments and asked that grammar and
@@ -492,8 +493,9 @@ human understanding.
 The full-set human reading still needs to assess the connected learning
 route, direct lookup and the ability to explain and change a contract. In
 particular, the earlier difficulty locating the tutorial's ownership exercise
-has new local routes, but no reported human re-test. The final navigation set
-also awaits its copy-edit, art and whole-document proof stages. The remaining
-language decisions are Q1–Q6; production parsing, validation, provider support,
+has new local routes, but no reported human re-test. The navigation set has
+passed its copy-edit, art and whole-document proof stages; those are
+consistency checks, not comprehension evidence. The remaining language
+decisions are Q1–Q6; production parsing, validation, provider support,
 implementation truth and runtime safety remain outside this documentation
 deliverable.

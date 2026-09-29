@@ -60,11 +60,3 @@ maps F1–F12 to remedies and remaining boundaries, leaves Q1–Q6 open, and
 separates navigation/consistency checks from the partial human assessments
 at first-path-reading-k64 and model-reading-k73. The full-set human checkpoint
 still owns comprehension; no new language question or figure is introduced.
-
-## Handed forward
-
-- **proof** — Update the audit's Step 2 F12 boundary and final paragraph when
-  this navigation pipeline has actually completed. They currently identify
-  copy-edit, art and proof as remaining. Preserve the distinct unresolved
-  full-set human assessment and Q1–Q6; do not turn passed document checks into
-  a comprehension claim.

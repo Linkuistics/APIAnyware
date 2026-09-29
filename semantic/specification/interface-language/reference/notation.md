@@ -306,7 +306,7 @@ storage an obligation addresses.
 
 [Diagram source](../figures/g10-places.puml) · [Exact grammar](../grammar.ebnf)
 
-Review task: [Trace names and members](../review/tasks.md#trace).
+Review tasks: [Trace names and members](../review/tasks.md#trace).
 
 <a id="environment"></a>
 
