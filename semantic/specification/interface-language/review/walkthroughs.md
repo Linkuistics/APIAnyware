@@ -1453,7 +1453,9 @@ normative facts remain accessible and its own restrictions are labelled
 ([A5](../profiles.md#a5)). The plain-language views above are such summaries;
 the linked packages retain the full descriptions.
 
-Continue to [Design choices, limits and open questions](../explanation/choices.md)
-to frame criticism, or use [the reference indexes](../reference/README.md)
+Continue to [Review tasks](tasks.md) to test and judge the notation, and use
+[Reviewing AIL](README.md) for the six dimensions and feedback template.
+[Design choices, limits and open questions](../explanation/choices.md)
+helps frame criticism; use [the reference indexes](../reference/README.md)
 to find exact clauses and rejection cases. Return to
 [the documentation map](../README.md#paths-through-the-documentation).

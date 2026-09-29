@@ -1,0 +1,69 @@
+// Independent review fragments; not complete or concatenable packages.
+
+// region: tagged-copy
+package example::buffers version "2" {
+  fn copy_bytes(store: Store, destination: mutptr<u8>, tag: ptr<u8>) -> bool {
+    input($tag, borrow);
+    retain($tag, none);
+    valid($tag, call);
+    direction($tag, in);
+    aliasing($tag, disjoint);
+    extent($tag, buffer(4, 4, elements));
+    contents($tag, binary);
+    // Existing input, effect and outcome clauses omitted.
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_store_copy_tagged");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  // Header, providers, environment, Store and publication context omitted.
+}
+// endregion
+
+// region: close
+package review::watch_lifetime version "1" {
+  fn watch_close(watch: Watch) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($watch, consume);
+    retain($watch, none);
+    outcome closed {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "watch_close");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  // Header, providers, environment, Watch and publication context omitted.
+}
+// endregion
+
+// region: static-borrows
+package example::objects version "1" {
+  constant fixed_bytes: ptr<u8> {
+    give($result, borrow(static));
+    invalidated_by($result, []);
+    // Extent, contents, sharing, isolation, availability and access omitted.
+  }
+  global pointer_value: ptr<u8> {
+    mutable(false);
+    give($result, borrow(static));
+    invalidated_by($result, []);
+    // Extent, contents, sharing, isolation, availability and access omitted.
+  }
+  // Header, dependencies and remaining declarations omitted.
+}
+// endregion

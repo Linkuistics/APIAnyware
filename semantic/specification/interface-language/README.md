@@ -107,7 +107,7 @@ different reading purpose.
 | Place names and references in their containing packages | [The two-package language-containment view](language.md#l2), followed by member and slot examples |
 | Interpret an example beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package-shell aid](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Look up exact syntax and railroad views | [Grammar and notation](reference/notation.md), with sections for [package shells](reference/notation.md#shell), [names](reference/notation.md#names), [clauses](reference/notation.md#clause) and [callables](reference/notation.md#callable) |
-| Review the design | [Reading the conformance examples](review/walkthroughs.md), with clause readings and trace questions; [pressure cases](conformance.md#pressure-cases-outside-the-synthetic-profile) for limits |
+| Review the design | [Reviewing AIL](review/README.md), with six dimensions, conformance walkthroughs, practical tasks and a feedback template |
 | Look up a term or exact rule | [Reference](reference/README.md), with types, declarations, model/rule indexes and clause applicability; [Glossary](glossary.md) for terms |
 
 Continue from the domain page to
@@ -115,7 +115,9 @@ Continue from the domain page to
 [How AIL states a contract](explanation/contracts.md).
 Then read [Packages, environments and access paths](explanation/packages.md)
 and [Design choices, limits and open questions](explanation/choices.md), followed
-by [the tutorial](tutorial/README.md).
+by [the tutorial](tutorial/README.md). Finish the guided route with
+[Reviewing AIL](review/README.md) to assess how well the language describes
+the model and record feedback tied to a task, example or rule.
 
 For a direct entry into the notation, choose a concept from
 [the model-to-notation map](explanation/model.md#from-the-model-to-ail).
