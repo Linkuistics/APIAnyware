@@ -94,8 +94,15 @@ There are four files:
 - outcomes and callback use;
 - access paths, patterns and the fixture profile.
 
-The reference drafts may adjust this split if an entry count makes one file
-unwieldy. They record the change in this section.
+The reference inventory confirms this split: `clauses-package.md` owns 29
+package, environment, common and nominal clauses; `clauses-callable.md` owns
+15 effects/input/storage clauses; `clauses-outcomes.md` owns 9 outcome and
+callback-schedule clauses; and `clauses-access.md` owns 11 access, pattern and
+fixture clauses. Shared spellings (`executor`, `concurrency`, `reentrancy`)
+have one entry covering both scopes. The `runtime` entry distinguishes its
+environment-clause use from its lifecycle-constructor use. The reviewed
+classifications are in `semantic/specification/tools/reference-dispositions.tsv`;
+`task docs:coverage` re-extracts candidates and checks them against this list.
 
 Page sizes follow the reader's questions, not a word budget. A page answers
 one question at one level. A definition does not get its own page unless it is
@@ -516,6 +523,13 @@ Later increments add tasks when they first need them:
   The candidate extraction is a lexical sweep. It does not parse AIL and does
   not decide what is a clause; the disposition list records that judgement,
   and it is reviewed against the rule text like any entry.
+  The implementation also extracts the names in L4's core-type table, so scalar
+  types and type constructors cannot fall outside the grammar/clause sweep.
+  `docs_coverage.py` exposes `--inventory` for source locations, `--json` for
+  candidates/dispositions/errors/pending, and `--require-complete` for the final
+  reference gate. The runtime checker uses the standard library. The separate
+  maintainer task `docs:coverage:test` runs pytest contract tests through uv;
+  it is not a parser or semantic-validation suite.
 
 None of these checks parses AIL or validates contracts. The EBNF recognizer
 from the draft's verification record was disposable and is not a documentation

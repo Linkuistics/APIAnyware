@@ -1,5 +1,13 @@
 # Conformance corpus and implementation obligations
 
+> **Purpose:** conformance reference — inspect synthetic examples, rejection mutations and future implementation obligations.
+> **Reader:** reviewers and implementers comparing declared facts with the draft rules.
+> **Before this:** [the API model](explanation/model.md) and [reference](reference/README.md).
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
+> **Rules:** [language](language.md), [contracts](contracts.md), [profiles](profiles.md) and [grammar](grammar.ebnf) are canonical; this page supplies supporting material.
+
 This is an acceptance specification for future implementations. The examples
 have no native implementation and use the synthetic catalogue in
 [F1](profiles.md#f1-synthetic-fixture-catalogue). They assert contracts of invented

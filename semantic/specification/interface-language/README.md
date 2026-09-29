@@ -108,7 +108,7 @@ different reading purpose.
 | Interpret an example beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package-shell aid](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Look up exact syntax and railroad views | [Grammar and notation](reference/notation.md), with sections for [package shells](reference/notation.md#shell), [names](reference/notation.md#names), [clauses](reference/notation.md#clause) and [callables](reference/notation.md#callable) |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
-| Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
+| Look up a term or exact rule | [Reference](reference/README.md), with types, declarations, model/rule indexes and clause applicability; [Glossary](glossary.md) for terms |
 
 Continue from the domain page to
 [A model of API behaviour and binding obligations](explanation/model.md), then

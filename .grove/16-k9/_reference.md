@@ -98,3 +98,23 @@ Four draft sessions, in order. Only the last cuts `copy-edit`.
 
 The plan's §2 split may change once the inventory is counted; session 1
 records any change there.
+
+## Inventory handoff
+
+`semantic/specification/tools/reference-dispositions.tsv` records the lexical
+candidate classifications, entry target anchors, model concepts and owning
+draft handles. `task docs:coverage` prints every pending entry by name and owner.
+The remaining owners are k21 (`clauses-package.md`), k22
+(`clauses-callable.md`) and k23 (`clauses-outcomes.md`, `clauses-access.md`).
+Change an entry's status from `pending` to `ready` when its file lands; the
+checker rejects pending entries in an existing file. Keep each declared anchor,
+or update the disposition and incoming links together. Shared clause spellings
+have one entry covering every scope; in particular `runtime` also has a lifecycle
+constructor use, while `executor`, `concurrency` and `reentrancy` cover callable
+and callback-use scopes.
+
+The last draft runs `python3 semantic/specification/tools/docs_coverage.py
+semantic/specification/interface-language --require-complete` as well as
+`task docs:check`, then grows copy-edit. This first draft has later live draft
+siblings and grows no editorial successor. Reference figures reuse G9 and the
+existing G10 views; no new figure slot is needed.

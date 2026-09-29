@@ -16,6 +16,7 @@ tasks:
       - task: docs:links
       - task: docs:examples
       - task: docs:diagrams
+      - task: docs:coverage
 
   docs:diagrams:
     desc: Regenerate diagram SVGs with pinned renderers and fail on differences
@@ -36,3 +37,15 @@ tasks:
     desc: Check fence info strings and that ail examples match their .ail source
     cmds:
       - python3 {{.DOCS_TOOLS}}/docs_examples.py {{.SPEC}} {{.DOCS_ALSO}}
+
+  docs:coverage:
+    desc: Check enumerated reference coverage and list future entries by name
+    cmds:
+      - python3 {{.DOCS_TOOLS}}/docs_coverage.py {{.SPEC}}
+
+  docs:coverage:test:
+    desc: Test extraction and rejection controls for the reference coverage checker
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    cmds:
+      - uv run --with pytest pytest -q {{.DOCS_TOOLS}}/test_docs_coverage.py

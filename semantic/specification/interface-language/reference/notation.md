@@ -14,6 +14,8 @@ an operation's parameters become callable slots, and the ways it can finish
 become named [outcomes](../glossary.md#outcome). Use [the model-to-notation map](../explanation/model.md#from-the-model-to-ail)
 to start from a concept rather than a syntax form.
 
+<a id="grammar-source-and-dialect"></a>
+
 ## Grammar source and dialect
 
 [`grammar.ebnf`](../grammar.ebnf) is the authoritative syntax source.
@@ -549,3 +551,45 @@ Return to [the documentation map](../README.md#paths-through-the-documentation),
 continue to [How AIL states a contract](../explanation/contracts.md) for the
 meaning of its obligations, or consult [the canonical language rules](../language.md)
 for lexical, scope and publication requirements.
+
+<a id="normative-wording"></a>
+
+## Normative wording
+
+The [landing page](../README.md#what-is-normative) identifies
+`language.md`, `contracts.md`, `profiles.md` and `grammar.ebnf` as normative.
+The language rules define the capitalised requirement, prohibition,
+recommendation and permission keywords at their opening. Lowercase wording
+retains its ordinary meaning and can still state a requirement; the spelling
+of a keyword alone does not determine whether a sentence in these files is
+part of the contract. [Q1](../explanation/choices.md#q1)
+records the presentation question about consistent signals.
+
+Reference meanings are labelled non-normative summaries and cite the rule
+that determines the answer. The bordered reading aids on canonical pages
+are also non-normative. A disagreement is resolved by the canonical rules,
+with ambiguities retained for review.
+
+<a id="entry-conventions"></a>
+
+## Reading an entry
+
+Start with **Expresses** to connect a construct to the
+[API model](../explanation/model.md). **Form** names its production or syntax;
+**Operands and types** names the accepted arguments. **Applies to** locates
+its scope. **Required and repeatability** and **Default** distinguish an
+explicit obligation from optional information. “None; required” records the
+absence of a default, rather than supplying a guessed contract.
+
+**Meaning** is a non-normative summary. **Constraints** names the companion
+facts and cross-checks; **Rejected when** cites the relevant rule and any
+matching conformance mutation. **Example** is a labelled complete package or
+fragment with enough enclosing context to identify its subjects. **Used by
+and see also** connects related entries and examples; **Rationale** leads to
+the explanation. Type and declaration entries use the fields that apply.
+
+The [reference index](README.md) offers model and rule routes.
+[Types](types.md) and [declarations](declarations.md) include semantic
+restrictions beyond the generic grammar. For clauses whose entries are
+forthcoming, the [applicability table](declarations.md#applicability) supplies
+scope and canonical rule links.

@@ -1,0 +1,266 @@
+// Independent reference fragments for invented APIs; not complete packages.
+
+// region: package
+language "0.1";
+package example::geometry version "1" {
+  surface("An invented point API, release 1.");
+  exports([@Point]);
+  // Point, environments and remaining facts omitted.
+}
+// endregion
+
+// region: import
+package example::canvas version "1" {
+  import example::geometry version "1"
+    digest "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    as Geometry;
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    // Callable contracts omitted.
+  }
+  // Canvas and publication context omitted.
+}
+// endregion
+
+// region: use
+package example::objects version "1" {
+  use profile fixture = "example.fixture" version "1"
+    digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1"
+    digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  // Environments and declarations omitted.
+}
+// endregion
+
+// region: environment
+package example::objects version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+    toolchain("fixture-compiler", "1");
+  }
+  // Providers and declarations omitted.
+}
+// endregion
+
+// region: record
+package example::geometry version "1" {
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: resource
+package example::buffers version "1" {
+  resource Store {
+    lifecycle(unique, @destroy);
+    // Implements, sharing, isolation and publication facts omitted.
+  }
+  // destroy and other declarations omitted.
+}
+// endregion
+
+// region: object
+package example::drawing version "1" {
+  object Shape { base(none); implements([]); }
+  object Dot { base(@Shape); implements([@Drawable]); }
+  // Drawable, lifecycle and other nominal contracts omitted.
+}
+// endregion
+
+// region: interface
+package example::drawing version "1" {
+  interface Drawable { extends([]); }
+  fn required_draw(item: Drawable) -> unit {
+    member(@Drawable, instance);
+    receiver($item);
+    requirement(required);
+    // Callable contracts omitted.
+  }
+  // Lifecycle and other nominal contracts omitted.
+}
+// endregion
+
+// region: field
+package example::geometry version "1" {
+  record Point { field x: i32; field y: i32; }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: alias
+package example::geometry version "1" {
+  alias Coordinate = i32 {
+    // Nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: enum
+package example::geometry version "1" {
+  enum Axis: u8 {
+    values(closed);
+    case horizontal = 0;
+    case vertical = 1;
+  }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: flags
+package example::geometry version "1" {
+  flags Edges: u8 {
+    values(closed);
+    case left = 1;
+    case right = 2;
+  }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: case
+package example::geometry version "1" {
+  enum Axis: u8 {
+    values(closed);
+    case horizontal = 0;
+    case vertical = 1;
+  }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: fn
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    input($canvas, borrow);
+    retain($canvas, none);
+    valid($canvas, call);
+    // Effects, outcomes and access omitted.
+  }
+  // Canvas, Geometry import and publication context omitted.
+}
+// endregion
+
+// region: callback
+package example::events version "1" {
+  callback Handler(code: u32) -> unit {
+    sharing(shared);
+    isolation(none);
+    // Invocation effects, outcomes, ABI and representation omitted.
+  }
+}
+// endregion
+
+// region: property
+package example::objects version "1" {
+  property count: u64 {
+    member(@Counter, instance);
+    accessors(@read_count, @write_count);
+    storage(value);
+    // Availability and deprecation omitted.
+  }
+  // Counter and accessor declarations omitted.
+}
+// endregion
+
+// region: constant
+package example::settings version "1" {
+  constant default_limit: u32 {
+    literal(16);
+    // Availability and deprecation omitted.
+  }
+}
+// endregion
+
+// region: global
+package example::settings version "1" {
+  global current_limit: u32 {
+    mutable(true);
+    sharing(confined);
+    isolation(main);
+    // Access and publication facts omitted.
+  }
+}
+// endregion
+
+// region: outcome
+package example::buffers version "1" {
+  fn create() -> nullable<Store> {
+    outcome created {
+      when(returned, nonnull($result));
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    // Null outcome, effects, access and other context omitted.
+  }
+}
+// endregion
+
+// region: callback-use
+package example::events version "1" {
+  fn subscribe(handler: Handler) -> Watch {
+    callback $handler {
+      timing(after_return);
+      count(0, many);
+      scope(owner($result));
+      quiescence(@unsubscribe);
+      // Executor, concurrency and reentrancy omitted.
+    }
+    // Callable, retention and output contracts omitted.
+  }
+  // Handler, Watch and unsubscribe omitted.
+}
+// endregion
+
+// region: access
+package example::objects version "1" {
+  fn read_count(receiver: Counter) -> u64 {
+    access objc_like in [test] {
+      abi(native, "object-message");
+      via(fixture, "message", "currentCount");
+      mapping(identity);
+      compatibility(stable);
+    }
+    // Member, input, effects and outcomes omitted.
+  }
+  // Providers, Counter and test environment omitted.
+}
+// endregion
+
+// region: pattern
+package example::buffers version "1" {
+  pattern lifetime {
+    role value: type one;
+    role release: operation one;
+    law(releases, release, value);
+  }
+}
+// endregion
+
+// region: role
+package example::buffers version "1" {
+  pattern grouping {
+    role element: type one;
+    role observer: operation optional;
+    role inputs: slot many;
+    role lifetimes: pattern some;
+  }
+}
+// endregion
+
+// region: instance
+package example::buffers version "1" {
+  instance store_lifetime: lifetime {
+    bind(value, [@Store]);
+    bind(release, [@destroy]);
+  }
+  // lifetime, Store and destroy omitted.
+}
+// endregion

@@ -8,6 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [L1](#l1), [L2](#l2), [L3](#l3), [L4](#l4), [L5](#l5) and [L6](#l6) below, together with the [grammar](grammar.ebnf), are canonical.
+> **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an example. The rule
 text outside the border states the requirements. The examples describe

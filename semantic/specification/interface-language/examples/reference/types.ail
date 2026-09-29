@@ -1,0 +1,85 @@
+// Independent reference fragments for invented APIs; not complete packages.
+
+// region: unit
+package example::canvas version "1" {
+  fn inspect(canvas: Canvas) -> unit {
+    // Callable contracts omitted.
+  }
+}
+// endregion
+
+// region: bool
+package example::geometry version "1" {
+  record Samples {
+    field enabled: bool;
+    // Other fields and nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: integers
+package example::geometry version "1" {
+  record Point { field x: i32; field y: i32; }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: floats
+package example::geometry version "1" {
+  record Measurement { field value: f64; }
+  // Nominal contracts omitted.
+}
+// endregion
+
+// region: pointers
+package example::canvas version "1" {
+  fn inspect(canvas: Canvas, pixels: ptr<u8>, output: mutptr<u8>) -> unit {
+    // Pointer and callable contracts omitted.
+  }
+}
+// endregion
+
+// region: nullable
+package example::canvas version "1" {
+  fn create() -> nullable<Canvas> {
+    // Allocation outcomes and ownership contracts omitted.
+  }
+}
+// endregion
+
+// region: array
+package example::geometry version "1" {
+  record Samples {
+    field counts: array<u16, 4>;
+    // Other fields and nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: complex
+package example::geometry version "1" {
+  record Samples {
+    field signal: complex<f32>;
+    // Other fields and nominal contracts omitted.
+  }
+}
+// endregion
+
+// region: named-types
+package example::geometry version "1" {
+  alias Coordinate = i32 {
+    // Nominal contracts omitted.
+  }
+  record Point { field x: Coordinate; }
+  // Remaining fields and nominal contracts omitted.
+}
+// endregion
+
+// region: profile-types
+package example::collections version "1" {
+  alias Points = collections::Sequence<i32> {
+    // Provider schema and all contracts omitted.
+  }
+  // The collections profile pin is omitted.
+}
+// endregion

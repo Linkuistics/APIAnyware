@@ -1,0 +1,230 @@
+candidate	kind	target	concept	status	owner	reason
+head:abi	entry	reference/clauses-access.md#abi	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:accessors	entry	reference/clauses-package.md#accessors	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:alias::clause	covered	keyword:use				Schematic profile-qualified clause spelling, not a literal provider name.
+head:aliasing	entry	reference/clauses-callable.md#aliasing	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:available	entry	reference/clauses-package.md#available	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:base	entry	reference/clauses-package.md#base	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:bind	entry	reference/clauses-access.md#bind	entities	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:borrow	covered	head:give				Value constructor covered with the clause that admits it; not an independent clause.
+head:buffer	covered	head:extent				Value constructor covered with the clause that admits it; not an independent clause.
+head:callback_abi	entry	reference/clauses-access.md#callback_abi	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:capability	covered	head:requires				Value constructor covered with the clause that admits it; not an independent clause.
+head:compatibility	entry	reference/clauses-access.md#compatibility	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:completions	entry	reference/clauses-callable.md#completions	outcomes	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:concurrency	entry	reference/clauses-callable.md#concurrency	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:contents	entry	reference/clauses-callable.md#contents	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:copy	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
+head:count	entry	reference/clauses-outcomes.md#count	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:declarations	non-vocabulary					Ordinary prose followed by a parenthesis; not AIL vocabulary.
+head:defaults	non-vocabulary					Ordinary prose followed by a parenthesis; not AIL vocabulary.
+head:deprecated	entry	reference/clauses-package.md#deprecated	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:direction	entry	reference/clauses-callable.md#direction	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:doc	entry	reference/clauses-package.md#doc	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:equal	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
+head:execution	entry	reference/clauses-callable.md#execution	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:executor	entry	reference/clauses-callable.md#executor	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:exports	entry	reference/clauses-package.md#exports	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:extends	entry	reference/clauses-package.md#extends	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:extension	entry	reference/clauses-package.md#extension	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:extent	entry	reference/clauses-callable.md#extent	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:feature	entry	reference/clauses-package.md#feature	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:fixture::actor	entry	reference/clauses-access.md#fixture-actor	execution	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:fixture::sendability	entry	reference/clauses-access.md#fixture-sendability	execution	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:give	entry	reference/clauses-outcomes.md#give	responsibility	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:implements	entry	reference/clauses-package.md#implements	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:input	entry	reference/clauses-callable.md#input	responsibility	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:invalidated_by	entry	reference/clauses-outcomes.md#invalidated_by	validity	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:isolation	entry	reference/clauses-package.md#isolation	execution	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:law	entry	reference/clauses-access.md#law	entities	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:lifecycle	entry	reference/clauses-package.md#lifecycle	responsibility	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:link	entry	reference/clauses-package.md#link	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:literal	entry	reference/clauses-package.md#literal	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:mapping	entry	reference/clauses-access.md#mapping	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:meaning	entry	reference/clauses-outcomes.md#meaning	outcomes	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:member	entry	reference/clauses-package.md#member	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:mutable	entry	reference/clauses-package.md#mutable	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:mutation	entry	reference/clauses-callable.md#mutation	validity	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:nonnull	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
+head:null	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
+head:outside_callback	covered	head:requires				Value constructor covered with the clause that admits it; not an independent clause.
+head:overrides	entry	reference/clauses-package.md#overrides	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:owner	covered	head:valid				Value constructor covered with the clause that admits it; not an independent clause.
+head:parameters	non-vocabulary					Ordinary prose followed by a parenthesis; not AIL vocabulary.
+head:platform	entry	reference/clauses-package.md#platform	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:quiescence	entry	reference/clauses-outcomes.md#quiescence	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:range	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
+head:receiver	entry	reference/clauses-package.md#receiver	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:reentrancy	entry	reference/clauses-callable.md#reentrancy	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:representation	entry	reference/clauses-access.md#representation	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:requirement	entry	reference/clauses-package.md#requirement	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:requires	entry	reference/clauses-callable.md#requires	callbacks	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:retain	entry	reference/clauses-callable.md#retain	responsibility	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:runtime	entry	reference/clauses-package.md#runtime	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:satisfies	entry	reference/clauses-package.md#satisfies	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:scope	entry	reference/clauses-outcomes.md#scope	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:sharing	entry	reference/clauses-package.md#sharing	execution	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:since	covered	head:deprecated				Value constructor covered with the clause that admits it; not an independent clause.
+head:source	entry	reference/clauses-package.md#source	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:state	entry	reference/clauses-outcomes.md#state	outcomes	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:storage	entry	reference/clauses-package.md#storage	entities	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:strong	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
+head:subject	entry	reference/clauses-access.md#subject	entities	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:surface	entry	reference/clauses-package.md#surface	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:target	entry	reference/clauses-package.md#target	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:text	covered	head:contents				Value constructor covered with the clause that admits it; not an independent clause.
+head:timing	entry	reference/clauses-outcomes.md#timing	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:toolchain	entry	reference/clauses-package.md#toolchain	description	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:unretained	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
+head:valid	entry	reference/clauses-callable.md#valid	validity	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:values	entry	reference/clauses-package.md#values	operations	pending	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
+head:variadic	entry	reference/clauses-callable.md#variadic	operations	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:via	entry	reference/clauses-access.md#via	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+head:weak	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
+head:when	entry	reference/clauses-outcomes.md#when	outcomes	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
+keyword:abi	covered	keyword:use				Contextual grammar terminal documented with the containing form.
+keyword:access	entry	reference/declarations.md#access	access	ready	reference-k16	Declaration or block form.
+keyword:alias	entry	reference/declarations.md#alias	operations	ready	reference-k16	Declaration or block form.
+keyword:as	covered	keyword:import				Contextual grammar terminal documented with the containing form.
+keyword:callback	entry	reference/declarations.md#callback	callbacks	ready	reference-k16	Declaration or block form.
+keyword:case	entry	reference/declarations.md#case	operations	ready	reference-k16	Declaration or block form.
+keyword:constant	entry	reference/declarations.md#constant	entities	ready	reference-k16	Declaration or block form.
+keyword:digest	covered	keyword:import				Contextual grammar terminal documented with the containing form.
+keyword:enum	entry	reference/declarations.md#enum	operations	ready	reference-k16	Declaration or block form.
+keyword:environment	entry	reference/declarations.md#environment	description	ready	reference-k16	Declaration or block form.
+keyword:false	covered	type:bool				Boolean token; L1 forbids use as an identifier.
+keyword:field	entry	reference/declarations.md#field	operations	ready	reference-k16	Declaration or block form.
+keyword:flags	entry	reference/declarations.md#flags	operations	ready	reference-k16	Declaration or block form.
+keyword:fn	entry	reference/declarations.md#fn	operations	ready	reference-k16	Declaration or block form.
+keyword:global	entry	reference/declarations.md#global	entities	ready	reference-k16	Declaration or block form.
+keyword:import	entry	reference/declarations.md#import	description	ready	reference-k16	Declaration or block form.
+keyword:in	covered	keyword:access				Contextual grammar terminal documented with the containing form.
+keyword:instance	entry	reference/declarations.md#instance	entities	ready	reference-k16	Declaration or block form.
+keyword:interface	entry	reference/declarations.md#interface	entities	ready	reference-k16	Declaration or block form.
+keyword:language	covered	keyword:package				Contextual grammar terminal documented with the containing form.
+keyword:many	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:object	entry	reference/declarations.md#object	entities	ready	reference-k16	Declaration or block form.
+keyword:one	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:operation	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:optional	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:outcome	entry	reference/declarations.md#outcome	outcomes	ready	reference-k16	Declaration or block form.
+keyword:package	entry	reference/declarations.md#package	description	ready	reference-k16	Declaration or block form.
+keyword:pattern	entry	reference/declarations.md#pattern	entities	ready	reference-k16	Declaration or block form.
+keyword:profile	entry	reference/types.md#profile-types	access	ready	reference-k16	Provider-defined types; provider pins are covered by the use entry.
+keyword:property	entry	reference/declarations.md#property	entities	ready	reference-k16	Declaration or block form.
+keyword:record	entry	reference/declarations.md#record	operations	ready	reference-k16	Declaration or block form.
+keyword:resource	entry	reference/declarations.md#resource	entities	ready	reference-k16	Declaration or block form.
+keyword:role	entry	reference/declarations.md#role	entities	ready	reference-k16	Declaration or block form.
+keyword:slot	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:some	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:throws	covered	keyword:fn				Contextual grammar terminal documented with the containing form.
+keyword:true	covered	type:bool				Boolean token; L1 forbids use as an identifier.
+keyword:type	covered	keyword:role				Contextual grammar terminal documented with the containing form.
+keyword:use	entry	reference/declarations.md#use	agreement	ready	reference-k16	Declaration or block form.
+keyword:version	covered	keyword:package				Contextual grammar terminal documented with the containing form.
+mutation:N01	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N02	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N03	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N04	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N05	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N06	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N07	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N08	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N09	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N10	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N11	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N12	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N13	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N14	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N15	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N16	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N17	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N18	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N19	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N20	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N21	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N22	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N23	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N24	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N25	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N26	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N27	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N28	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N29	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N30	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N31	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N32	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+mutation:N33	non-vocabulary					Conformance test identifier; defined in conformance.md#rejection-mutations, not AIL vocabulary.
+production:access	covered	keyword:access				Production documented with its enclosing declaration form.
+production:alias	covered	keyword:alias				Production documented with its enclosing declaration form.
+production:arguments	covered	production:clause				Generic clause/value grammar; names receive their closed meaning from the rules.
+production:callable	covered	keyword:fn				Production documented with its enclosing declaration form.
+production:callback_use	entry	reference/declarations.md#callback-use	callbacks	ready	reference-k16	Registration schedule block, distinct from the callback declaration.
+production:clause	entry	reference/notation.md#clause	description	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:constant	covered	keyword:constant				Production documented with its enclosing declaration form.
+production:constructor	covered	production:clause				Generic clause/value grammar; names receive their closed meaning from the rules.
+production:declaration	covered	keyword:package				Production documented with its enclosing declaration form.
+production:dependency	covered	keyword:use				Production documented with its enclosing declaration form.
+production:document	covered	keyword:package				Production documented with its enclosing declaration form.
+production:enum_case	covered	keyword:case				Production documented with its enclosing declaration form.
+production:enumeration	covered	keyword:enum				Production documented with its enclosing declaration form.
+production:environment	covered	keyword:environment				Production documented with its enclosing declaration form.
+production:field	covered	keyword:field				Production documented with its enclosing declaration form.
+production:global	covered	keyword:global				Production documented with its enclosing declaration form.
+production:import	covered	keyword:import				Production documented with its enclosing declaration form.
+production:instance	covered	keyword:instance				Production documented with its enclosing declaration form.
+production:integer	entry	reference/notation.md#grammar-source-and-dialect	operations	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:item	covered	keyword:package				Production documented with its enclosing declaration form.
+production:list	covered	production:clause				Generic clause/value grammar; names receive their closed meaning from the rules.
+production:name	entry	reference/notation.md#names	description	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:nominal	covered	keyword:record				Production documented with its enclosing declaration form.
+production:outcome	covered	keyword:outcome				Production documented with its enclosing declaration form.
+production:parameter	covered	keyword:fn				Production documented with its enclosing declaration form.
+production:parameters	covered	keyword:fn				Production documented with its enclosing declaration form.
+production:pattern	covered	keyword:pattern				Production documented with its enclosing declaration form.
+production:place	entry	reference/notation.md#places	operations	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:property	covered	keyword:property				Production documented with its enclosing declaration form.
+production:reference	entry	reference/notation.md#names	operations	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:role	covered	keyword:role				Production documented with its enclosing declaration form.
+production:type	entry	reference/types.md#named-types	operations	ready	reference-k16	Declared type names and transparent alias expansion.
+production:type_argument	covered	type:array				Type argument grammar admits a type or nonnegative integer; constructor-specific arities are in Types.
+production:value	covered	production:clause				Generic clause/value grammar; names receive their closed meaning from the rules.
+rule:A1	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:A2	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:A3	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:A4	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:A5	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C1	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C2	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C3	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C4	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C5	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C6	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C7	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:C8	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:F1	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L1	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L2	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L3	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L4	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L5	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+rule:L6	non-vocabulary					Rule identifier; canonical destination is in reference/README.md#rules, not an AIL construct.
+type:N	non-vocabulary					Metavariable in the normative core-type table, not a type spelling.
+type:T	non-vocabulary					Metavariable in the normative core-type table, not a type spelling.
+type:array	entry	reference/types.md#array	operations	ready	reference-k16	Core type or constructor.
+type:bool	entry	reference/types.md#bool	operations	ready	reference-k16	Core type or constructor.
+type:complex	entry	reference/types.md#complex	operations	ready	reference-k16	Core type or constructor.
+type:f32	entry	reference/types.md#floats	operations	ready	reference-k16	Core type or constructor.
+type:f64	covered	type:f32				Same fixed-field entry covers this spelling.
+type:i16	covered	type:i8				Same fixed-field entry covers this spelling.
+type:i32	covered	type:i8				Same fixed-field entry covers this spelling.
+type:i64	covered	type:i8				Same fixed-field entry covers this spelling.
+type:i8	entry	reference/types.md#integers	operations	ready	reference-k16	Core type or constructor.
+type:mutptr	covered	type:ptr				Same fixed-field entry covers this spelling.
+type:nullable	entry	reference/types.md#nullable	operations	ready	reference-k16	Core type or constructor.
+type:ptr	entry	reference/types.md#pointers	operations	ready	reference-k16	Core type or constructor.
+type:u16	covered	type:i8				Same fixed-field entry covers this spelling.
+type:u32	covered	type:i8				Same fixed-field entry covers this spelling.
+type:u64	covered	type:i8				Same fixed-field entry covers this spelling.
+type:u8	covered	type:i8				Same fixed-field entry covers this spelling.
+type:unit	entry	reference/types.md#unit	operations	ready	reference-k16	Core type or constructor.
