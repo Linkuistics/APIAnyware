@@ -31,6 +31,27 @@ concepts and authoring burden. API authors and tool implementers also need exact
 rules. Useful feedback cites a rule or example, explains the difficulty, and
 challenges the design where warranted.
 
+## APIs and languages in scope
+
+The model and AIL are intended to describe APIs across source languages and
+platforms. That includes .NET libraries, APIs in the Linux, Wayland, GTK and
+KDE ecosystems, Rust libraries and other libraries with typed contracts.
+The common description records each API's own promises and requirements.
+
+The library being described and the program calling it have separate roles.
+Programs in interpreted and dynamically typed languages are among the intended
+callers. The current emphasis for described libraries is on typed contracts;
+there is a tentative preference to leave interpreted or untyped libraries
+outside that initial focus. Interpretation and typing are separate properties,
+and that preference establishes no language-level exclusion.
+
+This breadth is an intended use of the model. Applying it to a particular API
+requires definitions for that API's types, access mechanisms and representations.
+Each API has its own access requirements; the model assumes no common C ABI
+across these ecosystems. Draft 0.1 supplies a synthetic fixture catalogue for
+review, with real provider development still ahead
+([scope and current limits](#scope-of-draft-01), [provider rules](profiles.md#a1)).
+
 <a id="the-problem-in-brief"></a>
 
 ## Who writes and uses an AIL description

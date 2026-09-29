@@ -17,6 +17,14 @@ language. A tool generating that binding needs the agreements in a form it
 can inspect. This model gathers the relevant entities and relationships into
 one account; AIL is a proposed notation for recording them.
 
+The intended APIs span .NET, the Linux, Wayland, GTK and KDE ecosystems,
+Rust and other libraries with typed contracts. The same questions about values,
+lifetimes and calls guide the description across these sources. Each answer
+comes from the API being described, including its particular access and
+representation requirements. The intended callers include programs in
+interpreted and dynamically typed languages. The overview explains the
+[source-side emphasis and its tentative limits](../README.md#apis-and-languages-in-scope).
+
 Recall the invented watch API. A program supplies a notification function and
 some context when it calls `watch_open`. A successful open gives it a watch
 [handle](../glossary.md#handle). It can pass that handle to `watch_view` to
@@ -24,6 +32,11 @@ obtain bytes and their length, and to `watch_close` to end the watch. The domain
 different possible promises about these operations. Those alternatives remain
 separate here: the header is an illustration, not a complete implemented API
 or one of the synthetic AIL fixture packages.
+
+The watch's C header supplies a concrete teaching example. Other APIs can need
+different ways to reach their code, as [Reaching the code](#access) explains.
+Applying the model to them requires suitable provider definitions; the draft's
+synthetic examples establish no production support for those ecosystems.
 
 The **call layer** describes what happens when the program uses the API:
 values pass between [caller and callee](../glossary.md#caller-and-callee), some

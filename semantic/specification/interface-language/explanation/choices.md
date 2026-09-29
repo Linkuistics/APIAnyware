@@ -137,7 +137,7 @@ map to those discussions; each cost concerns work an author or tool must do.
 
 | Draft 0.1 choice | Alternative discussed below | Cost to inspect |
 |---|---|---|
-| Dedicated syntax | Extend WIT or Swift interface syntax | New vocabulary, corpus and tooling |
+| Dedicated syntax | Extend an interface language such as WIT, or adopt a source language's syntax | New vocabulary, corpus and tooling |
 | Publish a complete description of a chosen subset | Publish unresolved facts for consumers to interpret | Author investigates required facts before publishing |
 | Write each applicable fact | Use defaults or shorthand | Author writes clauses even when the answer is `none` |
 | Put ownership in clauses | Put ownership in types/signatures | Reader follows the body to find transfers; rationale remains Q3 |
@@ -153,6 +153,12 @@ to [entities that outlive a call](model.md#entities),
 [reaching the code](model.md#access). To assess a dedicated syntax, consider
 whether a reader can follow those relationships across APIs with different
 lifetime and calling mechanisms.
+
+The [intended scope](../README.md#apis-and-languages-in-scope) spans source
+languages and platforms, with an emphasis on libraries with typed contracts.
+The comparison therefore asks how each notation serves that common model
+and the tools using it. Programs calling the described APIs can use different
+languages again, including interpreted and dynamically typed languages.
 
 The synthetic store gives its owner a [handle](../glossary.md#handle) to
 destroy once. The synthetic counter uses reference counting: each holder of an
@@ -173,11 +179,15 @@ language such as WIT. That would reuse a notation and some ownership concepts,
 but the extension would need to give native lifetimes, dispatch and
 representation precise meanings that fit the existing language.
 
-Another alternative is to extend Swift interface syntax. That would keep the
-description close to Swift declarations and familiar to Swift authors. Authors
-describing other source languages, and tools consuming those descriptions,
-would then need to work within the resulting Swift-shaped model. These are
-trade-offs to assess; neither alternative is established to be impossible.
+Another alternative is to adopt a source language's declaration syntax and
+extend it with the missing contract facts. That would keep descriptions close
+to declarations in that language and familiar to its authors. The comparison
+needs to distinguish reusable notation from the language's assumptions about
+types, lifetimes and calls. Authors and tools would need to express the other
+APIs' contracts faithfully wherever those assumptions differ. This is a test
+for any candidate source language; no one language defines the common model.
+These are trade-offs to assess; neither alternative is established to be
+impossible.
 
 Dedicated syntax avoids inheriting all the meanings and assumptions of either notation.
 Its cost is a new vocabulary, a conformance corpus and future tooling to learn
