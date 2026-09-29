@@ -454,8 +454,9 @@ lifetime; an owned reference carries one obligation in either case.
 | Unique `Store` | Pass the owned handle to `destroy` once | `destroy` destroys the store before returning |
 | Reference-counted `Counter` | Release each owned reference it holds | The final release destroys the counter |
 
-Use the state diagram to track who is responsible for destroying one synthetic
-immutable store. If `create` returns a store, the program receives that
+This detail of [entities that outlive a call](model.md#entities) tracks
+who is responsible for destroying one synthetic immutable store.
+If `create` returns a store, the program receives that
 responsibility. If it returns null, the program has nothing to destroy.
 Calling `view` lends access to the bytes and leaves responsibility with the
 program. At `destroy` entry, responsibility passes to the library. The library
@@ -594,7 +595,8 @@ to the caller. `retain(none)` promises no retention. A unique resource cannot be
 strongly retained or [copied](../glossary.md#copy) without an explicit clone profile
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-Use the diagram to follow the same three ownership cases through the domain
+This detail of [release responsibility](model.md#responsibility) follows
+the same three ownership cases through the domain
 page's [invented watch API](unsaid.md#a-small-api). Its `watch_view` borrows the
 watch, leaving the program responsible for closing it. Its `watch_close` takes
 that responsibility at entry and destroys the watch. A non-null owned result
@@ -688,7 +690,8 @@ even if that operation later fails. An empty list in the immutable case says
 there is no such earlier operation; the owner's destruction still ends access
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-Use the timelines to locate the moment the program stops using returned bytes.
+This detail of [validity](model.md#validity) locates the moment the program
+stops using returned bytes.
 In each case, it first keeps the input usable while `view` runs. The result's
 own contract then lets the program keep reading after the call completes.
 For the immutable store, destruction ends that access. In the constructed
@@ -1114,8 +1117,9 @@ locally. The precondition therefore identifies which registration's callback
 the caller needs to stay outside
 ([`L2`](../language.md#l2), [`C3`](../contracts.md#c3)).
 
-Use the callback timelines to find the point where the program knows the API
-has finished using the handler. In the constructed case, `notify` completes
+This detail of [callbacks and their schedules](model.md#callbacks) shows
+when the program knows the API has finished using the handler.
+In the constructed case, `notify` completes
 after the handler has finished, and that call can start no further
 invocation. The API retains no handler after the call.
 

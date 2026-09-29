@@ -79,8 +79,10 @@ position. It [imports](../glossary.md#import) geometry under the alias
 `Geometry`. When reading the canvas package, `Geometry::Point` therefore names an imported type
 ([`L2`](../language.md#l2)).
 
-The language-containment diagram shows the packages first, then their
-declarations and callable slots. A [slot](../glossary.md#slot) names a parameter, result or declared
+The language-containment diagram details
+[the published description](model.md#description): use it to locate each
+declaration and callable slot within its package.
+A [slot](../glossary.md#slot) names a parameter, result or declared
 thrown value in a [callable's](../glossary.md#callable) signature.
 `Canvas` illustrates [entities that outlive a call](model.md#entities): it is
 an [opaque resource](../glossary.md#opaque-resource), a
@@ -289,8 +291,9 @@ accurately and supplying every fact that portion needs.
 and internally consistent. Comparing its scope and claims with the actual
 library requires separate evidence ([`L3`](../language.md#l3)).
 
-Use the package diagram to follow a tool's reading from the public declarations
-to the further definitions they need. A reference can lead to a private
+This detail of [the published description](model.md#description) follows
+a tool's reading from the public declarations to the further definitions
+they need. A reference can lead to a private
 declaration; the tool still uses its contract, while the declaration stays
 private. The environment records the exact configuration where the contracts
 apply. The dependency
@@ -581,7 +584,8 @@ the source dependencies, compiler, options, interfaces and build procedure.
 The compiler establishes compatibility for that build. Separately built
 binaries need their own compatibility guarantee ([`A4`](../profiles.md#a4)).
 
-Use the access diagram to compare what a tool does to call the same getter.
+This detail of [reaching the code](model.md#access) compares what a tool
+does to call the same getter.
 On the left it sends a message; on the right it compiles a source call.
 Following either branch reaches the same `native` ABI entry, where the tool
 reads the rules for that branch's calling convention. Both branches also use

@@ -647,6 +647,15 @@ scalar places, such as `$length`, when those slots exist and are valid at the
 required entry or output point. An output buffer's `state` covers its initialized
 elements as [C5](#c5) shows; capacity alone creates no initialized values.
 
+Compare the storage requirements with the initialized payload: reserving
+capacity does not by itself make any element readable.
+
+| Case above | Initialized payload | Storage requirement |
+|---|---|---|
+| `buffer(3, 4, elements)` with UTF-8 `nul` text | Three code units | Four bytes; the fourth holds the terminator |
+| Non-null `buffer(0, 0, elements)` | None | No dereferenceable storage |
+| `buffer(0, 4, elements)` | None | Four allocated, aligned bytes |
+
 For one pointed-to record, `extent($point, one)` in [C1](#c1) supplies a single
 pointee instead of a buffer. Native field offsets and array stride come from the
 selected representation provider ([A3](profiles.md#a3)). See [How many bytes exist,

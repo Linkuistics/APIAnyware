@@ -696,8 +696,10 @@ its association and receiver, and [Place](#place) explains the `$canvas` clauses
 Local here means declared in this package, rather than a variable inside a
 function. Importing `Point` preserves its [canonical identity](#canonical-identity).
 
-Use the language-containment view to distinguish where a declaration lives from the declarations
-it refers to. Start with each package folder and its declaration boxes, then
+This language-containment detail of
+[The published description](explanation/model.md#description) distinguishes
+where a declaration lives from the declarations it refers to.
+Start with each package folder and its declaration boxes, then
 follow the labelled arrows: the canvas package imports geometry as `Geometry`,
 and `position` is associated with its sibling `Canvas` by `member`. Inside
 `Point`, the entries are fields; inside a callable, they are parameters and

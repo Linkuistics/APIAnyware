@@ -212,8 +212,10 @@ owned by `example::geometry` ([L2](#l2)).
 
 ![Two package folders: canvas contains sibling declarations Canvas, position and Filter; geometry contains Point. A member arrow connects position to Canvas, and an import arrow names Geometry. Each callable contains its own parameter and result slots.](figures/g9-model.svg)
 
-Read the language-containment view from packages to their declarations, then from the operation to
-its parameter and result. `Canvas` and `position` sit at the same package
+This language-containment detail of
+[The published description](explanation/model.md#description) locates
+declarations in packages and slots in callables.
+`Canvas` and `position` sit at the same package
 level. A separate member relation associates `position` with `Canvas`.
 The import relation leads from the canvas package to the geometry package;
 the result type follows that import to `Point`. These containment and reference
@@ -819,6 +821,14 @@ invalid because each case needs exactly one positive bit. Replacing either
 `values(closed)` with `values(open)` permits every `u8` value, including
 unnamed values such as 4. It does not enlarge the underlying integer range
 ([L4](#l4)).
+
+Compare the admitted values: closing an enum selects named values, while
+closing flags also admits combinations of their declared bits.
+
+| Declaration above | With `values(closed)` | With `values(open)` |
+|---|---|---|
+| `Axis` enum | 0 and 1 | Every `u8` value, 0 through 255 |
+| `Edges` flags | 0, 1, 2 and 3 | Every `u8` value, 0 through 255 |
 
 Distinct case names with the same numeric value require a supporting profile;
 the core rejects that duplication. An empty closed enum permits no values and

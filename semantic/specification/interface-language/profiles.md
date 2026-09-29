@@ -469,6 +469,15 @@ representation manifest, including compiler/runtime requirements.
 entry or an actual resolved build. A compiler-version string alone supplies
 less information than this artifact identity ([A4](#a4)).
 
+Use this comparison to identify the evidence needed for each compatibility
+claim; the artifact case remains hypothetical here.
+
+| Compatibility form | What establishes compatibility |
+|---|---|
+| `stable` | The provider's guarantee for every reachable type in its stated domain |
+| `source` | The complete named recipe used to build the call |
+| `artifact` | The identified built artifact set and its representation manifest |
+
 These are three ways to define a [compatibility domain](glossary.md#compatibility-domain).
 A `stable` claim needs a provider guarantee for every reachable type in its
 domain; a `source` claim needs the complete recipe; an `artifact` claim needs

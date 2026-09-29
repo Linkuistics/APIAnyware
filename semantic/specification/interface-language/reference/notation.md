@@ -77,6 +77,8 @@ connects the package items to those rules.
 
 ![G10 package shell: document, item and clause productions.](../figures/g10-shell.svg)
 
+Use this view to locate a declaration or clause within the package document.
+
 [Diagram source](../figures/g10-shell.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="clause"></a>
@@ -111,6 +113,9 @@ compares them with other values. [Vocabulary and validity](#vocabulary-and-valid
 explains how rules constrain this generic syntax.
 
 ![G10 clauses: clause, arguments, value, constructor and list productions.](../figures/g10-clause.svg)
+
+Use this view to identify the value forms a clause can contain; the cited
+rules determine which values each named clause accepts.
 
 [Diagram source](../figures/g10-clause.puml) · [Exact grammar](../grammar.ebnf)
 
@@ -162,6 +167,9 @@ See the [reference and slot examples](../language.md#reading-aid-non-normative-n
 
 ![G10 names: import, reference and name productions.](../figures/g10-names.svg)
 
+Use this view to compare an import's selected identity with the names used
+to refer to declarations and slots.
+
 [Diagram source](../figures/g10-names.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="callable"></a>
@@ -201,6 +209,10 @@ compare their slots.
 
 ![G10 callables: callable, parameters and parameter productions.](../figures/g10-callable.svg)
 
+Use this view to locate an invocation's values and the contract blocks
+within its callable declaration.
+
+[Full-size callable view](../figures/g10-callable.svg) ·
 [Diagram source](../figures/g10-callable.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="places"></a>
@@ -235,6 +247,9 @@ or elements; [C1's located examples](../contracts.md#reading-aid-non-normative-a
 show the types and storage facts that make each selection meaningful.
 
 ![G10 places: the place production.](../figures/g10-places.svg)
+
+Use this view to trace a place from its callable-local slot to the value or
+storage an obligation addresses.
 
 [Diagram source](../figures/g10-places.puml) · [Exact grammar](../grammar.ebnf)
 
@@ -282,6 +297,8 @@ explains how these configurations bound the package's claims.
 
 ![G10 environments: the environment production.](../figures/g10-environment.svg)
 
+Use this view to locate the clauses defining one named configuration.
+
 [Diagram source](../figures/g10-environment.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="pattern"></a>
@@ -319,6 +336,9 @@ also show a pattern connecting a resource and its destructor.
 [L6](../language.md#l6) defines role kinds, cardinalities, binding and laws.
 
 ![G10 patterns: pattern, role and instance productions.](../figures/g10-pattern.svg)
+
+Use these forms together to distinguish a pattern's participant roles from
+the instance that binds them.
 
 [Diagram source](../figures/g10-pattern.puml) · [Exact grammar](../grammar.ebnf)
 
@@ -363,6 +383,8 @@ outcome inside its [callable](#callable). See the
 [outcome example](../contracts.md#reading-aid-non-normative-use-an-observable-result-to-choose-the-output-contract).
 
 ![G10 outcomes: the outcome production.](../figures/g10-outcome.svg)
+
+Use this view to locate the clauses describing one named completion case.
 
 [Diagram source](../figures/g10-outcome.puml) · [Exact grammar](../grammar.ebnf)
 
@@ -415,6 +437,9 @@ form in [Callables](#callable) describes one invocation and the callable value.
 
 ![G10 callback use: the callback_use production.](../figures/g10-callback-use.svg)
 
+Use this view to connect a registration's callback value to the block
+describing its schedule.
+
 [Diagram source](../figures/g10-callback-use.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="dependency"></a>
@@ -457,6 +482,9 @@ connects the aliases to clauses that use them.
 
 ![G10 dependencies: the dependency production.](../figures/g10-dependency.svg)
 
+Use this view to identify the external definition selected by a local
+profile or ABI alias.
+
 [Diagram source](../figures/g10-dependency.puml) · [Exact grammar](../grammar.ebnf)
 
 <a id="access"></a>
@@ -497,6 +525,9 @@ required access clauses and environment coverage. Its
 shows another operation with two supported ways to reach the same behaviour.
 
 ![G10 access paths: the access production.](../figures/g10-access.svg)
+
+Use this view to locate a named implementation route, its environments and
+the clauses defining that route.
 
 [Diagram source](../figures/g10-access.puml) · [Exact grammar](../grammar.ebnf)
 
