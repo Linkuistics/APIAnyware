@@ -20,19 +20,31 @@ then [check yourself](#check-yourself). The new material concerns the
 destination buffer and the returned status; the card and label lifetimes
 continue to apply.
 
-## The domain obligation
+<a id="the-domain-obligation"></a>
 
-The caller supplies enough storage that overlaps no other memory accessed
-by the call, and reads the output text only after a successful copy
-([buffers](../explanation/contracts.md#buffers-and-strings) and
-[output states](../explanation/contracts.md#every-way-a-call-can-end)).
+## The model
+
+[Storage](../explanation/model.md#storage) asks how much room the caller
+supplies and what the library may write. Here the caller reserves eight
+bytes that overlap no other memory accessed by the call.
+[How a call finishes](../explanation/model.md#outcomes) then decides what is
+readable: a successful status permits reading the text; failure leaves the
+output unread.
+
+At the checkpoint, you can account for all eight bytes, distinguish the
+pointer from its output elements and explain which output state accompanies
+each status. The earlier label [Validity](../explanation/model.md#validity)
+contract still applies throughout copying.
 
 ## Steps
 
 ### 1. Distinguish successful copying from unavailable text
 
-Start with this C-shaped sketch. It gives the synthetic operation a status
-result as well as a destination address; the fixture supplies its representation.
+Connect [Operations and their values](../explanation/model.md#operations)
+with [How a call finishes](../explanation/model.md#outcomes): copying receives
+a destination address and returns a status that governs use of the output.
+Start with this C-shaped sketch of the synthetic operation; the fixture
+supplies its representation.
 
    ```c
    typedef enum CopyStatus {
@@ -54,6 +66,8 @@ promises no readable output and no preservation of earlier bytes
 
 ### 2. Define the two permitted status values
 
+For [Operations and their values](../explanation/model.md#operations),
+define the result's permitted values so the caller can identify every case.
 Place the status declaration at package level beside `Label` and `copy_text`.
 
 Fragment — shows the status type in `tutorial::storage`. The
@@ -75,10 +89,10 @@ package tutorial::storage version "1" {
 }
 ```
 
-The colon names the underlying integer type. Each `case` gives a name to
-one integer value; its semicolon ends the case declaration. The `values`
-clause determines whether unnamed values are admitted
-([`L4`](../language.md#l4), [enumeration grammar](../grammar.ebnf)).
+`CopyStatus` uses the underlying integer type `i32`. Its named cases let a
+reader recognize the two statuses; `values(closed)` restricts the type to
+those declared values ([`L4`](../language.md#l4),
+[enumeration grammar](../grammar.ebnf)).
 
 Declare `enum CopyStatus: i32` with `values(closed)` and cases `copied = 0`
 and `unavailable = 1`. Add `sharing(value)`, `isolation(none)`,
@@ -94,8 +108,11 @@ domain ([`C5`](../contracts.md#c5)).
 
 ### 3. Lend the label and destination for the call
 
-The two named parameters carry different kinds of reference: a label handle
-and an address at which the library can write bytes.
+Apply [Release responsibility](../explanation/model.md#responsibility)
+and [Validity](../explanation/model.md#validity) to both inputs. The library
+uses the label handle and destination address during copying; it keeps
+neither for later work. Record what the caller must keep usable until the
+call finishes.
 
 Fragment — shows copying's input contracts in `tutorial::storage`. The
 [complete checkpoint](#checkpoint-package) also supplies pointer-storage
@@ -114,16 +131,15 @@ fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
 ```
 
 `mutptr<u8>` describes writable storage of unsigned eight-bit elements.
-The angle brackets supply `u8` to the pointer type constructor. `$label`
-and `$destination` address their respective parameters; `CopyStatus` names
+`$label` and `$destination` address their respective parameters; `CopyStatus` names
 the result type ([`L4`](../language.md#l4), [`C1`](../contracts.md#c1)).
 
 Give `copy_text` a `Label` input and a `mutptr<u8>` destination. For each
 parameter, write `input(..., borrow)`, `retain(..., none)` and
 `valid(..., call)` using the full parameter names shown in the checkpoint. The call
-[borrows](../glossary.md#borrow) access while the caller keeps ownership,
-and the library promises no [retention](../glossary.md#retention) for later
-work ([`C3`](../contracts.md#c3)).
+[borrows](../glossary.md#borrow) access: the card keeps ownership of its label,
+and the caller keeps ownership of the destination allocation. The library
+promises no [retention](../glossary.md#retention) for later work ([`C3`](../contracts.md#c3)).
 
 For a label obtained in part 2, keeping it valid means keeping its card alive
 and preventing refresh throughout copying. Passing that label to another
@@ -137,7 +153,9 @@ You will describe that pointer and the bytes reached through it separately.
 
 ### 4. Describe the writable storage
 
-Keep the storage facts in the same function body as the pointer input.
+For [Storage](../explanation/model.md#storage), tell the caller how much
+room to reserve and the library what it may write there. Keep these facts
+in the same function body as the pointer input.
 
 Fragment — shows destination storage in `tutorial::storage`. The
 [complete checkpoint](#checkpoint-package) also supplies input validity,
@@ -156,10 +174,9 @@ fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
 
 The four pointer clauses select `$destination`. `mutation(arguments)`
 describes which input state the call may change ([`C3`](../contracts.md#c3)).
-The constructor `buffer(...)` groups
-length, capacity and unit into the second argument of `extent`;
-`text(...)` groups encoding and termination into the second argument of
-`contents` ([`C4`](../contracts.md#c4)).
+The extent describes initialized length and allocated capacity; the
+contents contract interprets the stored units as text. Read those facts
+together to account for the terminator ([`C4`](../contracts.md#c4)).
 
 Write `direction($destination, out)`. The library writes through this
 pointer and leaves its prior contents unread. Write
@@ -184,7 +201,10 @@ profile supports this encoding ([`C4`](../contracts.md#c4), [`F1`](../profiles.m
 
 ### 5. State what the caller can read on each outcome
 
-The outcomes now connect a returned status with the state of the written bytes.
+Apply [How a call finishes](../explanation/model.md#outcomes): connect each
+status to what the caller may read. Use
+[Operations and their values](../explanation/model.md#operations) to address
+the status value and destination elements separately.
 
 Fragment — shows copying's outcomes in `tutorial::storage`. The
 [complete checkpoint](#checkpoint-package) also supplies the input and
@@ -208,22 +228,15 @@ fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
 }
 ```
 
-`$result` selects the status. `$destination[]` follows the pointer to the
-buffer elements whose extent step 4 described. The empty brackets are a
-[place](../glossary.md#place) selector here; the brackets in
-`exports([@Card, ...])` instead delimit a list of references
-([`C1`](../contracts.md#c1), [`L1`](../language.md#l1)).
-
-![Place railroad: a dollar sign and identifier followed by optional repeated field, pointee or buffer-element selectors.](../figures/g10-places.svg)
-
-Trace `$destination[]` through `$`, the identifier `destination`, then the
-`[` and `]` branch. For `$result`, take the bypass after the identifier.
-The track describes
-[`place` syntax](../grammar.ebnf); [`C1`](../contracts.md#c1) decides whether
-the selected value has the required type and extent.
-
-[Place diagram source](../figures/g10-places.puml) ·
-[Package structure in part 1](01-lifetime.md#2-name-the-package-and-the-api-it-covers)
+`$result` selects the status. `$destination[]` selects the buffer elements
+whose extent step 4 described; `$destination` selects the pointer itself.
+These [places](../glossary.md#place) let an outcome distinguish unreadable
+bytes from the still-usable address of the caller's allocation
+([`C1`](../contracts.md#c1)). See the
+[place grammar](../reference/notation.md#places) and
+[outcome grammar](../reference/notation.md#outcome) for their exact forms.
+The [package structure in part 1](01-lifetime.md#1-identify-the-values-the-caller-receives)
+locates callables and their slots.
 
 Add two [outcomes](../glossary.md#outcome) describing what happens when the
 call returns. Returning is this function's declared
@@ -248,8 +261,10 @@ need a different signature and completion contract ([`C5`](../contracts.md#c5)).
 
 ### 6. Include copying in the package
 
-Add the copying declarations to the package-level publication clauses.
-The final two export references name the status type and copying function.
+Expand [The published description](../explanation/model.md#description)
+to include copying and its status type. Add them to the package-level
+publication clauses so a tool can follow the copying contract and interpret
+its outcomes. The final two export references name these declarations.
 
 Fragment — shows publication in `tutorial::storage`. The
 [complete checkpoint](#checkpoint-package) also supplies the header,

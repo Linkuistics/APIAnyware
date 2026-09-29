@@ -2,7 +2,7 @@
 
 > **Purpose:** tutorial — describe a synthetic API in complete AIL checkpoints, then change its contract.
 > **Reader:** language designers new to [API binding](../glossary.md#binding) who can read C signatures.
-> **Before this:** [Using an API across languages](../explanation/unsaid.md); the [contract explanation](../explanation/contracts.md) is available for deeper questions.
+> **Before this:** [Using an API across languages](../explanation/unsaid.md) and [A model of API behaviour and binding obligations](../explanation/model.md); the [contract explanation](../explanation/contracts.md) develops the notation.
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -26,12 +26,16 @@ shows how API authors and tools would use the descriptions you write.
 ### A card and its current label
 
 Imagine a card displaying a short label such as `READY!!`. A program creates
-the card, asks for its current label and eventually destroys the card. During
+the card, asks for its current label and eventually destroys the card. The
+card is one of the model's [Entities that outlive a call](../explanation/model.md#entities):
+its identity connects creation with later use and destruction. During
 these operations the program is the [caller](../glossary.md#caller-and-callee)
 and the library function is the callee.
 
-If creation succeeds, the program receives a card and becomes responsible for
-destroying it. AIL calls that result [owned](../glossary.md#owned). If creation
+Creation illustrates [How a call finishes](../explanation/model.md#outcomes)
+and [Release responsibility](../explanation/model.md#responsibility). If it
+succeeds, the program receives a card and becomes responsible for destroying it.
+AIL calls that result [owned](../glossary.md#owned). If creation
 returns null, allocation failed and there is nothing to destroy. The first
 part records both results and names `destroy_card` as the operation that
 takes over and completes the destruction responsibility.
@@ -41,7 +45,9 @@ that label while the card keeps ownership. This is a [borrow](../glossary.md#bor
 the program may use the label for a stated period. AIL describes that agreement;
 it implies no Rust-style static checking or exclusivity.
 
-Two events end that access. Destroying the card ends the label's lifetime.
+[Validity](../explanation/model.md#validity) answers how long the program
+can use the lent label. Two events end that access. Destroying the card ends
+the label's lifetime.
 Refreshing the card replaces its label, so the program stops using the old
 label as soon as `refresh_card` begins. Ending access while the card remains
 alive is [invalidation](../glossary.md#invalidation). Part 2 describes both
@@ -51,22 +57,25 @@ the lifetime contract to know when it can use that handle.
 
 ### Copying text into the program's storage
 
-To obtain text, the program reserves eight bytes and passes their address to
+Apply [Storage](../explanation/model.md#storage) to the next operation:
+to obtain text, the program reserves eight bytes and passes their address to
 `copy_text`. On success, the library writes seven nonzero UTF-8 code units
 followed by a zero terminator. For `READY!!`, each visible character occupies
 one code unit. Other UTF-8 text can use several code units for a character;
 the contract counts code units. A refresh can choose another label of the
 same length, and the exact spelling is left open.
 
-The function also returns a status. `copied` (`0`) means the program can read
+[How a call finishes](../explanation/model.md#outcomes) connects those bytes
+to the status that the function returns. `copied` (`0`) means the program can read
 the text. `unavailable` (`1`) means the program reads the status and leaves
 the output bytes unread. Part 3 describes the storage required before the
 call and what the library promises on each result.
 
 ### Receiving notifications and finishing with them
 
-The library also accepts a function to receive label-change numbers. A
-function supplied for the library to invoke is a [callback](../glossary.md#callback).
+[Callbacks and their schedules](../explanation/model.md#callbacks) describe
+the next relationship. The library accepts a function to receive label-change
+numbers. A function supplied for the library to invoke is a [callback](../glossary.md#callback).
 `watch_labels` stores a reference to this callback and returns a separate
 `Watch` identifying the subscription. It may send notifications after
 registration returns, and it may send none.
@@ -83,9 +92,11 @@ label's borrow contract, including its refresh cutoff.
 
 ### Changing the returned label
 
-Part 5 first explains how the description identifies code implementing each
-operation. It then introduces a separate API variant: `current_label` returns
-an independent owned snapshot. The program can keep that snapshot after
+[Reaching the code](../explanation/model.md#access) connects an operation
+to its implementation. Part 5 first explains how the description identifies
+that code. It then introduces a separate API variant: `current_label` returns
+an independent owned snapshot. This changes [Release responsibility](../explanation/model.md#responsibility).
+The program can keep that snapshot after
 refreshing or destroying its card. In exchange, it takes responsibility for
 calling `destroy_label` on the snapshot. You will change the description and
 follow every affected obligation.
@@ -106,8 +117,10 @@ what an API promises and how AIL expresses it.
 
 ## The five parts
 
-Each part supplies a complete [package](../glossary.md#package): a named,
-versioned description of the operations included so far. The first package
+The model's [published description](../explanation/model.md#description)
+gathers these API facts. Each part supplies a complete
+[package](../glossary.md#package): a named, versioned description of the
+operations included so far. The first package
 contains everything needed to create and destroy a card. Later packages add
 the label, copying and subscription operations with their own complete
 contracts. This lets you learn one group at a time while seeing all the facts
@@ -130,26 +143,24 @@ package tutorial::lifetime version "1" {
 }
 ```
 
-The `language` header selects AIL's version. The next line gives this API
-description its own name and version. Inside its braces, `resource` and `fn`
-introduce [declarations](../glossary.md#declaration).
-
-Read the function signatures next. `card: Card` names an input and its type;
-the arrow introduces the result type. Creation may return null, while
-destruction's `unit` result has no value ([`L1–L2`](../language.md#l1),
-[`L4`](../language.md#l4)). Part 1 develops this shell with a
-[syntax diagram and located clauses](01-lifetime.md#2-name-the-package-and-the-api-it-covers).
+This shell connects [Operations and their values](../explanation/model.md#operations)
+to the persistent card. `Card` identifies the entity; creation returns its
+handle or null, and destruction receives a handle with no result value.
+The three [declarations](../glossary.md#declaration) share the package's
+name and version ([`L1–L2`](../language.md#l1), [`L4`](../language.md#l4)).
+Part 1 develops the [located card contracts](01-lifetime.md#steps).
+For exact syntax, see the [package-shell reference](../reference/notation.md#shell).
 
 Use the map to open a part or its complete checkpoint file. The final row
 includes both the assembled example and the separate ownership exercise.
 
-| Part | What you will describe | Complete checkpoint |
-|---|---|---|
-| [1. A package and one resource](01-lifetime.md) | Create a card, handle allocation failure and destroy an owned card. | [Card lifetime](../examples/tutorial/01-lifetime.ail) |
-| [2. Lending access](02-lending.md) | Lend a label until card destruction or an earlier refresh. | [Label lending](../examples/tutorial/02-lending.ail) |
-| [3. Caller-supplied storage and failure](03-storage.md) | Copy text into eight bytes and say what is readable on each status. | [Text copying](../examples/tutorial/03-storage.ail) |
-| [4. Callbacks and teardown](04-callbacks.md) | Store a callback, permit later notifications and finish all callback use. | [Subscription](../examples/tutorial/04-callbacks.ail) |
-| [5. Reaching the code, and changing the contract](05-access-and-change.md) | Identify the implementation and give the caller an owned label snapshot. | [Finished package](../examples/tutorial/05-finished.ail) and [owned variant](../examples/tutorial/05-owned.ail) |
+| Part | What you will describe | Model concepts | Complete checkpoint |
+|---|---|---|---|
+| [1. A package and one resource](01-lifetime.md) | Create a card, handle allocation failure and destroy an owned card. | [Operations and their values](../explanation/model.md#operations); [How a call finishes](../explanation/model.md#outcomes); [Entities that outlive a call](../explanation/model.md#entities); [Release responsibility](../explanation/model.md#responsibility); [The published description](../explanation/model.md#description). | [Card lifetime](../examples/tutorial/01-lifetime.ail) |
+| [2. Lending access](02-lending.md) | Lend a label until card destruction or an earlier refresh. | [Release responsibility](../explanation/model.md#responsibility); [Validity](../explanation/model.md#validity). | [Label lending](../examples/tutorial/02-lending.ail) |
+| [3. Caller-supplied storage and failure](03-storage.md) | Copy text into eight bytes and say what is readable on each status. | [Storage](../explanation/model.md#storage); [How a call finishes](../explanation/model.md#outcomes). | [Text copying](../examples/tutorial/03-storage.ail) |
+| [4. Callbacks and teardown](04-callbacks.md) | Store a callback, permit later notifications and finish all callback use. | [Where and when calls run](../explanation/model.md#execution); [Callbacks and their schedules](../explanation/model.md#callbacks). | [Subscription](../examples/tutorial/04-callbacks.ail) |
+| [5. Reaching the code, and changing the contract](05-access-and-change.md) | Identify the implementation and give the caller an owned label snapshot. | [Reaching the code](../explanation/model.md#access); [Release responsibility](../explanation/model.md#responsibility). | [Finished package](../examples/tutorial/05-finished.ail) and [owned variant](../examples/tutorial/05-owned.ail) |
 
 Each file has a different package name so it can be read independently.
 Part 5's owned variant describes a deliberately different API contract.
@@ -164,8 +175,10 @@ meaning. They belong in each complete description from the start
 
 ## How to check your work
 
-Read each checkpoint as a document. Compare it with your description and
-follow its references: for example, follow the card's `lifecycle` to its
+Apply [Writers, checkers and users](../explanation/model.md#agreement):
+you supply the API facts, then inspect whether the description records them
+consistently. Read each checkpoint as a document. Compare it with your
+description and follow its references: for example, follow the card's `lifecycle` to its
 destructor in [part 1's located resource example](01-lifetime.md#card-lifetime).
 Use the expected observations to explain what a caller does at
 each step. Answer the questions before opening the answers, then inspect the

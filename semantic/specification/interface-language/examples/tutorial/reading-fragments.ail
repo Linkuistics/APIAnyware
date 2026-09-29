@@ -389,3 +389,11 @@ package tutorial::lifetime version "1" {
 }
 // endregion
 
+// region: lifetime-core
+package tutorial::lifetime version "1" {
+  resource Card {
+    lifecycle(unique, @destroy_card);
+  }
+  // create_card and destroy_card are sibling declarations, omitted here.
+}
+// endregion

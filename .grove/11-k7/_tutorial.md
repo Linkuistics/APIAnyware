@@ -137,3 +137,23 @@ limits. Part 5 maps access clauses to tool actions and compares the caller's
 actions with a borrow and an owned snapshot. The overview links remain the
 route to G1. Proof should read those figures and tables with their surrounding
 steps; the human checkpoint still owns the assessment of comprehension.
+
+## Early parts in the model-first run
+
+`tutorial-k80` revises the index and parts 1–3. Part 1 now proceeds through
+operations in a minimal package shell, the card's lifecycle, creation's
+outcomes and destruction's transfer, then publication, dependencies and
+remaining call facts. The lifetime diagram follows destruction; the full
+resource/sharing fragment remains with the final call-facts step. Old heading
+slugs and `card-lifetime` survive. The model map links directly to these
+steps. Part 2's resource step also has the stable `label-lifecycle` anchor.
+
+The first three parts introduce their model concepts before each step's
+notation; the index's part map names all five parts' concepts. Local snippets
+and semantic figures remain, while G10 links go to the grammar home.
+`reading-fragments.ail` appends `lifetime-core` and preserves earlier regions.
+All six checkpoints are unchanged from `7891f92a`. Part 3 explicitly keeps
+the card's ownership of its label separate from the caller's ownership of
+its destination allocation. Keep these facts through k81 and the queued
+editorial stages. `task docs:check` passed; this is consistency evidence,
+not a human comprehension assessment.

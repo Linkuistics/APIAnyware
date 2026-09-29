@@ -20,19 +20,30 @@ then [check yourself](#check-yourself). The new relationship is between the
 returned label and its card; the creation and destruction functions from
 part 1 keep their contracts.
 
-## The domain obligation
+<a id="the-domain-obligation"></a>
 
-A [caller](../glossary.md#caller-and-callee) using a card's current label keeps
-the card alive and finishes using that label before refreshing the card
-([borrow validity and invalidation](../explanation/contracts.md#how-long-a-borrow-lasts)).
+## The model
+
+[Release responsibility](../explanation/model.md#responsibility) asks who
+releases the label: the card keeps ownership while the
+[caller](../glossary.md#caller-and-callee) receives access.
+[Validity](../explanation/model.md#validity) asks how long that access lasts:
+the caller keeps the card alive and finishes using the label before refresh.
+
+At the checkpoint, you can distinguish the card lent during the getter call
+from the label lent after it returns. You can name both events that end label
+access and explain why the caller cannot destroy a borrowed label. The
+[borrow explanation](../explanation/contracts.md#how-long-a-borrow-lasts)
+develops the same relationship in another API.
 
 ## Steps
 
 ### 1. Follow a label through use and refresh
 
-Add these operations to the C-shaped sketch of the synthetic API. The
-signatures identify the values exchanged; the following steps supply their
-lifetime promises.
+For [Operations and their values](../explanation/model.md#operations),
+identify the label returned by the getter and the card changed by refresh.
+Add these operations to the C-shaped sketch of the synthetic API; the
+following steps supply their lifetime promises.
 
    ```c
    typedef struct Label Label;
@@ -53,10 +64,15 @@ operation that makes it unusable earlier. AIL calls that earlier ending
 [invalidation](../glossary.md#invalidation). You will express both facts on
 the returned borrow ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
+<a id="label-lifecycle"></a>
+
 ### 2. Describe `Label` and its destructor
 
-Place the label and its destructor beside the card declarations. This is the
-same relationship you used for `Card`, with its own type and operation names.
+Apply [Entities that outlive a call](../explanation/model.md#entities) and
+[Release responsibility](../explanation/model.md#responsibility) to the
+label: record how an owner releases it. Place the label and its destructor
+beside the card declarations, using the same relationship as for `Card`.
+The type defines the release operation; the getter will say who holds the duty.
 
 Fragment — shows the label's lifecycle in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies publication and
@@ -82,7 +98,8 @@ package tutorial::lending version "1" {
 
 `@destroy_label` finds the local function declaration. In its signature,
 `Label` names the type without `@`; inside its body, `$label` selects the
-parameter value ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
+parameter value ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)). The
+[names reference](../reference/notation.md#names) keeps these forms together.
 
 Declare `Label` as a resource. Like `Card`, its value is an opaque
 [handle](../glossary.md#handle); the library keeps the layout private.
@@ -105,8 +122,11 @@ that agreement; it implies no Rust-style static checking or exclusivity.
 
 ### 3. Keep the input card usable during the call
 
-The getter names a card input and a label result. Read the clauses about
-the input before adding the result's separate lifetime.
+For [Release responsibility](../explanation/model.md#responsibility), the
+caller keeps its card while the getter uses it. For
+[Validity](../explanation/model.md#validity), the caller keeps that card
+usable until the getter finishes. Record these input obligations before
+adding the result's separate lifetime.
 
 Fragment — shows the getter's input in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies outcomes, effects,
@@ -121,9 +141,8 @@ fn current_label(card: Card) -> Label {
 }
 ```
 
-The colon assigns `Card` as the type of `card`, and the arrow introduces
-the result type `Label`. All three `$card` [places](../glossary.md#place)
-select that same input.
+All three `$card` [places](../glossary.md#place) select the getter's card
+input. The returned `Label` has its own contract in the next step.
 `call` names the period during which this invocation runs
 ([`L2`](../language.md#l2), [`C1`](../contracts.md#c1)).
 
@@ -139,8 +158,10 @@ has finished.
 
 ### 4. Tie the returned label to the card's lifetime
 
-The result's contract belongs inside an outcome. Read its owner relationship
-first; the following step explains the additional refresh cutoff shown here.
+Apply [Validity](../explanation/model.md#validity) after delivery: the
+returned label remains usable while its card lives, subject to the earlier
+refresh cutoff. Record that owner relationship in the successful outcome;
+the following step develops the refresh event.
 
 Fragment — shows the getter's returned borrow in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies input clauses,
@@ -181,8 +202,10 @@ the cost of finding these related facts in separate places.
 
 ### 5. End earlier borrows when refresh begins
 
-The preceding outcome points to the refresh operation using `@refresh_card`.
-Here is the relevant part of that sibling function.
+[Validity](../explanation/model.md#validity) includes events that end access
+while the owner lives on. Record refresh as that earlier event. The preceding
+outcome points to the sibling operation using `@refresh_card`; its input and
+mutation contract identify the card whose label it replaces.
 
 Fragment — shows refresh's input and mutation in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies its remaining
@@ -220,8 +243,10 @@ changes the card's contents, as the invalidation contract requires
 
 ### 6. Include the new declarations in the package
 
-The expanded publication clauses stay at package level. Each `@` entry
-selects a local declaration included in this checkpoint.
+Expand [The published description](../explanation/model.md#description)
+so a tool can follow the label's lifetime and refresh relationship. Keep the
+publication clauses at package level; each `@` entry selects a local
+declaration included in this checkpoint.
 
 Fragment — shows publication in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies the header,
