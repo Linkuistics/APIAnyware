@@ -506,6 +506,8 @@ For example, `extent` lives in [`C4`](../contracts.md#c4), while
 [`callback_abi`](../reference/clauses-access.md#callback_abi) is defined in [`A2`](../profiles.md#a2). A reader assembles both
 syntax and meaning across the rules; an indexed reference can help lookup
 without eliminating this split in the language's definition.
+The later design question in [Q7](#q7) also asks whether distinct syntactic
+forms could make each kind of obligation easier to recognize from its notation.
 
 <a id="exact-environments"></a>
 
@@ -833,6 +835,20 @@ and review comments, or are paragraph-level identifiers needed?
 mutations that cite the several distinct obligations in [`C3`](../contracts.md#c3).
 **Why it matters:** a stable identifier helps locate a rule, but a broad section
 can leave the reader searching for the exact rejecting condition.
+
+### Q7
+
+**Question:** Could clause-specific syntactic forms communicate the different
+obligations and relationships more clearly than the uniform function-call-like
+`name(arguments);` form?
+**Where:** the [clause comparison](#one-clause-syntax-with-a-closed-vocabulary-in-prose),
+the [clause grammar](../reference/notation.md#clause), and the ownership,
+validity, storage and callback examples above.
+**Why it matters:** words, ordering and enclosing structure can help readers
+anticipate a clause's meaning. A later design exploration should compare that
+benefit with learning several forms and extending them through profiles,
+using the same API contracts in each notation. This is a question for later
+language design; draft 0.1 retains its current grammar and semantics.
 
 Next: [Describing a small API](../tutorial/README.md) guides you through writing
 and reading complete checkpoint packages. Then use [Reviewing AIL](../review/README.md)

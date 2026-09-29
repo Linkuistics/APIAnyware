@@ -16,6 +16,34 @@ and the emphasis and non-goals. The same plan's §4 (prose contract), §5
 (page-one block and example labels), §6 (figures) and §7 (checks) govern
 every stage. The gate is `task docs:check`, plus any task this document adds.
 
+## Full-set source/platform correction
+
+Full-set-reading-k12 records the human's positive verdict, with one present
+correction: both the API model and AIL serve source languages and platforms
+beyond Swift/Apple. Plan §1 and §9.2 carry the resulting contract. The human
+explicitly places a more conversational presentation and clause-specific
+syntax exploration later; Q7 records the latter without changing the grammar.
+
+This run's document is `README.md`, `explanation/model.md` and
+`explanation/choices.md`, plus any directly affected summary/route text found
+by inspecting the published set. Make intended source/consumer breadth clear,
+distinguish described typed contracts from consumer languages, and recast the
+dedicated-syntax comparison without privileging Swift. Preserve accurate
+source-specific references, synthetic `swift_like` examples, the eleven model
+concepts, canonical rule text, grammar and frozen packages. The ecosystem
+list is an intended scope, not a provider-support or common-C-ABI claim.
+
+The human's direction authorizes exactly one ordered run: concepts-k95 draft,
+concepts-k96 copy-edit, concepts-k97 art and concepts-k98 proof. Its later
+stages are already queued. This adds scope at the human checkpoint; it does
+not reset the previous correction history or authorize another unattended
+run. Every stage reads the whole bounded document and fixes only its charter.
+Exit: the scope is clear in orientation/model/rationale and their affected
+summaries, the existing rules/examples are preserved, and `task docs:check`
+passes. Proof updates the audit's record of the supplied correction and then
+closes the node if these conditions hold. Unresolved residue returns to the
+human, with no automatic new reading checkpoint.
+
 ## Pipeline
 
 `draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act

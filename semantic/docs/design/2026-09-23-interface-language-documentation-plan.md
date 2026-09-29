@@ -31,6 +31,18 @@ account, while the reference supplies exact syntax lookup.
 **Secondary readers.** API authors and tool implementers, who need exact
 lookup. The reference serves them without being written for them first.
 
+**Source and consumer scope (full-set-reading-k12).** Both the model and AIL
+are intended to serve APIs across source languages and platforms: .NET,
+Linux/Wayland/GTK/KDE, Rust and other libraries with typed contracts, alongside
+the Apple-related examples already present. Swift is not privileged. Separate
+the library being described from the languages using it; interpreted and
+dynamically typed languages remain intended consumers. The source-side
+emphasis is on typed contracts. Preserve the human's tentative source-language
+preference without treating interpretation as the same thing as lacking types.
+These are intended applications, not claims of supplied providers or a common
+C interface. Exact access and representation requirements remain those of the
+particular API and provider.
+
 **Outcomes.** These are taken from the root brief's completion conditions.
 After the relevant documents, the primary reader can:
 
@@ -156,7 +168,11 @@ next on this route.
   that introduces its notation, the tutorial part that exercises it and the
   canonical rules; the reference entries are added when they land.
 - **From an example** (a link to `buffers.ail`). The walkthrough explains the
-  example, and the landing page lists all examples with their purpose.
+  example, and the landing page lists all examples with their purpose. The
+  raw file itself has no onward reading link: the full-set proxy recorded that
+  gap. The human accepted the set for now apart from source/platform framing,
+  so the existing index/walkthrough pairing remains a disclosed limitation;
+  this does not establish a successful human test of the raw-file entry.
 - **From a term** (a search for *quiescence*). The glossary entry links to its
   defining page and to the rules that use it.
 - **From a reference entry.** Each entry names the model concept it expresses
@@ -658,6 +674,26 @@ not a narration of every visible token. Distinguish proposed guidance from
 guidance already implemented and a verified presentation repair from evidence
 that the prose was understood.
 
+At `full-set-reading-k12`, one fresh-context proxy read all 29 published pages,
+the grammar, nine complete examples and all 26 diagram source/SVG pairs. It
+attempted all six outcomes and the five direct-entry types in one accumulating
+context. Its response is proxy evidence, not five independent cold reads or
+evidence of human comprehension. The human's separate verdict was positive:
+"Apart from that point, I am very impressed with your work" and "for now this
+is good." The exception was the Swift-centred framing of the syntax rationale;
+the human specified the broader source/consumer scope now recorded in §1.
+They cited that passage without reporting their full reading extent.
+
+That direction authorizes one bounded concepts correction (k95–k98, draft,
+copy-edit, art, proof), with the landing/model scope included as described in
+§9.2. The proxy's raw-example navigation gap is retained as the disclosed
+limitation in §3; exact-rule lookup friction remains Q6. A more conversational
+and guided presentation is a later aim, and clause-specific syntax is later
+language-design question Q7. Neither is an instruction to rewrite the set or
+change draft 0.1's grammar now. Preserve these timing distinctions in the
+audit and subsequent handoffs. Further automatic correction runs are not
+authorized.
+
 ## 9. Structure briefs
 
 Each brief states the reader and outcome, the ordered sections with the
@@ -814,6 +850,26 @@ draft 0.1 cannot express. These are outcomes 2 (in part) and 3. They can also
 say which model concept each construct they have met expresses, and judge
 whether AIL expresses that concept well: the second half of outcome 6.
 
+**Full-set scope correction (full-set-reading-k12).** The human accepts the
+set for now with one source/platform framing correction. This later direction
+governs the correction run k95–k98. Its document is `README.md`,
+`explanation/model.md` and `explanation/choices.md`, with their affected routes
+and summaries inspected across the published set. Establish §1's intended
+source/consumer breadth early enough that readers can interpret the examples.
+Revise *A dedicated syntax* and its summary table to compare a common
+description notation with adopting a source language's assumptions, without
+making Swift a privileged candidate. Preserve useful distinctions between
+domain facts, API choices and AIL choices. Retain explicitly synthetic fixture
+names and accurate historical/source-specific statements; do not mechanically
+remove every Swift mention or change frozen examples or normative text.
+
+This is a bounded scope correction, not the later conversational rewrite or
+syntax redesign. Q7 records the latter as an open question. The eleven model
+concepts and their order remain unchanged. The correction's exit is consistent
+framing across its pages and affected summaries, preserved draft/fixture
+boundaries and a green `task docs:check`. All four editorial stages run once;
+unresolved residue is recorded for the human rather than growing another run.
+
 **`explanation/contracts.md`: ordered sections.** Every section after the
 first follows the same pattern: the domain obligation, two contrasting cases
 in AIL, the principle, AIL's choice and its alternative, and the rule links.
@@ -870,7 +926,10 @@ snippet/context check to all three concept pages, including their tables.
 
 1. Page-one block.
 2. *How to read this page.* Domain constraint against language choice.
-3. *A dedicated syntax,* against extending WIT or Swift interface syntax.
+3. *A dedicated syntax,* compared with extending an interface language such
+   as WIT or adopting a particular source language's syntax and assumptions.
+   Evaluate each against the intended cross-language model; no source language
+   is privileged.
 4. *Publishing a complete description.* Explain how a declared API subset and
    its dependencies establish the scope of the facts the author supplies.
 5. *Stating the applicable facts.* Explain required clauses, optional facts

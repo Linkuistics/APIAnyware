@@ -425,10 +425,12 @@ recorded in the following sections.
 
 ### Language questions still open
 
-All six questions remain open in
+Questions Q1–Q7 remain open in
 [Design choices](../../specification/interface-language/explanation/choices.md#open-questions).
 The documentation explains the current rules and gives reviewers concrete
 ways to investigate them; it does not decide their merits.
+Q1–Q6 came from the audit; Q7 records the later syntax exploration requested
+at the full-set human checkpoint.
 
 | Question | Status and review route |
 |---|---|
@@ -438,9 +440,10 @@ ways to investigate them; it does not decide their merits.
 | [Q4 — slot and reference spelling](../../specification/interface-language/explanation/choices.md#q4) | Open design trade-off. The [Trace task](../../specification/interface-language/review/tasks.md#trace) follows imports, members and callable slots. |
 | [Q5 — split borrow validity](../../specification/interface-language/explanation/choices.md#q5) | Open discoverability question. The [Predict](../../specification/interface-language/review/tasks.md#predict) and [Model fit](../../specification/interface-language/review/tasks.md#model-fit) tasks recover input and output obligations. |
 | [Q6 — rule granularity](../../specification/interface-language/explanation/choices.md#q6) | Open diagnostic/citation choice. The [mutation index](../../specification/interface-language/reference/README.md#mutations) connects IDs to rules and entries; finer rule identifiers have not been introduced. |
+| [Q7 — clause-specific syntax](../../specification/interface-language/explanation/choices.md#q7) | Later language-design exploration: compare forms whose wording and structure suggest clause semantics with the present uniform function-call-like form. The current grammar remains unchanged. |
 
-The current question register contains Q1–Q6. The navigation integration adds
-no language question. The guide's [six dimensions](../../specification/interface-language/review/README.md#the-six-dimensions)
+The current question register contains Q1–Q7. The navigation integration added
+no question; the full-set human checkpoint added Q7. The guide's [six dimensions](../../specification/interface-language/review/README.md#the-six-dimensions)
 and [feedback template](../../specification/interface-language/review/README.md#recording-feedback)
 also invite new criticisms, including challenges to the model itself.
 
@@ -455,6 +458,11 @@ file is paired with its walkthrough in the landing page and review index;
 the frozen `.ail` files themselves remain unchanged. A term such as
 [quiescence](../../specification/interface-language/glossary.md#quiescence)
 leads to its domain case, model concept, rule, clause entry and review task.
+A direct reader of `buffers.ail` has no onward link from the file itself and
+must recover the walkthrough through the landing or review index. The full-set
+proxy identified this navigation limitation. The current disposition retains
+that pairing under the human's acceptance of the set apart from source/platform
+framing; it is not a reported successful human test of direct raw-file entry.
 A reference entry supplies its concept, rule, rationale and example routes;
 entries used by the review tasks also link back to those tasks.
 
@@ -490,12 +498,35 @@ before previewing the model page. That repair establishes image loading,
 not comprehension. Earlier labelled proxy readings likewise do not establish
 human understanding.
 
-The full-set human reading still needs to assess the connected learning
-route, direct lookup and the ability to explain and change a contract. In
-particular, the earlier difficulty locating the tutorial's ownership exercise
-has new local routes, but no reported human re-test. The navigation set has
-passed its copy-edit, art and whole-document proof stages; those are
-consistency checks, not comprehension evidence. The remaining language
-decisions are Q1–Q6; production parsing, validation, provider support,
-implementation truth and runtime safety remain outside this documentation
-deliverable.
+At the full-set checkpoint, the human said, "Apart from that point, I am very
+impressed with your work" and "for now this is good." The exception was the
+Swift-related syntax rationale: both the model and AIL are intended to serve
+.NET, Linux/Wayland/GTK/KDE, Rust and other libraries with typed contracts.
+Swift has no privileged place. The human also distinguished described
+libraries from consumer languages, which include interpreted and dynamically
+typed languages. Their tentative source-side preference is not a normative
+ban, and the ecosystem list establishes neither a common C ABI nor current
+production provider support.
+
+One bounded correction, concepts-k95–k98, is scheduled to make this framing
+explicit in the landing page, model account, rationale and affected summaries.
+It has not yet landed. The human explicitly leaves a more conversational and
+guided presentation for later. Their request to explore distinct syntax for
+each clause type is retained as Q7; no grammar redesign is part of this
+documentation correction.
+
+The cited wording locates one part of the human's read, but its full extent
+and order were not reported. Their positive verdict does not establish that
+they completed every outcome or re-tested the tutorial's ownership-exercise
+route. A separate labelled model proxy read all 29 pages, grammar, nine
+complete packages and 26 figure source/SVG pairs, and attempted all six
+outcomes. Its five direct-entry probes shared one developing context. Its
+raw-example navigation gap is recorded above; its exact-rule lookup friction
+corresponds to Q6. These are proxy observations, not human comprehension
+evidence or a measurement of individual editorial stages.
+
+The navigation set passed copy-edit, art and whole-document proof, and the
+checkpoint's document checks passed; those remain consistency evidence. The
+open language questions are Q1–Q7. Production parsing, validation, provider
+support, implementation truth and runtime safety remain outside this
+documentation deliverable.

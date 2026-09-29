@@ -236,6 +236,17 @@ ADR, because neither passes the ADR test.
 
 ## Technical scope and verification
 
+The model and AIL are intended to describe APIs across source languages and
+platforms, including .NET, Linux/Wayland/GTK/KDE, Rust and other libraries with
+typed contracts. Swift has no privileged position. Distinguish the API being
+described from the languages that consume it: interpreted and dynamically
+typed languages remain intended consumers. The human's source-side emphasis
+is on typed contracts, with a tentative preference against describing untyped
+or interpreted libraries; do not turn that preference into a normative ban.
+The ecosystem list describes intended reach, not supplied production providers
+or a shared C ABI. The full-set correction makes this scope explicit in the
+orientation, model and rationale while preserving the draft's actual limits.
+
 This work explains and improves presentation of draft 0.1. Preserve its proposed
 status, normative force, stable rule identities and supported/unsupported
 boundary. Reorganizing and clarifying prose is in scope; silently changing
@@ -300,10 +311,38 @@ semantic validator or general build-system migration.
 
 - A published edition (HTML or PDF) is not scheduled. If the human wants one,
   the survey's §8 favours AsciiDoc output generated from the Markdown set.
-- Revision after the second reading checkpoint depends on its findings. It
-  cannot be stated until that checkpoint runs.
+- The human would like a more conversational, guided presentation later.
+  They accept the present documentation apart from the source/platform
+  framing correction below; a general prose rewrite is outside this run.
+- Later language design should explore clause-specific syntax that suggests
+  meaning through its forms and structure. Q7 in `explanation/choices.md`
+  preserves this direction. It is not a grammar change in this documentation
+  workstream.
 
 ## Notes
+
+At `full-set-reading-k12`, the human said, "Apart from that point, I am very
+impressed with your work" and "for now this is good." The exception is the
+Swift-centred rationale and the need to state the broader intended source and
+consumer scope above. They cited the phrase about extending Swift syntax;
+the full reading extent was not reported. This is a positive verdict with a
+specific correction, not evidence that a cold reader achieved every outcome.
+
+One bounded correction under concepts-k6 is authorized by that direction:
+concepts-k95 draft → concepts-k96 copy-edit → concepts-k97 art → concepts-k98
+proof. Its document is the landing page, model page and choices page, with
+affected summary/route text checked across the set. It does not repeat the
+whole documentation project. No further automatic correction or human reading
+checkpoint is scheduled. Any unresolved residue returns to the human.
+
+The single full-set proxy read all 29 pages and attempted all six outcomes.
+Its response and limits are preserved in k12. Its raw-example navigation gap
+is retained as an accepted limitation of the existing index/walkthrough
+pairing; the human's current correction is source/platform framing and the
+rest is accepted for now. Do not infer that the human independently tested
+the raw-file route. P2's lookup friction remains Q6; Q1–Q7 remain language
+questions, with Q7 explicitly later work. Mechanical checks and proxy results
+remain separate from the human's reported verdict.
 
 Cross-set navigation is proofed (`reviewer-journey-k94`, closing
 `reviewer-journey-k11`). Every page has a direct inbound link from the landing
@@ -314,9 +353,9 @@ Task links use one gloss per task across the set. Proof moved `lifecycle`'s
 reference entry, index row and disposition from *Release responsibility* to
 *Entities*, matching §10, the model page and the glossary. The audit's closing
 *Step 2: refactored output* indexes the set, maps F1–F12, keeps Q1–Q6 open and
-separates these consistency checks from the unassessed full-set human reading.
+separates those consistency checks from the then-unassessed full-set human reading.
 `task docs:check` passed, with 229 coverage candidates and no pending entries.
-The full-set checkpoint still owns comprehension.
+The checkpoint's subsequent verdict and its limits are recorded above.
 
 The three-page review guide is proofed (`review-guide-k91`, closing
 `review-guide-k10`). `review/README.md` is the landing-map and guided-route
