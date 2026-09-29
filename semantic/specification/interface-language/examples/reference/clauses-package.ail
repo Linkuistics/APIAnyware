@@ -1,0 +1,227 @@
+// Independent teaching fragments, not concatenable complete packages.
+// Adapted from examples/objects.ail and rule-reading/{syntax,clauses,contracts}.ail.
+// The environment region illustrates L3 with hypothetical provider values;
+// it does not extend F1. Fixture references elsewhere are synthetic.
+
+// region: property
+package example::objects version "1" {
+  property count: u64 {
+    member(@Counter, instance);
+    accessors(@read_count, @write_count);
+    storage(value);
+    // Availability and deprecation omitted.
+  }
+  // Counter and the full read_count/write_count functions omitted.
+  // Getter: (receiver: Counter) -> u64.
+  // Setter: (receiver: Counter, value: u64) -> unit.
+}
+// endregion
+
+// region: availability
+package example::geometry version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  record Point {
+    available([test]);
+    deprecated(no);
+    field x: i32;
+    field y: i32;
+    // Remaining nominal contracts omitted.
+  }
+  // Header, provider pins and publication context omitted.
+}
+// endregion
+
+// region: relations
+package example::drawing version "1" {
+  interface Drawable {
+    extends([]);
+    // Nominal contracts omitted.
+  }
+  object Shape {
+    base(none);
+    implements([]);
+    // Nominal contracts omitted.
+  }
+  object Dot {
+    base(@Shape);
+    implements([@Drawable]);
+    // Nominal contracts omitted.
+  }
+  // Header, providers, members and publication context omitted.
+}
+// endregion
+
+// region: deprecated
+package example::geometry version "2" {
+  record Point {
+    deprecated(since("2"), "Use Position instead.");
+    // Fields, availability and nominal contracts omitted.
+  }
+  // Header, Position and publication context omitted.
+}
+// endregion
+
+// region: navigation
+package example::geometry version "1" {
+  doc("Coordinates used by the invented drawing API.");
+  link("https://example.invalid/geometry");
+  record Point {
+    source(fixture, "Geometry.Point");
+    doc("A position measured along two axes.");
+    // Fields, availability and nominal contracts omitted.
+  }
+  // Header, fixture pin and publication context omitted.
+}
+// endregion
+
+// region: publication
+package example::geometry version "1" {
+  surface("An invented point API, release 1.");
+  exports([@Point]);
+  record Point {
+    field x: i32;
+    field y: i32;
+    // Availability and nominal contracts omitted.
+  }
+  // Header, environments and provider pins omitted.
+}
+// endregion
+
+// region: extension
+package example::canvas_extras version "1" {
+  fn refresh(canvas: Drawing::Canvas) -> unit {
+    member(@Drawing::Canvas, instance);
+    receiver($canvas);
+    extension(fixture, "Refresh", "CanvasExtras");
+    // Callable contracts omitted.
+  }
+  // Header, Drawing import, fixture pin and publication context omitted.
+}
+// endregion
+
+// region: environment
+package example::configuration version "1" {
+  environment selected {
+    target("example64");
+    platform("example-os", "3");
+    toolchain("example-compiler", "2");
+    runtime("example-runtime", "5");
+    feature("tracing", true);
+    feature("vector", false);
+  }
+  // Header, capable provider pins, declarations and publication context omitted.
+}
+// endregion
+
+// region: isolation
+package example::objects version "1" {
+  object Counter {
+    lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
+    sharing(confined);
+    isolation(main);
+    // Base, interfaces, availability and deprecation omitted.
+  }
+  // Header, fixture pin, members and publication context omitted.
+}
+// endregion
+
+// region: lifecycle
+package example::buffers version "1" {
+  resource Store {
+    lifecycle(unique, @destroy);
+    sharing(transferable);
+    isolation(none);
+    // Availability, deprecation and implements omitted.
+  }
+  fn destroy(store: Store) -> unit {
+    input($store, consume);
+    retain($store, none);
+    // Effects, successful returned outcome and access omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: literal
+package example::settings version "1" {
+  constant default_limit: u32 {
+    literal(16);
+    // Availability and deprecation omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: member
+package example::canvas version "1" {
+  fn position(canvas: Canvas) -> Geometry::Point {
+    member(@Canvas, instance);
+    receiver($canvas);
+    // Callable contracts omitted.
+  }
+  // Header, Canvas, Geometry import and publication context omitted.
+}
+// endregion
+
+// region: mutable
+package example::settings version "1" {
+  global current_limit: u32 {
+    mutable(true);
+    sharing(confined);
+    isolation(main);
+    // Access, availability and deprecation omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+
+// region: function_relations
+package example::drawing version "1" {
+  fn required_draw(item: Drawable) -> unit {
+    member(@Drawable, instance);
+    receiver($item);
+    requirement(required);
+    // Callable contracts omitted.
+  }
+  fn shape_draw(item: Shape) -> unit {
+    member(@Shape, instance);
+    receiver($item);
+    // Callable contracts omitted.
+  }
+  fn dot_draw(item: Dot) -> unit {
+    member(@Dot, instance);
+    receiver($item);
+    overrides(@shape_draw);
+    satisfies([@required_draw]);
+    // Compatible signatures, ownership and behaviours required.
+  }
+  // Header, nominal declarations, providers and publication context omitted.
+}
+// endregion
+
+// region: toolchain
+package example::objects version "1" {
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+    toolchain("fixture-compiler", "1");
+  }
+  // Header, fixture/native pins, declarations and publication context omitted.
+}
+// endregion
+
+// region: values
+package example::geometry version "1" {
+  enum Axis: u8 {
+    case horizontal = 0;
+    case vertical = 1;
+    values(closed);
+    // Availability, deprecation, sharing and isolation omitted.
+  }
+  // Header and publication context omitted.
+}
+// endregion
+

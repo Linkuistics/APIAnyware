@@ -21,11 +21,12 @@ explain how to read the fields.
 railroad views. It includes [local and imported references](notation.md#names),
 [callable slots](notation.md#callable) and [places](notation.md#places).
 
-The clause entries are forthcoming in `clauses-package.md` (package,
-environment, common and nominal clauses), `clauses-callable.md` (effects,
-inputs and storage), `clauses-outcomes.md` (outcomes and callback schedules),
-and `clauses-access.md` (access, pattern bindings/laws and fixture clauses).
-Their applicability and canonical rule destinations are available now in the
+[Package, environment and declaration clauses](clauses-package.md) covers
+publication, exact configurations, common clauses, members and nominal contracts.
+Further entries are forthcoming in `clauses-callable.md` (effects, inputs and
+storage), `clauses-outcomes.md` (outcomes and callback schedules), and
+`clauses-access.md` (access, pattern bindings/laws and fixture clauses).
+Their applicability and canonical rule destinations are available in the
 [table](declarations.md#applicability).
 
 ## Canonical sources
@@ -50,18 +51,18 @@ for the distinction between rule text and explanatory summaries.
 Start here with the fact you need to record. Forthcoming clause entries are
 named as plain text; the applicability table links their rules.
 
-| Model concept | Available entries and forthcoming clauses |
+| Model concept | Entries and clause destinations |
 |---|---|
-| [Operations and their values](../explanation/model.md#operations) | [`unit`](types.md#unit), [`bool`](types.md#bool), [`i8`](types.md#integers), [`f32`](types.md#floats), [`ptr`](types.md#pointers), [`nullable`](types.md#nullable), [`array`](types.md#array), [`complex`](types.md#complex), [`record`](declarations.md#record), [`field`](declarations.md#field), [`alias`](declarations.md#alias), [`enum`](declarations.md#enum), [`flags`](declarations.md#flags), [`case`](declarations.md#case), [`fn`](declarations.md#fn), [`type`](types.md#named-types), [`reference`](notation.md#names), [`place`](notation.md#places), [`integer`](notation.md#grammar-source-and-dialect); forthcoming: `values`, `variadic` |
-| [How a call finishes](../explanation/model.md#outcomes) | [`outcome`](declarations.md#outcome); forthcoming: `completions`, `meaning`, `state`, `when` |
-| [Entities that outlive a call](../explanation/model.md#entities) | [`resource`](declarations.md#resource), [`object`](declarations.md#object), [`interface`](declarations.md#interface), [`property`](declarations.md#property), [`constant`](declarations.md#constant), [`global`](declarations.md#global), [`pattern`](declarations.md#pattern), [`role`](declarations.md#role), [`instance`](declarations.md#instance); forthcoming: `accessors`, `base`, `bind`, `extends`, `extension`, `implements`, `law`, `literal`, `member`, `mutable`, `overrides`, `receiver`, `requirement`, `satisfies`, `storage`, `subject` |
-| [Release responsibility](../explanation/model.md#responsibility) | forthcoming: `give`, `input`, `lifecycle`, `retain` |
-| [Validity](../explanation/model.md#validity) | forthcoming: `invalidated_by`, `mutation`, `valid` |
-| [Storage](../explanation/model.md#storage) | forthcoming: `aliasing`, `contents`, `direction`, `extent` |
-| [Where and when calls run](../explanation/model.md#execution) | forthcoming: `concurrency`, `execution`, `executor`, `fixture::actor`, `fixture::sendability`, `isolation`, `reentrancy`, `sharing` |
-| [Callbacks and their schedules](../explanation/model.md#callbacks) | [`callback`](declarations.md#callback), [`callback_use`](declarations.md#callback-use); forthcoming: `count`, `quiescence`, `requires`, `scope`, `timing` |
-| [The published description](../explanation/model.md#description) | [`package`](declarations.md#package), [`import`](declarations.md#import), [`environment`](declarations.md#environment), [`clause`](notation.md#clause), [`name`](notation.md#names); forthcoming: `available`, `deprecated`, `doc`, `exports`, `feature`, `link`, `platform`, `runtime`, `source`, `surface`, `target`, `toolchain` |
-| [Reaching the code](../explanation/model.md#access) | [`access`](declarations.md#access), [`profile`](types.md#profile-types); forthcoming: `abi`, `callback_abi`, `compatibility`, `mapping`, `representation`, `via` |
+| [Operations and their values](../explanation/model.md#operations) | [`unit`](types.md#unit), [`bool`](types.md#bool), [`i8`](types.md#integers), [`f32`](types.md#floats), [`ptr`](types.md#pointers), [`nullable`](types.md#nullable), [`array`](types.md#array), [`complex`](types.md#complex), [`record`](declarations.md#record), [`field`](declarations.md#field), [`alias`](declarations.md#alias), [`enum`](declarations.md#enum), [`flags`](declarations.md#flags), [`case`](declarations.md#case), [`fn`](declarations.md#fn), [`type`](types.md#named-types), [`reference`](notation.md#names), [`place`](notation.md#places), [`integer`](notation.md#grammar-source-and-dialect); clauses: [`values`](clauses-package.md#values), `variadic` |
+| [How a call finishes](../explanation/model.md#outcomes) | [`outcome`](declarations.md#outcome); clauses: `completions`, `meaning`, `state`, `when` |
+| [Entities that outlive a call](../explanation/model.md#entities) | [`resource`](declarations.md#resource), [`object`](declarations.md#object), [`interface`](declarations.md#interface), [`property`](declarations.md#property), [`constant`](declarations.md#constant), [`global`](declarations.md#global), [`pattern`](declarations.md#pattern), [`role`](declarations.md#role), [`instance`](declarations.md#instance); clauses: [`accessors`](clauses-package.md#accessors), [`base`](clauses-package.md#base), `bind`, [`extends`](clauses-package.md#extends), [`extension`](clauses-package.md#extension), [`implements`](clauses-package.md#implements), `law`, [`literal`](clauses-package.md#literal), [`member`](clauses-package.md#member), [`mutable`](clauses-package.md#mutable), [`overrides`](clauses-package.md#overrides), [`receiver`](clauses-package.md#receiver), [`requirement`](clauses-package.md#requirement), [`satisfies`](clauses-package.md#satisfies), [`storage`](clauses-package.md#storage), `subject` |
+| [Release responsibility](../explanation/model.md#responsibility) | `give`, `input`, [`lifecycle`](clauses-package.md#lifecycle), `retain` |
+| [Validity](../explanation/model.md#validity) | `invalidated_by`, `mutation`, `valid` |
+| [Storage](../explanation/model.md#storage) | `aliasing`, `contents`, `direction`, `extent` |
+| [Where and when calls run](../explanation/model.md#execution) | `concurrency`, `execution`, `executor`, `fixture::actor`, `fixture::sendability`, [`isolation`](clauses-package.md#isolation), `reentrancy`, [`sharing`](clauses-package.md#sharing) |
+| [Callbacks and their schedules](../explanation/model.md#callbacks) | [`callback`](declarations.md#callback), [`callback_use`](declarations.md#callback-use); clauses: `count`, `quiescence`, `requires`, `scope`, `timing` |
+| [The published description](../explanation/model.md#description) | [`package`](declarations.md#package), [`import`](declarations.md#import), [`environment`](declarations.md#environment), [`clause`](notation.md#clause), [`name`](notation.md#names); clauses: [`available`](clauses-package.md#available), [`deprecated`](clauses-package.md#deprecated), [`doc`](clauses-package.md#doc), [`exports`](clauses-package.md#exports), [`feature`](clauses-package.md#feature), [`link`](clauses-package.md#link), [`platform`](clauses-package.md#platform), [`runtime`](clauses-package.md#runtime), [`source`](clauses-package.md#source), [`surface`](clauses-package.md#surface), [`target`](clauses-package.md#target), [`toolchain`](clauses-package.md#toolchain) |
+| [Reaching the code](../explanation/model.md#access) | [`access`](declarations.md#access), [`profile`](types.md#profile-types); clauses: `abi`, `callback_abi`, `compatibility`, `mapping`, `representation`, `via` |
 | [Writers, checkers and users](../explanation/model.md#agreement) | [`use`](declarations.md#use) |
 
 <a id="rules"></a>

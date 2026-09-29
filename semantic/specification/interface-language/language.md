@@ -623,6 +623,11 @@ For the exact forms, see the [environment grammar](reference/notation.md#environ
 and [clause grammar](reference/notation.md#clause). L3 requires the target and
 platform facts even though the grammar admits an empty environment body.
 
+Lookup: [surface](reference/clauses-package.md#surface),
+[exports](reference/clauses-package.md#exports),
+[available](reference/clauses-package.md#available), and
+[environment clauses](reference/clauses-package.md#target).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -836,6 +841,8 @@ the core rejects that duplication. An empty closed enum permits no values and
 is invalid. These constraints go beyond the grammar's general `case name =
 integer;` shape ([L4](#l4)).
 
+Lookup: [values](reference/clauses-package.md#values).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -998,6 +1005,11 @@ These advisory messages leave actual availability to the environment contract.
 `source` may repeat for different profile aliases, once per alias; `link` may
 repeat as navigation. A second `doc` in the same scope would violate the usual
 singular-clause rule ([L5](#l5)).
+
+Lookup: [doc](reference/clauses-package.md#doc),
+[link](reference/clauses-package.md#link),
+[source](reference/clauses-package.md#source), and
+[deprecated](reference/clauses-package.md#deprecated).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1219,6 +1231,12 @@ only the nominal type appears in `exports`. A tool may display them beneath
 `Canvas` or derive inherited-member and property views; the declarations and
 signatures in the package remain their source of truth ([L5](#l5)).
 See [How AIL states a contract](explanation/contracts.md).
+
+Lookup: [member](reference/clauses-package.md#member),
+[receiver](reference/clauses-package.md#receiver),
+[nominal relations](reference/clauses-package.md#base),
+[accessors](reference/clauses-package.md#accessors), and
+[property storage](reference/clauses-package.md#storage).
 
 </blockquote>
 <!-- /reading-aid -->

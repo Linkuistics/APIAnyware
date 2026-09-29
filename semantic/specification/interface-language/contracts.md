@@ -287,6 +287,11 @@ reference needs a policy that accounts for that reference. A callback's
 [callback captures](glossary.md#callback-captures); [C6](#c6) separately
 shows when the API may invoke it. See [Entities and their lifecycles](explanation/contracts.md#entities-and-their-lifecycles).
 
+Lookup: [lifecycle](reference/clauses-package.md#lifecycle),
+[runtime primitives](reference/clauses-package.md#runtime),
+[sharing](reference/clauses-package.md#sharing), and
+[isolation](reference/clauses-package.md#isolation).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -1102,6 +1107,11 @@ with `sharing(confined)` and a non-`none` isolation such as `main`; a mutable
 reference global requires a provider contract or explicit accessor operations.
 The [global storage rule](#c7) below defines that boundary, and the
 [region glossary entry](glossary.md#region) explains the lifetime vocabulary.
+
+Lookup: [mutable](reference/clauses-package.md#mutable),
+[sharing](reference/clauses-package.md#sharing),
+[isolation](reference/clauses-package.md#isolation), and
+[literal](reference/clauses-package.md#literal).
 
 </blockquote>
 <!-- /reading-aid -->

@@ -1094,42 +1094,43 @@ package example::buffers version "1" {
 ## Clause-by-declaration applicability
 
 This is a non-normative lookup table. The linked rules determine operands,
-companions and rejection. Clause entries are forthcoming. **Required** means
+companions and rejection. Linked clause names lead to entries; the remaining
+entries are forthcoming. **Required** means
 required when the stated applicability condition holds; omission does not infer
 an empty or safe value. Under [L5](../language.md#l5), clauses are singular in
 their stated scope unless an explicit repeatability rule applies, and a clause
 outside its scope is invalid.
 
-Every declaration except patterns and instances has one `available`. Public
-roots and members of public nominal types require `deprecated`; a private
+Every declaration except patterns and instances has one [`available`](clauses-package.md#available). Public
+roots and members of public nominal types require [`deprecated`](clauses-package.md#deprecated); a private
 support declaration remains subject to its applicable contracts
 ([L3](../language.md#l3), [L5](../language.md#l5)).
 
 | Clause | Scope and requiredness | Canonical rule |
 |---|---|---|
-| `surface`, `exports` | Package: required scope statement and public roots | [L3](../language.md#l3) |
-| `target`, `platform` | Environment: exactly one each | [L3](../language.md#l3) |
-| `toolchain`, `runtime` | Environment: optional configuration refinements; the `runtime(...)` value constructor in lifecycle is a separate use | [L3](../language.md#l3), [C2](../contracts.md#c2) |
-| `feature` | Environment: optional, repeats by unique feature name | [L3](../language.md#l3) |
-| `available` | All declarations except patterns/instances: one nonempty environment set | [L3](../language.md#l3) |
-| `doc` | Optional on package, declaration (including a role's containing pattern) or outcome | [L5](../language.md#l5) |
-| `link` | Optional, repeatable on package/declarations | [L5](../language.md#l5) |
-| `source` | Optional on declarations, repeatable once per profile alias | [L5](../language.md#l5) |
-| `deprecated` | Public declarations except patterns/instances: required | [L5](../language.md#l5) |
-| `base` | Object: required, object reference or explicit `none` | [L5](../language.md#l5) |
-| `implements` | Object, record, resource: required, possibly empty interface list | [L5](../language.md#l5) |
-| `extends` | Interface: required, possibly empty interface list | [L5](../language.md#l5) |
-| `member` | Function/property: optional owner and instance/static/initializer association | [L5](../language.md#l5) |
-| `receiver` | Instance/initializer function: required non-null parameter of the owner type or a provider-defined receiver type; static/free function forbids it | [L5](../language.md#l5) |
-| `requirement` | Interface member: required; forbidden elsewhere | [L5](../language.md#l5) |
-| `overrides`, `satisfies` | Function: optional relations to compatible members | [L5](../language.md#l5) |
-| `extension` | Member contributed by a source extension/category: optional origin | [L5](../language.md#l5) |
-| `accessors`, `storage` | Property: required; storage agrees with accessor contracts | [L5](../language.md#l5), [C3](../contracts.md#c3) |
-| `literal` | Constant: exactly one literal or one/more access paths | [L5](../language.md#l5), [A2](../profiles.md#a2) |
-| `mutable` | Global: required | [L5](../language.md#l5), [C7](../contracts.md#c7) |
-| `values` | Enum/flags: required `open` or `closed` domain | [L4](../language.md#l4) |
-| `lifecycle` | Resource/object/interface: required; `unique` only on resources | [C2](../contracts.md#c2) |
-| `sharing`, `isolation` | Record/resource/object/interface/enum/flags/alias/callback: required. Globals also require them; accessed constants obey C7's output rules | [C2](../contracts.md#c2), [C7](../contracts.md#c7) |
+| [`surface`](clauses-package.md#surface), [`exports`](clauses-package.md#exports) | Package: required scope statement and public roots | [L3](../language.md#l3) |
+| [`target`](clauses-package.md#target), [`platform`](clauses-package.md#platform) | Environment: exactly one each | [L3](../language.md#l3) |
+| [`toolchain`](clauses-package.md#toolchain), [`runtime`](clauses-package.md#runtime) | Environment: optional configuration refinements; the `runtime(...)` value constructor in lifecycle is a separate use | [L3](../language.md#l3), [C2](../contracts.md#c2) |
+| [`feature`](clauses-package.md#feature) | Environment: optional, repeats by unique feature name | [L3](../language.md#l3) |
+| [`available`](clauses-package.md#available) | All declarations except patterns/instances: one nonempty environment set | [L3](../language.md#l3) |
+| [`doc`](clauses-package.md#doc) | Optional on package, declaration (including a role's containing pattern) or outcome | [L5](../language.md#l5) |
+| [`link`](clauses-package.md#link) | Optional, repeatable on package/declarations | [L5](../language.md#l5) |
+| [`source`](clauses-package.md#source) | Optional on declarations, repeatable once per profile alias | [L5](../language.md#l5) |
+| [`deprecated`](clauses-package.md#deprecated) | Public declarations except patterns/instances: required | [L5](../language.md#l5) |
+| [`base`](clauses-package.md#base) | Object: required, object reference or explicit `none` | [L5](../language.md#l5) |
+| [`implements`](clauses-package.md#implements) | Object, record, resource: required, possibly empty interface list | [L5](../language.md#l5) |
+| [`extends`](clauses-package.md#extends) | Interface: required, possibly empty interface list | [L5](../language.md#l5) |
+| [`member`](clauses-package.md#member) | Function/property: optional owner and instance/static/initializer association | [L5](../language.md#l5) |
+| [`receiver`](clauses-package.md#receiver) | Instance/initializer function: required non-null parameter of the owner type or a provider-defined receiver type; static/free function forbids it | [L5](../language.md#l5) |
+| [`requirement`](clauses-package.md#requirement) | Interface member: required; forbidden elsewhere | [L5](../language.md#l5) |
+| [`overrides`](clauses-package.md#overrides), [`satisfies`](clauses-package.md#satisfies) | Function: optional relations to compatible members | [L5](../language.md#l5) |
+| [`extension`](clauses-package.md#extension) | Member contributed by a source extension/category: optional origin | [L5](../language.md#l5) |
+| [`accessors`](clauses-package.md#accessors), [`storage`](clauses-package.md#storage) | Property: required; storage agrees with accessor contracts | [L5](../language.md#l5), [C3](../contracts.md#c3) |
+| [`literal`](clauses-package.md#literal) | Constant: exactly one literal or one/more access paths | [L5](../language.md#l5), [A2](../profiles.md#a2) |
+| [`mutable`](clauses-package.md#mutable) | Global: required | [L5](../language.md#l5), [C7](../contracts.md#c7) |
+| [`values`](clauses-package.md#values) | Enum/flags: required `open` or `closed` domain | [L4](../language.md#l4) |
+| [`lifecycle`](clauses-package.md#lifecycle) | Resource/object/interface: required; `unique` only on resources | [C2](../contracts.md#c2) |
+| [`sharing`](clauses-package.md#sharing), [`isolation`](clauses-package.md#isolation) | Record/resource/object/interface/enum/flags/alias/callback: required. Globals also require them; accessed constants obey C7's output rules | [C2](../contracts.md#c2), [C7](../contracts.md#c7) |
 | `execution`, `completions`, `mutation`, `variadic` | Every function/callback declaration: required | [C3](../contracts.md#c3) |
 | `executor`, `concurrency`, `reentrancy` | Every function/callback declaration and every callback-use block: required, with distinct invocation/registration scopes | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
 | `input`, `retain` | Callable body: required per input reference leaf, including references read from `in`/`inout` storage | [C1](../contracts.md#c1), [C3](../contracts.md#c3) |
