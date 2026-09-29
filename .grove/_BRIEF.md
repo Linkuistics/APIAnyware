@@ -305,6 +305,21 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+The three-page review guide is proofed (`review-guide-k91`, closing
+`review-guide-k10`). `review/README.md` is the landing-map and guided-route
+destination; it links the six dimensions, feedback template, complete
+clause-by-clause walkthroughs and seven tasks. Use `review/tasks.md#trace`,
+`#predict`, `#change`, `#compare`, `#stretch`, `#author` and `#model-fit` for
+direct task links. Preserve Compare's historical non-0.1 label, Trace's
+placeholder import pin, Author's lifetime-only assumptions, and Stretch's
+separate cancellation/acknowledgement boundary. Model fit includes L6's
+checked release relationship without inventing a second ownership authority.
+Whole-document proof found no actionable defect or outstanding handoff.
+`task docs:check` passed, including 26 SVGs and complete reference coverage;
+canonical rules, grammar, conformance record and frozen packages match
+`a1e22077`. These are consistency checks. The reviewer journey and later
+human checkpoint still own cross-set assessment and comprehension evidence.
+
 The complete eight-page reference is proofed (`reference-k88`, closing
 `reference-k9`). `reference/README.md` provides model-concept, rule,
 N01–N33 mutation and alphabetical clause indexes; `declarations.md#applicability`
