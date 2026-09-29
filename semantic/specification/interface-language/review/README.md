@@ -1,6 +1,6 @@
 # Reviewing AIL
 
-> **Purpose:** review guide — judge how well AIL describes API behaviour and binding obligations, and record concrete feedback.
+> **Purpose:** review guide — judge how well AIL describes API behaviour and [binding](../glossary.md#binding) obligations, and record concrete feedback.
 > **Reader:** language designers who have read the orientation; API authors and tool implementers can use the same tasks.
 > **Before this:** [the overview](../README.md) and [the API model](../explanation/model.md). [Using an API across languages](../explanation/unsaid.md) explains the domain through a small C API.
 > **Status:** Draft 0.1 is a proposal under review through its specification
@@ -11,7 +11,7 @@
 ## What this review is for
 
 AIL is a tool for writing down the [API model](../explanation/model.md).
-A useful review asks whether a person can state what callers need to know,
+A useful review asks whether a person can state what [callers](../glossary.md#caller-and-callee) need to know,
 and whether another person or tool can recover those facts accurately.
 Feedback can challenge the model's distinctions, the language's way of
 expressing them, or the documentation that connects the two. The examples
@@ -23,9 +23,9 @@ store dies with access that a refresh operation ends sooner. AIL records
 the lifetime bound and earlier invalidating operations separately
 ([C1](../contracts.md#c1), [C5](../contracts.md#c5)).
 
-Fragment — `view` in the invented `example::buffers` package. The
+Fragment — `view` in the invented `example::buffers` [package](../glossary.md#package). The
 [complete package](../examples/buffers.ail) supplies `Store`, its destructor,
-publication context and the omitted callable facts. Its
+publication context and the omitted [callable](../glossary.md#callable) facts. Its
 [profile](../glossary.md#profile), [ABI](../glossary.md#abi) catalogue and
 [digest tokens](../glossary.md#digest-pin) are synthetic ([F1](../profiles.md#f1)).
 
@@ -47,18 +47,20 @@ fn view(store: Store) -> ptr<u8> {
 
 Here `store` is the local function's input, and `$result` addresses its
 returned pointer. The caller keeps the input usable during the call.
-The result's owner region then requires the store to remain alive while
-the returned bytes are used; the empty invalidator list promises no earlier
-invalidation. These clauses answer related questions at different moments
+To use the returned bytes, the caller keeps the store alive for the result's
+owner [region](../glossary.md#region). The empty invalidator list promises no
+earlier [invalidation](../glossary.md#invalidation).
+These [clauses](../glossary.md#clause) answer related questions at different moments
 ([C1](../contracts.md#c1), [C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 Whether their placement helps a reader find that whole answer is a review
-question. The [place](../reference/notation.md#places) and
-[outcome](../reference/notation.md#outcome) grammar is available for exact lookup.
+question. The glossary explains [places](../glossary.md#place) and
+[outcomes](../glossary.md#outcome); the [place](../reference/notation.md#places)
+and [outcome](../reference/notation.md#outcome) grammar is available for exact lookup.
 
 Choose a route through the guide:
 
 - [Read the conformance examples](walkthroughs.md) for clause-by-clause
-  readings of the buffer, callback and object packages, grouped by model concept.
+  readings of the buffer, [callback](../glossary.md#callback) and object packages, grouped by model concept.
 - [Try a review task](tasks.md) to trace, predict, change, compare, stretch,
   author or assess the fit between a model concept and its notation.
 - Use [the reference indexes](../reference/README.md) when you need a clause,
@@ -76,7 +78,7 @@ a language problem, or a missing distinction in the model.
 For [Validity](../explanation/model.md#validity), can a reader find the
 facts that determine when access ends without having to interpret unrelated
 clauses? The `view` fragment above separates input validity from the
-returned borrow, and the full function places other facts around both.
+returned [borrow](../glossary.md#borrow), and the full function places other facts around both.
 
 After [Predict](tasks.md#predict), identify the words or placement in
 [`view`](../examples/buffers.ail) that made the lifetime clear or misleading.
@@ -88,11 +90,11 @@ case where an operation ends the borrow before its owner dies.
 
 [Operations and their values](../explanation/model.md#operations) gives each
 callable its own parameters and result. [The published description](../explanation/model.md#description)
-locates declarations in packages. A reader needs to distinguish a reference
+locates [declarations](../glossary.md#declaration) in packages. A reader needs to distinguish a reference
 to another package from a reference to another operation's parameter.
 
-In [Trace](tasks.md#trace), compare the imported point type with the canvas
-member's receiver and result. Which forms in [L2](../language.md#l2) and
+In [Trace](tasks.md#trace), compare the [imported](../glossary.md#import) point type with the canvas
+[member](../glossary.md#member)'s receiver and result. Which forms in [L2](../language.md#l2) and
 [C1](../contracts.md#c1) express one recognisable relationship, and which
 invite a different interpretation? Propose a naming or reference scheme if
 the current one conflates concepts. [Q4](../explanation/choices.md#q4)
@@ -119,12 +121,12 @@ core form ([C5](../contracts.md#c5)).
 For [Storage](../explanation/model.md#storage), adding one pointer input
 requires facts about its storage as well as the pointer value. For
 [Release responsibility](../explanation/model.md#responsibility), even a
-small release operation also needs its surrounding call contract.
+small release operation also needs its surrounding [binding contract](../glossary.md#binding-contract).
 
 Try [Change](tasks.md#change) or [Author](tasks.md#author). Separate clauses
 that contribute distinct facts from repetitions that add work. Using
 [C3–C5](../contracts.md#c3) and the resulting fragment, identify what you
-would combine, derive or make easier to write. Explain how a consumer would
+would combine, derive or make easier to write. Explain how a [consumer](../glossary.md#consumer) would
 still recover the fact, and how an author would state an exceptional case.
 Clause counts locate the work; they do not by themselves measure difficulty.
 
@@ -147,15 +149,15 @@ The [Model fit task](tasks.md#model-fit) extends this check across examples.
 [Writers, checkers and users](../explanation/model.md#agreement) asks whether
 an analysis tool can emit the description and a binding generator or renderer
 can recover the same facts. [Reaching the code](../explanation/model.md#access)
-adds a practical test: the object getter has two access paths that both need
+adds a practical test: the object getter has two [access paths](../glossary.md#access-path) that both need
 to preserve its contract.
 
 Inspect [the getter's two paths](walkthroughs.md#read-count-one-member-two-ways-to-call-it)
 and [Two views of one contract](../conformance.md#two-views-of-one-contract).
-Which facts would your proposed producer have evidence to write? Which
+Which facts would your proposed [producer](../glossary.md#producer) have evidence to write? Which
 would each consumer need to recover? Identify anything [A2](../profiles.md#a2)
 or [A5](../profiles.md#a5) makes difficult, ambiguous or unnecessarily costly.
-Describe a better representation if one is warranted. Distinguish an
+Describe a better way to express those facts if one is warranted. Distinguish an
 unsupported consumer operation from an incomplete API description.
 
 ## Recording feedback
@@ -181,8 +183,9 @@ language needs to change, state the distinction it should express.
 ## Known open questions
 
 The [open-question register](../explanation/choices.md#open-questions)
-currently includes normative presentation, the two meanings of “closure”,
-the rationale for ownership clauses, reference spelling, entry versus output
+currently includes normative presentation, [dependency closure](../glossary.md#dependency-closure) versus
+[callback captures](../glossary.md#callback-captures),
+the rationale for [ownership](../glossary.md#owned) clauses, reference spelling, entry versus output
 validity, and rule-citation precision. Add evidence to those questions or
 challenge another choice. Their presence records uncertainty, not an answer
 the review is expected to endorse.
@@ -199,7 +202,7 @@ native fixture or binding generator to run.
 
 You can inspect syntax, identify the rule a conforming validator would apply,
 and reason about the declared behaviour. Implementation truth, runtime safety,
-real-provider coverage and authoring cost at production scale need further
+coverage of real [providers](../glossary.md#provider) and authoring cost at production scale need further
 evidence ([C8](../contracts.md#c8), [A1](../profiles.md#a1)).
 The expected observations in [the tasks](tasks.md) are readings to compare
 with your own, not tool diagnostics or proof that the design is suitable.

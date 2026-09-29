@@ -1,5 +1,35 @@
 # review-guide-k89
 
+## Decisions (running log)
+
+- Keep the three pages' structure, task inventories and examples intact. Add
+  first-use glossary routes and revise sentences that compress actors or
+  conditions; qualify callback captures separately from dependency closure.
+- Use direct document reads as evidence. Graph generation
+  `2026-09-23T09:55:55Z` is ready, but coverage reports the plan/research
+  subtree excluded and the review pages untracked; no code-structure claim
+  relies on that index.
+- The full-document copy-edit closes both glossary/prose handoffs. No
+  structural correction or unresolved technical finding was found. Art
+  remains mandatory and is queued as `review-guide-k90`; the node stays live.
+
+## Verification
+
+- `task docs:check` passed: 31 files checked for links and examples, 29 pages
+  reachable, all 26 SVGs reproduced, 229 coverage candidates with no pending
+  entries or errors. External links were listed, not fetched.
+- Compared all three review pages against parent `d6b7407b`: headings, code
+  fences, example markers and explicit anchors are unchanged. Read the prose
+  diff against C1–C10, retaining all seven task structures and their expected
+  observations, including the 17-clause count and L6 release relationship.
+- `language.md`, `contracts.md`, `profiles.md`, `grammar.ebnf`,
+  `conformance.md`, the three complete conformance packages and
+  `examples/review/tasks.ail` are byte-identical to the parent.
+- SHA-256 digests before and after the final gate match for 123 files:
+  the interface-language documentation tree, documentation checker files,
+  root Taskfile, documentation plan and audit. The check establishes document
+  consistency and preservation, not human comprehension or runtime safety.
+
 
 ## Goal
 

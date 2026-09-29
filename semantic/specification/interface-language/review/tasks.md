@@ -12,22 +12,22 @@ Choose one task and try its steps before reading the expected observations.
 Each task supplies its own starting conditions. Record the step you reached
 and the rule or example behind your conclusion; completing every task is
 optional. Use the [clause-by-clause walkthroughs](walkthroughs.md) when you
-want a longer reading of a package.
+want a longer reading of a [package](../glossary.md#package).
 
 | Task | Model question |
 |---|---|
-| [Trace](#trace) | In the canvas example, which declaration owns each fact about the position operation? |
-| [Predict](#predict) | Can the caller use the store's returned bytes after the call finishes? |
+| [Trace](#trace) | In the canvas example, which [declaration](../glossary.md#declaration) owns each fact about the position operation? |
+| [Predict](#predict) | Can the [caller](../glossary.md#caller-and-callee) use the store's returned bytes after the call finishes? |
 | [Change](#change) | What must a caller supply when the buffer copy gains a pointer input? |
 | [Compare](#compare) | How do the earlier byte-store sketch and draft 0.1 express a view's lifetime? |
-| [Stretch](#stretch) | When is callback state safe to release if cancellation only requests a stop? |
+| [Stretch](#stretch) | When is [callback](../glossary.md#callback) state safe to release if cancellation only requests a stop? |
 | [Author](#author) | What does closing the watch require and promise? |
 | [Model fit](#model-fit) | How many forms must a reader follow to recover validity across the examples? |
 
 The APIs are invented. The conformance packages use a synthetic
 [profile](../glossary.md#profile), [ABI](../glossary.md#abi) catalogue and
 [digest tokens](../glossary.md#digest-pin) ([F1](../profiles.md#f1)). The
-canvas import uses a placeholder digest, identified locally below.
+canvas [import](../glossary.md#import) uses a placeholder digest, identified locally below.
 Edits are paper or scratch-file exercises. Expected observations identify
 rules to apply by inspection; they are not reports from a validator or a
 running implementation.
@@ -43,7 +43,7 @@ declarations. [Operations and their values](../explanation/model.md#operations)
 locates the receiver and result within the call.
 
 **Goal:** distinguish an imported type from a local declaration, then follow
-a member's nominal owner and callable [slots](../glossary.md#slot).
+a [member](../glossary.md#member)'s nominal owner and [callable](../glossary.md#callable) [slots](../glossary.md#slot).
 
 **Conditions:** use the fragment below and [L2](../language.md#l2).
 `example::geometry`, version `1`, declares the record `Point`; the current
@@ -52,8 +52,8 @@ all-zero digest is a placeholder, not the hash of the geometry document.
 A publishable package would need the exact dependency bytes and matching pin.
 
 Fragment — the canvas package with its imported result type and local
-receiver. Publication, nominal lifetime, effects, outcomes, access and
-provider definitions are omitted. [L2's two-package language-containment
+receiver. Publication, nominal [lifecycle](../glossary.md#lifecycle), effects, [outcomes](../glossary.md#outcome), access and
+[provider](../glossary.md#provider) definitions are omitted. [L2's two-package language-containment
 view](../language.md#l2) shows the same containing relationships.
 
 <!-- ail-example: ../examples/rule-reading/canvas.ail region=model -->
@@ -79,9 +79,10 @@ package example::canvas version "1" {
 
 The import gives the external package the local alias `Geometry`.
 `member` associates the top-level `position` function with `Canvas`, and
-`receiver` identifies its ordinary `canvas` parameter. The input clauses
-say that the call borrows that canvas, stores no reference and needs it
-usable during the call ([L2](../language.md#l2), [L5](../language.md#l5),
+`receiver` identifies its ordinary `canvas` parameter. The input [clauses](../glossary.md#clause)
+say that the callee [borrows](../glossary.md#borrow) that canvas and stores no
+reference. The caller keeps the canvas usable during the call
+([L2](../language.md#l2), [L5](../language.md#l5),
 [C3](../contracts.md#c3)). For exact syntax, see
 [names and references](../reference/notation.md#names) and
 [callables](../reference/notation.md#callable).
@@ -103,7 +104,7 @@ usable during the call ([L2](../language.md#l2), [L5](../language.md#l5),
 
 `Canvas` and `position` belong to `example::canvas`, version `1`.
 `Point` belongs to `example::geometry`, version `1`; `Geometry` is the
-import alias, not part of the point's canonical declaration identity.
+import alias, not part of the point's [canonical declaration identity](../glossary.md#canonical-identity).
 `@Canvas` is local, while `@Geometry::Point` follows the import
 ([L2](../language.md#l2)).
 
@@ -111,7 +112,7 @@ The function is a sibling of `Canvas`. Its member clause associates it
 with that type, and its receiver clause selects `canvas`. Both
 `@position::canvas` and `@position::result` name slots of the local function;
 the shared `::` spelling does not make them imported declarations.
-`$canvas` is a place in the enclosing invocation. Type names resolve by the
+`$canvas` is a [place](../glossary.md#place) in the enclosing invocation. Type names resolve by the
 same local/imported rules without `@` ([L2](../language.md#l2),
 [L5](../language.md#l5), [C1](../contracts.md#c1)).
 
@@ -176,7 +177,7 @@ delivery. These are separate obligations ([C1](../contracts.md#c1),
    `borrow(call)` in the result's `give` clause. This is mutation N07.
 2. Locate when `call` ends and when the recipient receives the result.
    Identify the rule that applies to this escaping borrow.
-3. Explain why the original input clause can keep its `call` region.
+3. Explain why the original input clause can keep its `call` [region](../glossary.md#region).
    Then explain what the original empty invalidator list promises.
 
 **Expected observations**
@@ -185,10 +186,10 @@ The replacement has the generic clause/value shape, but the contract is
 invalid. The result escapes the call, so its borrow needs a region that
 survives delivery. A conforming validator rejects N07 under
 [C1](../contracts.md#c1) and [C5](../contracts.md#c5);
-recognizing its syntax would not discharge that check ([L1](../language.md#l1)).
+recognizing its syntax alone would not establish a valid contract ([L1](../language.md#l1)).
 
 The borrowed input is needed during the call; its entry obligation can use
-`call`. The original output separately requires keeping the store alive
+`call`. For the original output, the caller keeps the store alive
 while reading its bytes. An empty invalidator list promises no earlier
 invalidating operation, while the owner-lifetime bound still applies
 ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
@@ -252,7 +253,7 @@ package example::buffers version "2" {
 
 `$tag` selects the input pointer. Its storage contract requires four
 readable initialized bytes, while its input contract leaves release with
-the caller. The new access path passes all three parameters in declaration
+the caller. The new [access path](../glossary.md#access-path) passes all three parameters in declaration
 order ([C3–C4](../contracts.md#c3), [A2](../profiles.md#a2),
 [F1](../profiles.md#f1)). Exact syntax: [callables](../reference/notation.md#callable),
 [clauses](../reference/notation.md#clause) and [access](../reference/notation.md#access).
@@ -261,7 +262,7 @@ order ([C3–C4](../contracts.md#c3), [A2](../profiles.md#a2),
 
 1. For each of the seven `$tag` clauses, name the exercise fact it records
    and its rule. Separate facts about the pointer from facts about storage.
-2. Check whether either returned outcome needs a state or ownership clause
+2. Check whether either returned outcome needs a state or [ownership](../glossary.md#owned) clause
    for the tag. Check whether the function's existing mutation clause changes.
 3. Compare the old and new access signatures. Explain why changing the
    semantic parameter list also requires an implementation path accepting it.
@@ -272,10 +273,10 @@ order ([C3–C4](../contracts.md#c3), [A2](../profiles.md#a2),
 
 The seven new clauses are `input`, `retain`, `valid`, `direction`, `aliasing`,
 `extent` and `contents`. The first three record a borrowed pointer with no
-retention and validity through the call. `direction(in)` describes readable
+[retention](../glossary.md#retention) and validity through the call. `direction(in)` describes readable
 input storage; disjointness forbids overlap with the other accessed memory.
-The extent requires four initialized elements in capacity for four, and
-binary contents add no terminator ([C3](../contracts.md#c3), [C4](../contracts.md#c4)).
+The [extent](../glossary.md#buffer-extent) requires four initialized elements in capacity for four, and
+binary [contents](../glossary.md#contents) add no terminator ([C3](../contracts.md#c3), [C4](../contracts.md#c4)).
 
 The tag contains scalar bytes and is input-only. Its addition creates no
 returned reference or writable pointee needing output `state` or `give`.
@@ -285,7 +286,7 @@ the tag's read-only pointer and input direction constrain its own storage
 ([C3–C5](../contracts.md#c3)).
 
 The new symbol receives three explicit parameters; the old two-parameter
-path cannot implement that signature unchanged. Identity mapping requires
+path cannot implement that signature unchanged. Identity [mapping](../glossary.md#mapping) requires
 faithful lowering of the entire revised contract ([A2](../profiles.md#a2),
 [F1](../profiles.md#f1)). The package still needs all original applicable
 declarations and clauses, its environment and pinned providers, exports and
@@ -295,7 +296,7 @@ version gives the revised declaration a distinct identity
 
 **Feedback prompt:** Which parts of the added contract in
 [C3–C4](../contracts.md#c3) are costly to author or easy to omit? Judge the
-seven clauses by the **Storage** facts a consumer needs, and propose a more
+seven clauses by the **Storage** facts a [consumer](../glossary.md#consumer) needs, and propose a more
 usable form if appropriate. Account for a case with a different length,
 retention period or aliasing permission before treating a repeated value
 as an implicit default.
@@ -329,7 +330,7 @@ interface example.byte_store version "1.0" language "0.1" {
 ```
 
 The sketch places borrowing in the signature and names lifetime and
-invalidation within the function. For the current notation, use `view` in
+[invalidation](../glossary.md#invalidation) within the function. For the current notation, use `view` in
 [Predict](#predict): its signature supplies types, and its input and outcome
 clauses supply borrowing. The current buffer API is immutable; the sketch's
 replacement operation gives it an earlier invalidation event.
@@ -362,8 +363,8 @@ entry to a listed operation involving the owner and requires an appropriate
 mutation contract ([C1](../contracts.md#c1), [C3](../contracts.md#c3),
 [C5](../contracts.md#c5)).
 
-The complete function also states availability and deprecation, retention,
-entry validity, effects, completion/outcome and output state, extent and
+The complete function also states [availability](../glossary.md#availability) and deprecation, retention,
+entry validity, effects, [completion](../glossary.md#completion)/outcome and [output state](../glossary.md#output-state), extent and
 contents, and access/compatibility facts. Comparing the sketch's brevity with
 the complete function therefore mixes notation with omitted obligations
 ([L3–L5](../language.md#l3), [C3–C5](../contracts.md#c3), [A2](../profiles.md#a2)).
@@ -450,7 +451,7 @@ a caller to release state while it is in use ([C6](../contracts.md#c6)).
 
 The profile needs explicit cancellation and acknowledgement events, their
 ordering relative to invocations, and rules for keeping and releasing the
-callback representation and its [captures](../glossary.md#callback-captures).
+callback [representation](../glossary.md#representation) and its [captures](../glossary.md#callback-captures).
 It also needs to define how consumers observe those events and handle
 teardown invoked from a callback. The exact protocol remains a design task.
 F1 supplies owner-scoped retention and quiescent destruction, not this
@@ -478,12 +479,12 @@ describes this operation's transfer.
 for the work its clauses require.
 
 **Conditions:** use the following deliberately bounded lifetime-only case.
-The watch is a unique opaque resource with `watch_close` as its destructor.
+The watch is a unique [opaque resource](../glossary.md#opaque-resource) with `watch_close` as its destructor.
 There are no stored callbacks in this exercise. The caller supplies a live
-owned watch; closing consumes it at entry, retains nothing, and returns
+owned watch; closing [consumes](../glossary.md#consume) it at entry, retains nothing, and returns
 synchronously with one successful unit completion. Entry may occur on any
-executor, independent uses of the same watch are serialized, and nested
-re-entry is forbidden. The function is non-variadic and changes no live
+[executor](../glossary.md#executor), independent uses of the same watch are serialized, and nested
+[re-entry](../glossary.md#re-entrancy) is forbidden. The function is non-variadic and changes no live
 input contents; destruction follows its lifecycle. This fixes one possible
 contract rather than deriving those promises from C syntax.
 
@@ -518,7 +519,7 @@ not a mapping of the full watch header's callback/context protocol.
 
 Fragment — one answer for the stated conditions. A complete package would
 also supply the language header, surface and exports, pinned providers,
-environment and `Watch` declaration with its lifetime, sharing, isolation,
+environment and `Watch` declaration with its lifetime, sharing, [isolation](../glossary.md#isolation),
 availability, deprecation and interface-conformance list.
 
 <!-- ail-example: ../examples/review/tasks.ail region=close -->
@@ -551,7 +552,7 @@ package review::watch_lifetime version "1" {
 }
 ```
 
-`Watch` already denotes an opaque handle; `ptr<Watch>` would instead
+`Watch` already denotes an opaque [handle](../glossary.md#handle); `ptr<Watch>` would instead
 describe storage containing a handle ([L4](../language.md#l4)). Consumption
 transfers the release obligation at entry and requires a valid owned input.
 The separate `valid` clause applies to borrowed inputs. A unit result has
@@ -662,7 +663,7 @@ spelling of **Validity**.
 | Returned borrow duration | `view` uses `give(..., borrow(owner($store)))`; the two object data declarations use `give(..., borrow(static))` ([C1](../contracts.md#c1), [C5](../contracts.md#c5), [C7](../contracts.md#c7)). |
 | Earlier invalidation and changes | The output borrows all have empty `invalidated_by` lists. `mutation` describes permitted changes to live input state, including `copy_bytes`'s destination and `write_count`'s receiver; mutation alone does not declare a borrow invalidator ([C3](../contracts.md#c3), [C5](../contracts.md#c5)). |
 | Owner end | `Store` and `Subscription` name unique destructors; `Counter` uses runtime reference counting. Owner regions end at destruction/final release, while the static data borrows end at F1 provider unload ([C1–C2](../contracts.md#c1), [F1](../profiles.md#f1)). |
-| Checked release relationship | The `lifetime` pattern declares typed resource and operation roles, with `law(releases, release, resource_type)`. The `store_lifetime` instance binds them to `Store` and `destroy`. This checks the existing destructor relationship; it creates no second release boundary or ownership authority ([L6](../language.md#l6)). |
+| Checked release relationship | The `lifetime` [pattern](../glossary.md#pattern) declares typed resource and operation [roles](../glossary.md#role), with `law(releases, release, resource_type)`. The `store_lifetime` instance binds them to `Store` and `destroy`. This checks the existing destructor relationship; it creates no second release boundary or ownership authority ([L6](../language.md#l6)). |
 | Readable output | Outcome `state` clauses establish usable outputs. In particular, failed `copy_bytes` leaves no readable destination elements; this is output state rather than a shorter owner lifetime ([C5](../contracts.md#c5)). |
 | Saved callback use | `subscribe` retains the handler for `owner($result)` and gives its callback use that same scope. `quiescence(@unsubscribe)` and the destructor's `outside_callback` precondition establish safe teardown ([C3](../contracts.md#c3), [C6](../contracts.md#c6)). |
 

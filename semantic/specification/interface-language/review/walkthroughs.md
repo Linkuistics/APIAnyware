@@ -1,6 +1,6 @@
 # Reading the conformance examples
 
-> **Purpose:** review guide — trace the facts a caller or tool needs through three AIL packages.
+> **Purpose:** review guide — trace the facts a [caller](../glossary.md#caller-and-callee) or tool needs through three AIL [packages](../glossary.md#package).
 > **Reader:** language designers who have read the orientation and want to inspect concrete contracts.
 > **Before this:** [Using an API across languages](../explanation/unsaid.md) and [the API model](../explanation/model.md); consult [the glossary](../glossary.md) as needed.
 > **Status:** Draft 0.1 is a proposal under review through its specification
@@ -11,19 +11,19 @@
 Choose the question you want to follow:
 
 - [Buffers](#buffers): who releases a store, and which bytes can a caller read?
-- [Callbacks](#callbacks): when can notifications arrive, and when can callback state be released?
+- [Callbacks](#callbacks): when can notifications arrive, and when can [callback](../glossary.md#callback) state be released?
 - [Objects](#objects): which calls belong to an object, and how does a tool reach its code and data?
 
-Each section reads every declaration in its linked package. The paragraphs
-beside each extract group clauses by the [API model's concepts](../explanation/model.md#from-the-model-to-ail).
+Each section reads every [declaration](../glossary.md#declaration) in its linked package. The paragraphs
+beside each extract group [clauses](../glossary.md#clause) by the [API model's concepts](../explanation/model.md#from-the-model-to-ail).
 A fragment preserves the source text but relies on the rest of its package.
 The final questions ask you to recover a fact, then judge how AIL expresses it.
 Expected observations follow the questions so you can try them first.
 
-All three APIs are invented. Their `fixture` profile and `native` ABI entry
+All three APIs are invented. Their `fixture` [profile](../glossary.md#profile) and `native` [ABI entry](../glossary.md#abi-entry)
 come from the [synthetic catalogue F1](../profiles.md#f1). The repeated `a`
-and `b` digest pins are test resolution tokens, usable only in fixture mode;
-they make no claim about an installed library or a real operating-system ABI.
+and `b` [digest pins](../glossary.md#digest-pin) are test resolution tokens, usable only in fixture mode;
+they make no claim about an installed library or a real operating-system [ABI](../glossary.md#abi).
 The [conformance record](../conformance.md#verification-record) describes
 historical checks. Here, you inspect descriptions and permitted behaviour;
 there is no implementation to run.
@@ -69,16 +69,16 @@ package example::buffers version "1" {
 `language "0.1"` selects this draft. The package name and version contribute
 to each declaration's identity. `surface` claims the immutable store and its
 complete lifetime API; `exports` lists its public roots. `store_lifetime` is
-public, and its supporting `lifetime` pattern remains in the package's
-dependency closure. The local environment `test` names exactly target
+public, and its supporting `lifetime` [pattern](../glossary.md#pattern) remains in the package's
+[dependency closure](../glossary.md#dependency-closure). The local [environment](../glossary.md#environment) `test` names exactly target
 `fixture64` and platform `fixture`, version `1`; it does not describe a range
 of platforms ([L1–L3](../language.md#l1)).
 
 **[Reaching the code](../explanation/model.md#access).**
 `use profile fixture` selects the versioned definitions of mechanisms such as
-`symbol`. `use abi native` separately selects the calling conventions and
-representations. The pins select F1's fixture definitions. These catalogue
-aliases are distinct from imported API declarations: this package has no
+`symbol`. `use abi native` separately selects the [calling conventions](../glossary.md#calling-convention) and
+[representations](../glossary.md#representation). The pins select F1's fixture definitions. These catalogue
+aliases are distinct from [imported](../glossary.md#import) API declarations: this package has no
 `import` clause ([L2](../language.md#l2), [A1](../profiles.md#a1),
 [F1](../profiles.md#f1)). Exact syntax: [package shells](../reference/notation.md#shell)
 and [provider dependencies](../reference/notation.md#dependency).
@@ -86,8 +86,8 @@ and [provider dependencies](../reference/notation.md#dependency).
 ### Store: one destruction duty
 
 [Entities that outlive a call](../explanation/model.md#entities) lets a caller
-identify what persists between operations. `Store` is the local opaque
-resource type that the functions use; its contents have no dereferenceable
+identify what persists between operations. `Store` is the local [opaque resource](../glossary.md#opaque-resource)
+type that the functions use; its contents have no dereferenceable
 layout in this declaration ([L4](../language.md#l4)).
 
 Fragment — `Store` in `example::buffers`. The [complete package](../examples/buffers.ail)
@@ -108,13 +108,13 @@ also supplies its destructor, operations and publication context.
 
 **[Entities that outlive a call](../explanation/model.md#entities).**
 `implements([])` records an empty interface-conformance list.
-`lifecycle(unique, @destroy)` associates each owned handle with exactly one
-destruction obligation, discharged by the local `destroy` function. Its
-`doc` explains the immutable bytes and ownership movement; that prose
+`lifecycle(unique, @destroy)` associates each [owned](../glossary.md#owned) [handle](../glossary.md#handle) with exactly one
+destruction obligation, discharged by the local `destroy` function. `Store`'s
+`doc` explains the immutable bytes and [ownership transfer](../glossary.md#ownership-transfer); that prose
 supplements the clauses ([L5](../language.md#l5), [C2](../contracts.md#c2)).
 
 **[Where and when calls run](../explanation/model.md#execution).**
-`sharing(transferable)` permits sole ownership to move across executors,
+`sharing(transferable)` permits sole ownership to move across [executors](../glossary.md#executor),
 with no concurrent access. `isolation(none)` records no nominal executor
 restriction. Each operation still has its own entry and overlap conditions
 ([C2](../contracts.md#c2)).
@@ -133,7 +133,7 @@ To decide what to release, the caller also needs
 [How a call finishes](../explanation/model.md#outcomes).
 
 Fragment — `create` in `example::buffers`. The [complete package](../examples/buffers.ail)
-also supplies `Store`, its destructor and the selected providers.
+also supplies `Store`, its destructor and the selected [providers](../glossary.md#provider).
 
 <!-- ail-example: ../examples/buffers.ail lines=20-48 -->
 ```ail
@@ -170,12 +170,12 @@ also supplies `Store`, its destructor and the selected providers.
 
 **[Operations and their values](../explanation/model.md#operations).**
 `nullable<Store>` admits a handle or null. `$result` addresses this
-invocation's result slot. `variadic(false)` fixes the signature to its declared
+invocation's result [slot](../glossary.md#slot). `variadic(false)` fixes the signature to its declared
 parameters ([L4](../language.md#l4), [C1](../contracts.md#c1),
 [C3](../contracts.md#c3)).
 
 **[How a call finishes](../explanation/model.md#outcomes).**
-`completions([returned])` gives the sole completion mode. `created` selects
+`completions([returned])` gives the sole [completion mode](../glossary.md#completion). `created` selects
 non-null and calls it success; `allocation_failed` selects null and calls it
 failure. Both declare the result valid, so the caller may inspect it in
 either case. The two predicates cover the nullable domain exactly. Failure
@@ -183,14 +183,14 @@ remains a returned null value ([C3](../contracts.md#c3), [C5](../contracts.md#c5
 
 **[Release responsibility](../explanation/model.md#responsibility).**
 `give($result, owned)` supplies one destruction obligation on a non-null
-result. On the null outcome the same annotation creates no obligation: null
+result. On the null [outcome](../glossary.md#outcome) the same annotation creates no obligation: null
 carries none ([C1](../contracts.md#c1), [C5](../contracts.md#c5)).
 
 **[Where and when calls run](../explanation/model.md#execution).**
 `execution(sync)` completes this invocation before control returns;
 `executor(any)` permits entry on any executor. `concurrency(parallel)`
 permits independent overlap, and `reentrancy(allowed)` permits nested
-re-entry. These permissions carry no promise of eventual completion
+[re-entry](../glossary.md#re-entrancy). These permissions carry no promise of eventual completion
 ([C3](../contracts.md#c3)).
 
 **[Validity](../explanation/model.md#validity).**
@@ -204,9 +204,10 @@ and advisory status to `create` ([L3](../language.md#l3), [L5](../language.md#l5
 **[Reaching the code](../explanation/model.md#access).**
 The `direct` path applies in `test`. `abi(native, "c")` selects a convention
 within the ABI entry; `via` names `fixture_store_create` as a function symbol.
-`mapping(identity)` requires faithful lowering of the whole signature and
-contract. `compatibility(stable)` uses the ABI entry's guaranteed fixture
-domain ([A2–A4](../profiles.md#a2), [F1](../profiles.md#f1)).
+`mapping(identity)` requires the [consumer](../glossary.md#consumer) to preserve the whole signature
+and contract when implementing the call. `compatibility(stable)` uses the
+ABI entry's guaranteed fixture [compatibility domain](../glossary.md#compatibility-domain)
+([A2–A4](../profiles.md#a2), [F1](../profiles.md#f1)).
 
 ### Destroy: transfer the obligation at entry
 
@@ -215,7 +216,7 @@ the caller gives up its duty. `destroy` receives the owned handle and takes
 that duty as the call begins.
 
 Fragment — `destroy` in `example::buffers`. The [complete package](../examples/buffers.ail)
-also supplies `Store`'s lifecycle and the paths that create and borrow it.
+also supplies `Store`'s [lifecycle](../glossary.md#lifecycle) and the paths that create and [borrow](../glossary.md#borrow) it.
 
 <!-- ail-example: ../examples/buffers.ail lines=49-71 -->
 ```ail
@@ -256,7 +257,7 @@ selected by `when(returned, any)`. A unit result needs no `state` clause
 
 **[Release responsibility](../explanation/model.md#responsibility).**
 `input($store, consume)` transfers the owned obligation at entry.
-`retain($store, none)` promises no retention. The caller supplies a valid
+`retain($store, none)` promises no [retention](../glossary.md#retention). The caller supplies a valid
 owned handle at entry; the declared unique destructor discharges its duty
 ([C2–C3](../contracts.md#c2)).
 
@@ -274,7 +275,7 @@ requires callers to avoid independent overlap using the same resource;
 
 **[The published description](../explanation/model.md#description)** and
 **[Reaching the code](../explanation/model.md#access).**
-`available([test])` and `deprecated(no)` give the local availability and
+`available([test])` and `deprecated(no)` give the local [availability](../glossary.md#availability) and
 status. The `direct` access in `test` uses `native`'s `c` convention and the
 fixture symbol `fixture_store_destroy`; `mapping(identity)` preserves this
 contract, and `compatibility(stable)` uses the fixture ABI domain
@@ -342,7 +343,7 @@ pointer usable ([C5](../contracts.md#c5)).
 duty for the pointer ([C3](../contracts.md#c3), [C5](../contracts.md#c5)).
 
 **[Validity](../explanation/model.md#validity).**
-`valid($store, call)` requires the input to remain valid through the call.
+`valid($store, call)` requires the caller to keep the input valid through the call.
 `owner($store)` bounds the returned borrow by the store's lifetime;
 `invalidated_by($result, [])` records no earlier invalidating operations.
 `mutation(none)` agrees with this immutable API. The empty list leaves the
@@ -351,12 +352,14 @@ owner-lifetime bound in force ([C1](../contracts.md#c1),
 
 **[Storage](../explanation/model.md#storage).**
 `buffer(16, 16, elements)` supplies sixteen initialized `u8` elements in
-capacity for sixteen. `contents($result, binary)` gives raw bytes without a
-text terminator ([C4](../contracts.md#c4)).
+capacity for sixteen, stating the [buffer extent](../glossary.md#buffer-extent).
+`contents($result, binary)` describes the [contents](../glossary.md#contents)
+as raw bytes without a text terminator ([C4](../contracts.md#c4)).
 
 **[Where and when calls run](../explanation/model.md#execution).**
-`execution(sync)` and `executor(any)` permit synchronous entry anywhere.
-`concurrency(serial)` prevents independent overlap on the same store;
+`execution(sync)` completes the invocation before control returns.
+`executor(any)` permits entry on any executor.
+`concurrency(serial)` requires callers to avoid independent overlap on the same store;
 `reentrancy(allowed)` separately permits nested re-entry
 ([C3](../contracts.md#c3)).
 
@@ -365,7 +368,7 @@ text terminator ([C4](../contracts.md#c4)).
 `view` is available in `test` and not deprecated. Its `direct` path applies
 there, selects the `native` ABI's `c` convention, and calls
 `fixture_store_view` through `fixture`'s `symbol` mechanism. The identity
-mapping preserves this whole contract within the stable fixture domain
+[mapping](../glossary.md#mapping) preserves this whole contract within the stable fixture domain
 ([L3](../language.md#l3), [L5](../language.md#l5), [A2–A4](../profiles.md#a2),
 [F1](../profiles.md#f1)).
 
@@ -378,7 +381,7 @@ see [the owner-borrow view](../explanation/contracts.md#how-long-a-borrow-lasts)
 [Storage](../explanation/model.md#storage) tells the caller what to allocate;
 [How a call finishes](../explanation/model.md#outcomes) tells it whether to
 read the result. `copy_bytes` writes into the caller's destination, so its
-output-state clauses matter even though the function returns only a Boolean.
+[output-state](../glossary.md#output-state) clauses matter even though the function returns only a Boolean.
 
 Fragment — `copy_bytes` in `example::buffers`. The [complete package](../examples/buffers.ail)
 also supplies `Store`, its lifetime and the selected providers.
@@ -500,7 +503,7 @@ exports the instance.
 `resource_type: type one` requires exactly one type participant;
 `release: operation one` requires exactly one operation. The
 `law(releases, release, resource_type)` requires that operation to be the
-resource's declared unique destructor. `store_lifetime` binds the roles to
+resource's declared unique destructor. `store_lifetime` binds the [roles](../glossary.md#role) to
 local `@Store` and `@destroy`. Both participants apply in `test`, giving the
 instance a nonempty common availability. The pattern records a checked
 relationship already supported by `Store`'s lifecycle; it does not invent a
@@ -514,7 +517,7 @@ Creation returns either an owned store or a null failure. An owned store has
 one destruction duty. `view` lends access to its sixteen immutable bytes;
 the caller keeps the store alive while reading that view. `copy_bytes`
 requires separate writable space and tells the caller, through its Boolean
-result, whether that space contains readable output. Destruction consumes
+result, whether that space contains readable output. Destruction [consumes](../glossary.md#consume)
 the handle and ends views into its storage. Independent uses of a store are
 serialized, even though its ownership may move between executors
 ([C2–C5](../contracts.md#c2)).
@@ -567,7 +570,8 @@ subscription. Read the callback type for one invocation, then `subscribe` for
 the schedule of those invocations.
 
 Complete source: [`callbacks.ail`](../examples/callbacks.ail).
-The API and providers are synthetic; F1's closure representation supplies
+The API and providers are synthetic. F1's `closure` representation stores
+the callback and its [captures](../glossary.md#callback-captures). It supplies
 retention and release, with no separately visible context argument.
 
 ### Package and environment
@@ -595,7 +599,7 @@ package example::callbacks version "1" {
 **[The published description](../explanation/model.md#description).**
 The header selects `0.1`; `example::callbacks`, version `1`, owns
 `Subscription`, `Handler`, `subscribe` and `unsubscribe`. `surface` states the
-notification API through quiescent destruction, and `exports` lists those
+notification API through [quiescent](../glossary.md#quiescence) destruction, and `exports` lists those
 four public roots. `test` selects target `fixture64` and platform `fixture`,
 version `1` ([L1–L3](../language.md#l1)).
 
@@ -692,10 +696,11 @@ state ([C3](../contracts.md#c3)).
 
 **[Where and when calls run](../explanation/model.md#execution).**
 `sharing(shared)` and `isolation(none)` govern the callback value and all its
-captures: they must permit references to cross executors. Invocation has its
-own synchronous execution, `executor(any)`, serial independent concurrency
-and forbidden nested re-entry. Shared captures therefore do not establish
-permission for overlapping invocations ([C2–C3](../contracts.md#c2)).
+captures: they must permit references to cross executors. Each invocation
+finishes before control returns and may enter on any executor. Callers keep
+independent invocations from overlapping and avoid nested re-entry. The
+permission to share captures therefore remains subject to these invocation
+restrictions ([C2–C3](../contracts.md#c2)).
 
 **[The published description](../explanation/model.md#description).**
 `Handler` is available in `test` and not deprecated
@@ -794,7 +799,7 @@ Inside `callback $handler`, `timing(after_return)` allows invocation starts
 only after registration's returned completion. `count(0, many)` permits zero
 or more invocations over the registration's scope, conditional on eventual
 scope end. It offers no notification-delivery promise. `scope(owner($result))`
-ties the schedule to the returned subscription, matching the retention region
+ties the schedule to the returned subscription, matching the retention [region](../glossary.md#region)
 ([C6](../contracts.md#c6)).
 
 The block's `executor(any)`, `concurrency(serial)` and
@@ -939,7 +944,7 @@ Using [the registration and teardown above](#subscribe-retain-the-handler-for-a-
    every active invocation has finished ([C3](../contracts.md#c3),
    [C6](../contracts.md#c6)).
 4. The `@` reference addresses another declaration's parameter; the `$`
-   place addresses the enclosing invocation's parameter. `Handler` has its
+   [place](../glossary.md#place) addresses the enclosing invocation's parameter. `Handler` has its
    own `value` parameter, addressable externally as `@Handler::value`
    ([L2](../language.md#l2), [C1](../contracts.md#c1)).
 
@@ -966,7 +971,7 @@ they assert no real Objective-C or Swift interoperability.
 ### Package and environment
 
 [The published description](../explanation/model.md#description) locates the
-object, its members and the two data declarations in one package.
+object, its [members](../glossary.md#member) and the two data declarations in one package.
 
 Fragment — the package opening. The [complete package](../examples/objects.ail)
 also supplies the six exported declarations and its closing boundary.
@@ -1044,9 +1049,9 @@ an actual Swift compiler finding nor an exemption from confinement
 **[The published description](../explanation/model.md#description)** and
 **[Reaching the code](../explanation/model.md#access).**
 `available([test])` and `deprecated(no)` establish the configuration and
-status. `source(fixture, "Outer.Counter")` supplies an exact source identity
+status. `source(fixture, "Outer.Counter")` supplies an exact [source identity](../glossary.md#source-identity)
 interpreted by the profile; the canonical local declaration name remains
-`Counter`. This source spelling supplies no callable access path by itself
+`Counter`. This source spelling supplies no [callable](../glossary.md#callable) [access path](../glossary.md#access-path) by itself
 ([L2–L3](../language.md#l2), [L5](../language.md#l5),
 [A2](../profiles.md#a2), [F1](../profiles.md#f1)).
 
@@ -1211,8 +1216,9 @@ express a state change while ownership remains with the caller
 ([C3](../contracts.md#c3)).
 
 **[Where and when calls run](../explanation/model.md#execution).**
-The setter is synchronous on `main`, with serial independent concurrency
-and allowed nested re-entry, matching the getter's entry restrictions
+The setter finishes before control returns and runs on `main`. Callers keep
+independent uses from overlapping; nested re-entry is allowed. These
+conditions match the getter's entry restrictions
 ([C2–C3](../contracts.md#c2)).
 
 **[The published description](../explanation/model.md#description)** and
@@ -1302,7 +1308,7 @@ no callable outcome block ([L4–L5](../language.md#l4),
 **[Validity](../explanation/model.md#validity).**
 `give($result, borrow(static))` lends the bytes without transferring a release
 duty. `static` lasts for the loaded API instance; F1 ends it at provider
-unload. `invalidated_by($result, [])` records no earlier invalidation
+unload. `invalidated_by($result, [])` records no earlier [invalidation](../glossary.md#invalidation)
 ([C1](../contracts.md#c1), [C5](../contracts.md#c5),
 [C7](../contracts.md#c7), [F1](../profiles.md#f1)).
 

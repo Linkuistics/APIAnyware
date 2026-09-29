@@ -70,18 +70,3 @@ because the guide's index does not exist yet. The second drafts
 `review/README.md` and `review/tasks.md`, makes the index the map's entry to
 the guide, and links the walkthroughs from it. Only the second cuts
 `copy-edit`.
-
-## Handed forward
-
-- **copy-edit — `review/walkthroughs.md`:** apply the prose contract's
-  first-use glossary links, especially the opening profile/ABI/digest terms,
-  the buffer package's dependency closure, and callback captures/quiescence.
-  Model-concept and canonical-rule links are already present; keep their
-  distinct purposes while checking terminology throughout all three pages.
-- **copy-edit — `review/README.md` and `review/tasks.md`:** complete first-use
-  glossary routing for domain terms, particularly ownership/retention,
-  outcomes, access paths and nominal lifecycles. Preserve the seven task
-  structures, fragment assumptions, 17-statement authoring count and
-  separation of model judgement from expected rule observations. The
-  Model fit inventory includes L6's checked release relationship after the
-  bounded draft review.
