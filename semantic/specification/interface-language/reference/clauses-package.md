@@ -964,7 +964,12 @@ package example::drawing version "1" {
 
 **Form:** Environment clause: `runtime("id", "version");`. Lifecycle constructor: `runtime(profileAlias, "primitive")` inside `lifecycle(refcounted, ..., ...);`. ([clause and constructor grammar](notation.md#clause)).
 
-**Operands and types:** The environment clause takes nonempty runtime identifier/version strings. The lifecycle constructor takes a declared profile alias and a primitive-identity string interpreted by that provider.
+**Operands and types:** Use the enclosing scope to distinguish the two operand lists.
+
+| Use of `runtime` | First operand | Second operand |
+|---|---|---|
+| Environment clause | Nonempty runtime identifier string | Nonempty version string |
+| Lifecycle constructor | Declared profile alias | Primitive-identity string interpreted by that provider |
 
 **Applies to:** The clause appears in environments; the constructor appears as the retain and release operands of reference-counted resource/object/interface lifecycles.
 
@@ -1089,7 +1094,14 @@ package example::drawing version "1" {
 
 **Default:** None; enums/flags normally state `value` explicitly.
 
-**Meaning (non-normative; [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7)):** `value` allows freely copyable scalar/value aggregates without reference obligations. `transferable` allows sole ownership to move across executors, without concurrent access. `shared` permits references to cross executors, with [concurrency](../glossary.md#concurrency) governed per operation. `confined` restricts use to a declared executor.
+**Meaning (non-normative; [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7)):** Compare the modes to determine how a value or reference may cross executor boundaries.
+
+| Mode | Permission |
+|---|---|
+| `value` | Freely copy scalar/value aggregates without reference obligations |
+| `transferable` | Move sole ownership across executors, without concurrent access |
+| `shared` | Pass references across executors; [concurrency](../glossary.md#concurrency) is governed per operation |
+| `confined` | Use the value only on its declared executor |
 
 **Constraints:** A record with reference leaves cannot use `value`. Aliases agree with their expanded type. Callback sharing covers the callback value and every capture. `confined` requires non-`none` isolation, including retain/release, destruction and free-function use. Core mutable value globals require confinement; shared references do not imply safe concurrent mutation ([`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7)).
 
@@ -1360,7 +1372,13 @@ The fixture's source-call recipe requires exactly `fixture-compiler` version `1`
 
 **Default:** None; the value domain is explicit.
 
-**Meaning (non-normative; [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C5`](../contracts.md#c5)):** A closed enum permits its declared values. Closed flags permit every bitwise combination of their declared positive single-bit cases, including zero. An open enum/flags type permits any value of its underlying integer type.
+**Meaning (non-normative; [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C5`](../contracts.md#c5)):** Use the declaration kind and domain together to determine which values an outcome partition must cover.
+
+| Declaration and domain | Permitted values |
+|---|---|
+| Enum with `closed` | Exactly the declared values |
+| Flags with `closed` | Every bitwise combination of the declared positive single-bit cases, including zero |
+| Enum or flags with `open` | Every value of the underlying integer type |
 
 **Constraints:** The underlying type is a core integer type. Case names are distinct and values fit it; the core rejects duplicate values, with numeric aliases requiring a profile. Closed enums are nonempty; closed-flags cases each have exactly one bit set. Outcome coverage uses this domain ([`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C5`](../contracts.md#c5)).
 

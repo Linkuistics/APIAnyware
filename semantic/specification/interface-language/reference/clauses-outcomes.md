@@ -364,7 +364,13 @@ The result of this `subscribe` invocation bounds this registration. Call-scoped 
 
 **Default:** None; required where applicable.
 
-**Meaning (non-normative; [`C5`](../contracts.md#c5)):** `valid` supplies usable output; `invalid` supplies output that cannot be read, freed, null-tested or used as a discriminator. `unchanged` preserves an `inout` subtree's entry contents and obligations. Reference leaves still need their individual transfer/validity clauses.
+**Meaning (non-normative; [`C5`](../contracts.md#c5)):** Use the state to determine what the caller may do with this output on the selected outcome. Reference leaves still need their individual transfer/validity clauses.
+
+| State | Output consequence |
+|---|---|
+| `valid` | Usable output |
+| `invalid` | Cannot be read, freed, null-tested or used as a discriminator |
+| `unchanged` | Preserves an `inout` subtree's entry contents and obligations |
 
 **Constraints:** Results and thrown values are valid on their corresponding completion. Results are unavailable on thrown/cancelled/terminated completion. `unchanged` applies only to `inout` storage and is forbidden when its entry obligations were consumed. Invalid output buffers convey no initialized elements; partially initialized output needs an explicit valid length. State agrees with the outcome predicate ([`L5`](../language.md#l5), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
@@ -463,7 +469,16 @@ Notifications can start after `subscribe` returns. `count(0, many)` independentl
 
 **Form:** `when(completion, predicate);` ([outcome grammar](notation.md#outcome)).
 
-**Operands and types:** A declared completion name (`returned`, `thrown`, `cancelled` or `terminated`) and `any`, `null($slot)`, `nonnull($slot)`, `equal($slot, literal)` or `range($slot, lowerInteger, upperInteger)`. Equality literals are integers or Booleans; ranges have inclusive integer bounds. A discriminator is the result, an `out`/`inout` scalar pointee, or `$exception` for thrown completion.
+**Operands and types:** A declared completion name (`returned`, `thrown`, `cancelled` or `terminated`) and a predicate from this table. Use the predicate's operand domain to check that it can test the chosen discriminator.
+
+| Predicate | Operand domain |
+|---|---|
+| `any` | No discriminator; covers the completion without a value test |
+| `null($slot)`, `nonnull($slot)` | Nullable reference |
+| `equal($slot, literal)` | Integer or Boolean, with a matching literal |
+| `range($slot, lowerInteger, upperInteger)` | Integer, with inclusive integer bounds |
+
+A discriminator is the result, an `out`/`inout` scalar pointee, or `$exception` for thrown completion.
 
 **Applies to:** Named outcomes of functions and callback declarations.
 

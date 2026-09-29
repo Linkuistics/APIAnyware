@@ -19,6 +19,10 @@ These are non-normative summaries of [`L2–L6`](../language.md#l2),
 
 ![G9 language containment: two packages, an import, local declarations, a nominal owner, a top-level member and its callable slots.](../figures/g9-model.svg)
 
+Use this language-containment view to find each declaration's package and
+each slot's callable; the [API model](../explanation/model.md) explains the
+behaviour and obligations these declarations record.
+
 The imported `Geometry::Point` belongs to the geometry package. `Canvas` and
 `position` belong to the canvas package; `member(@Canvas, instance)` connects
 them without nesting the function inside the resource. Inside `position`,
@@ -1018,7 +1022,14 @@ The law requires the bound release operation to be the resource’s declared uni
 
 **Default:** No implicit participant or cardinality.
 
-**Meaning (non-normative; [`L6`](../language.md#l6)):** Cardinalities mean 1, 0..1, 0..unbounded and 1..unbounded respectively.
+**Meaning (non-normative; [`L6`](../language.md#l6)):** Use the cardinality to check how many participants an instance binds to this role.
+
+| Cardinality | Participants |
+|---|---|
+| `one` | Exactly one |
+| `optional` | Zero or one |
+| `many` | Zero or more |
+| `some` | One or more |
 
 **Constraints:** An instance binds every role, even an empty optional/many role. Pattern participants refer to instances; slot identities include their operation ([`L6`](../language.md#l6)).
 

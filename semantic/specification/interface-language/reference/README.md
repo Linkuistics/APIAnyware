@@ -33,6 +33,8 @@ Their applicability and canonical rule destinations are available in the
 
 ## Canonical sources
 
+Use this table to choose the source that determines the fact you are checking.
+
 | Source | Determines |
 |---|---|
 | [Language rules](../language.md) | Text, identity, publication, types, declarations and patterns |
@@ -70,6 +72,9 @@ rule and to the explanation of the concept it expresses.
 <a id="rules"></a>
 
 ## Rule-identifier index
+
+Use a rule identifier to reach its canonical text, or scan the subjects to
+find the rule governing a contract.
 
 | Rule | Subject |
 |---|---|

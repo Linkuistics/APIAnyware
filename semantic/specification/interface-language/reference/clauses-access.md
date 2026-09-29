@@ -99,7 +99,7 @@ Both paths implement `read_count`. `native` selects the same synthetic ABI entry
 
 **Default:** None; optional/many roles still need explicit empty bindings when unused.
 
-**Meaning (non-normative; [`L6`](../language.md#l6)):** The instance identifies the declarations, slots or pattern instances that participate in each role. Cardinalities are `one` (one), `optional` (zero or one), `many` (zero or more) and `some` (one or more).
+**Meaning (non-normative; [`L6`](../language.md#l6)):** The instance identifies the declarations, slots or pattern instances that participate in each role. Use the [role cardinality table](declarations.md#role) to check the number of participants in each binding.
 
 **Constraints:** Participant kinds and counts agree with the role. Slot identities include their operation; a pattern participant names an instance. Participants have a nonempty intersection of [availability](../glossary.md#availability), composition is acyclic, and bound contracts satisfy the pattern's laws ([`L2`](../language.md#l2), [`L6`](../language.md#l6)).
 
@@ -195,7 +195,13 @@ Both paths implement `read_count`. `native` selects the same synthetic ABI entry
 
 **Default:** None; required.
 
-**Meaning (non-normative; [`A4`](../profiles.md#a4)):** `stable` uses the ABI entry's guaranteed domain. `artifact` binds use to a particular built artifact set. `source` binds use to a fully specified source build recipe whose compiler establishes compatibility for that build.
+**Meaning (non-normative; [`A4`](../profiles.md#a4)):** Use the mode to identify the domain within which this path's representations are compatible.
+
+| Mode | Compatibility domain |
+|---|---|
+| `stable` | The ABI entry's guaranteed domain |
+| `artifact` | A particular built artifact set |
+| `source` | A fully specified source build recipe; its compiler establishes compatibility for that build |
 
 **Constraints:** Stability covers all reachable types. Artifact IDs resolve to content identities, compiler/runtime requirements and a representation manifest. Source recipes pin dependencies, compiler/options, module/header interfaces and the adapter/build procedure. Compiler version alone is not artifact identity; source access does not assert independent binary stability. `F1`'s `fixture-build` requires exactly `fixture-compiler` version `1` and this [package](../glossary.md#package)'s source surface ([`A4`](../profiles.md#a4), [`F1`](../profiles.md#f1)).
 

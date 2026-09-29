@@ -30,6 +30,8 @@ its source and the rules that constrain the form. The examples are independent
 fragments of invented APIs; their omission notes distinguish them from
 complete packages.
 
+Use this table to go from the form you are writing to its grammar view.
+
 | Form | Section |
 |---|---|
 | Document and [package](../glossary.md#package) items | [Package shell](#shell) |

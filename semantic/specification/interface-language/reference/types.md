@@ -15,6 +15,8 @@ supplies its native [representation](../glossary.md#representation) ([`L4`](../l
 [`A3`](../profiles.md#a3)). [Type expressions](../grammar.ebnf) use `type` and
 `type_argument`; [the notation reference](notation.md#callable) places them in signatures.
 
+Use this table to find a type's entry from its spelling in a declaration.
+
 | Core form | Lookup |
 |---|---|
 | `unit` | [No result value](#unit) |
@@ -404,11 +406,15 @@ package example::geometry version "1" {
 
 ## Value types and reference types
 
-In summary (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1)):
-records, enums, flags, arrays and complex types are value types; objects,
-resources, interfaces and callbacks are reference types. Pointers are also
-reference leaves for contract checking. An aggregate's value classification
-does not erase reference obligations in its fields or elements.
+In summary (non-normative; [`L4`](../language.md#l4), [`C1`](../contracts.md#c1)),
+use this partition to distinguish a type's classification from the reference
+obligations within a value.
+
+| Forms | Classification and contract consequence |
+|---|---|
+| Records, enums, flags, arrays and complex types | Value types; reference leaves in fields or elements retain their obligations |
+| Objects, resources, interfaces and callbacks | Reference types with applicable ownership and validity contracts |
+| Pointers | Reference leaves for contract checking, with separately described storage |
 
 Compare `array<u16, 4>` above with `ptr<Canvas>` in the
 [pointer teaching example](../language.md#l4): the array holds scalar values,

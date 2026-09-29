@@ -246,7 +246,13 @@ package example::text version "1" {
 
 **Default:** None; required.
 
-**Meaning (non-normative; [`C3`](../contracts.md#c3)):** `in` supplies readable storage, `out` supplies writable output storage whose old contents are not read, and `inout` supplies both. The pointer itself remains valid for the call.
+**Meaning (non-normative; [`C3`](../contracts.md#c3)):** Use the direction to distinguish the callee's access to old contents from its delivery of new output. The pointer itself remains valid for the call.
+
+| Direction | Storage supplied to the callee |
+|---|---|
+| `in` | Readable input storage |
+| `out` | Writable output storage; old contents are not read |
+| `inout` | Readable input and writable output storage |
 
 **Constraints:** `out` and `inout` buffers use `mutptr`; direction agrees with mutation and extent. Input obligations cover reference leaves read from `in`/`inout` storage. New references written to writable storage have outcome obligations; an `out` pointee has no initialized old value to consume ([`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4), [`C5`](../contracts.md#c5)).
 
@@ -663,7 +669,15 @@ package example::optional version "1" {
 
 **Default:** None; required. Explicit `none` promises no retention.
 
-**Meaning (non-normative; [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)):** `strong` creates an independent ownership obligation. `copy` creates a profile-defined semantic copy. `weak` stores a zeroing reference; `unretained` stores a non-owning, non-zeroing reference whose referent the caller keeps alive for the storage region.
+**Meaning (non-normative; [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)):** Compare the policies to determine what the callee stores and who keeps the referent alive.
+
+| Policy | Storage and lifetime consequence |
+|---|---|
+| `none` | No retention |
+| `strong(region)` | Creates an independent ownership obligation |
+| `copy(region)` | Creates a profile-defined semantic copy |
+| `weak(region)` | Stores a zeroing reference |
+| `unretained(region)` | Stores a non-owning, non-zeroing reference; the caller keeps the referent alive for the storage region |
 
 **Constraints:** Unique resources need an explicit clone profile for strong retention or copying. An output-owner region takes effect only on outcomes returning that owner non-null and valid; other outcomes allow only call-scoped temporary storage and discharge temporary retained/copied references before completion. This does not undo entry consumption. Owner-scoped callback use retains for that same owner region; call scope uses `none`. `F1` supports strong retention of callback values but no `copy` ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6), [`F1`](../profiles.md#f1)).
 
@@ -706,7 +720,13 @@ The caller lends `Handler` at entry and retains its original obligation. The cal
 
 **Default:** None where applicable; required.
 
-**Meaning (non-normative; [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)):** The caller guarantees usability for the stated region. `call` runs from entry through completion, including synchronous callbacks. `static` lasts for the loaded API instance; `owner` ends at owner destruction or final release.
+**Meaning (non-normative; [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3)):** The caller guarantees usability for the stated region. Use the region to find the endpoint of that guarantee.
+
+| Region | Duration |
+|---|---|
+| `call` | Entry through completion, including synchronous callbacks |
+| `static` | The lifetime of the loaded API instance |
+| `owner($owner)` | Until owner destruction or final release |
 
 **Constraints:** The provider defines shutdown for `static`. Owner dependencies are acyclic. For unretained storage the caller keeps the referent alive for the full storage region. Output borrows use [`give`](clauses-outcomes.md#give) and a region surviving delivery; their validity is a separate exit obligation ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
