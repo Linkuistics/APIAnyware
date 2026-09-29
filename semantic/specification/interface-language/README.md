@@ -105,8 +105,8 @@ different reading purpose.
 | Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
 | Learn to read and write the notation | [Describing a small API](tutorial/README.md), with complete checkpoint packages |
 | Place names and references in their containing packages | [The two-package language-containment view](language.md#l2), followed by member and slot examples |
-| Follow the syntax beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package shell](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
-| Look up grammar productions and railroad views | [Grammar and notation](reference/notation.md) |
+| Interpret an example beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package-shell aid](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
+| Look up exact syntax and railroad views | [Grammar and notation](reference/notation.md), with sections for [package shells](reference/notation.md#shell), [names](reference/notation.md#names), [clauses](reference/notation.md#clause) and [callables](reference/notation.md#callable) |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 
@@ -123,10 +123,18 @@ The [package shell](language.md#l1) and [two-package language-containment view](
 then supply the containing context. The view locates a declaration in its own
 package and shows how another package refers to it through an import. The accompanying snippets
 also show a function associated with a type and the parameters and result that
-belong to that function. [Grammar and notation](reference/notation.md) gathers
-the railroad views with their syntax productions;
-the adjacent rules determine what the names mean and whether a description is
-valid. The [glossary](glossary.md#declaration) gives shorter examples for lookup.
+belong to that function. Each rule section's first reading aid links back to
+the model concepts it expresses. The aid explains its local examples; the
+rule text determines their exact obligations.
+
+For syntax lookup, [Grammar and notation](reference/notation.md) gathers
+the railroad views with their productions. For example, compare the
+[place grammar](reference/notation.md#places) with
+[C1's value-selection examples](contracts.md#c1), or the
+[access-path grammar](reference/notation.md#access) with
+[A2's two ways to call Counter](profiles.md#a2).
+The [glossary](glossary.md#declaration) gives shorter examples and routes to
+both meaning and syntax.
 
 ## What is normative
 

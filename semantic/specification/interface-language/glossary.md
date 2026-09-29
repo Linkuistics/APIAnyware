@@ -22,7 +22,9 @@ They use the same invented geometry and canvas packages as
 the [language-containment view and reading aids](language.md#l2). Read that view
 from packages to their declarations, then to a function's parameters and result.
 For the surrounding document syntax, see the
-[package shell](language.md#l1). Each fragment below
+[package-shell grammar](reference/notation.md#shell); its
+[canonical reading aid](language.md#l1) explains what the package records.
+Each fragment below
 names what it omits; none supplies a new complete API contract.
 
 ## ABI
@@ -54,6 +56,9 @@ Model: [Reaching the code](explanation/model.md#access).
 See [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries).
 Rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 
+Example: [selected definitions](profiles.md#a1).
+Syntax: [dependencies](reference/notation.md#dependency).
+
 ## Access path
 
 An access path describes how a tool reaches a declaration's code or data.
@@ -68,6 +73,9 @@ Model: [Reaching the code](explanation/model.md#access).
 
 See [Reaching the code](explanation/packages.md#reaching-the-code).
 Rule: [`A2`](profiles.md#a2).
+
+Example: [Counter's two access paths](profiles.md#a2).
+Syntax: [access paths](reference/notation.md#access).
 
 ## Availability
 
@@ -181,16 +189,15 @@ package example::canvas version "1" {
 }
 ```
 
-`fn` introduces the function named `position`. In its parentheses,
-`canvas: Canvas` gives the parameter name and its type; `-> Geometry::Point`
-gives the result type from the package imported as `Geometry`. Type names
-appear without `@`. The function's braces enclose clauses describing its
-invocation. Here `execution(sync);` says that the invocation completes before
+The `canvas` parameter has the local resource type `Canvas`; the result has
+the imported type `Geometry::Point`. Type names resolve to declarations
+without `@`. Here `execution(sync);` says that this invocation completes before
 control returns to the caller. It makes no promise that the call eventually
 finishes. The parameter and result are its [slots](#slot).
 
 See [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots),
-including the callable railroad and the contrasting `Filter` callback.
+including the contrasting `Filter` callback. Exact syntax:
+[callable grammar](reference/notation.md#callable).
 Rules: [`L2`](language.md#l2), [`L5`](language.md#l5), [`C3`](contracts.md#c3).
 
 ## Callback
@@ -206,6 +213,10 @@ Model: [Callbacks and their schedules](explanation/model.md#callbacks).
 See [A small API](explanation/unsaid.md#a-small-api) and
 [callback teardown](explanation/unsaid.md#when-is-it-safe-to-discard-callback-state).
 Rules: [`C2–C3`](contracts.md#c2), [`C6`](contracts.md#c6).
+
+Example: [Handler and its registration](contracts.md#c6).
+Syntax: [callback declarations](reference/notation.md#callable) and
+[callback-use blocks](reference/notation.md#callback-use).
 
 ## Callback captures
 
@@ -273,9 +284,8 @@ package example::geometry version "1" {
 ```
 
 For this record, the three identity values are
-`(example::geometry, "1", Point)`: the package name before `version`, the
-version string and the declaration name after `record`. The parentheses here
-display an identity tuple in prose; they are not an AIL clause. A `Point`
+`(example::geometry, "1", Point)`: the package name, package version and
+declaration name. This tuple summarizes the declaration's identity. A `Point`
 declared in `example::canvas` would have a different identity. Importing this
 record under the alias `Geometry` gives it a spelling in the importing package
 while preserving its identity in `example::geometry`; see
@@ -301,7 +311,7 @@ Rule: [`L6`](language.md#l6).
 
 Model: [Operations and their values](explanation/model.md#operations).
 
-A clause states a fact using the form `name(arguments);`. For example, a
+A clause states a fact about its containing subject. For example, a
 callable's `execution(sync);` clause says that the invocation completes before
 control returns to the caller; it makes no promise that the call eventually
 finishes. The rule files define each clause's arguments, meaning and permitted locations.
@@ -322,13 +332,12 @@ package example::canvas version "1" {
 }
 ```
 
-Here `execution` names the fact, `sync` is its argument, the parentheses
-enclose that argument and the semicolon ends the clause. The enclosing
-function says which invocation it describes. In contrast, a package-level
+Here `execution(sync)` describes an invocation of `position`. A package-level
 `exports` clause lists public declarations; the [package example](#package)
-shows that containing scope. Follow the
-[clause railroad](language.md#reading-aid-non-normative-clauses-contain-values)
-to see how arguments fit inside the common syntax.
+shows that containing scope. The
+[canonical clause aid](language.md#reading-aid-non-normative-clauses-contain-values)
+explains how permitted arguments supply a fact; the
+[clause grammar](reference/notation.md#clause) gives the exact forms.
 
 See [From signature to contract](explanation/contracts.md#from-signature-to-contract)
 and [One clause syntax](explanation/choices.md#one-clause-syntax-with-a-closed-vocabulary-in-prose).
@@ -464,8 +473,8 @@ package example::geometry version "1" {
 }
 ```
 
-The outer braces contain the declaration named `Point`; its inner braces
-contain fields named `x` and `y`. Each field has the core signed 32-bit integer
+The package declares `Point`, which has fields named `x` and `y`.
+Each field has the core signed 32-bit integer
 type `i32`. These fields are parts of `Point`, while a function such as
 [`position`](#callable) is another declaration at package level. A
 [member](#member) function also sits at package level and names its owning
@@ -529,6 +538,9 @@ Model: [The published description](explanation/model.md#description).
 
 See [Where it holds](explanation/packages.md#where-it-holds).
 Rule: [`L3`](language.md#l3).
+
+Example: [the canvas package's configuration](language.md#l3).
+Syntax: [environments](reference/notation.md#environment).
 
 ## Executor
 
@@ -673,10 +685,10 @@ package example::canvas version "1" {
 }
 ```
 
-The import names `example::geometry`, its version and digest, then introduces
-`Geometry` after `as`. In the signature, `Canvas` selects the local type;
-`Geometry::Point` selects `Point` through that alias. The `::` joins the alias
-and declaration name. When a clause needs a declaration reference, it uses
+The import selects `example::geometry` by version and digest and assigns it
+the local alias `Geometry`. In the signature, `Canvas` selects the local type;
+`Geometry::Point` selects `Point` through that alias.
+When a clause needs a declaration reference, it uses
 `@Canvas` for the local resource or `@Geometry::Point` for the imported record.
 The member clause above uses the first spelling; [Member](#member) explains
 its association and receiver, and [Place](#place) explains the `$canvas` clauses.
@@ -701,7 +713,8 @@ and the example import digest remains a placeholder.
 [Diagram source](figures/g9-model.puml) ·
 [How tools use these API descriptions](README.md#who-writes-and-uses-an-ail-description)
 
-See [the language-containment view and import/reference railroads](language.md#l2) and
+See [the language-containment view and reference examples](language.md#l2),
+[names and references grammar](reference/notation.md#names), and
 [What it depends on](explanation/packages.md#what-it-depends-on).
 Rule: [`L2`](language.md#l2).
 
@@ -786,6 +799,9 @@ Model: [How a call finishes](explanation/model.md#outcomes).
 See [What can the caller read when a call fails?](explanation/unsaid.md#what-can-the-caller-read-when-a-call-fails).
 Rule: [`C5`](contracts.md#c5).
 
+Example: [copying bytes successfully or failing](contracts.md#c5).
+Syntax: [outcomes](reference/notation.md#outcome).
+
 ## Output state
 
 An output state says whether a result, thrown value or writable pointee is
@@ -855,14 +871,14 @@ package example::geometry version "1" {
 ```
 
 The `language` header selects AIL version `"0.1"`; `version "1"` identifies
-this API description independently. The outer braces enclose the package's
-contents. `surface` states what it covers, and `exports([@Point]);` lists
-`Point` as a public root: brackets enclose a list and `@Point` refers to the
-record declaration inside this package. In a package describing watch
+this API description independently. `surface` states what it covers, and
+`exports([@Point]);` lists the local `Point` declaration as a public root.
+In a package describing watch
 operations, the roots would instead name those operations and any other
 declarations the producer exposes.
 
-See [the package-shell railroad](language.md#l1) and
+See [the package-shell reading aid](language.md#l1),
+[package-shell grammar](reference/notation.md#shell), and
 [What a package claims](explanation/packages.md#what-a-package-claims).
 Rules: [`L2–L3`](language.md#l2).
 
@@ -878,6 +894,9 @@ Model: [Entities that outlive a call](explanation/model.md#entities).
 
 See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
 Rule: [`L6`](language.md#l6).
+
+Example: [roles bound to concrete participants](language.md#l6).
+Syntax: [patterns and instances](reference/notation.md#pattern).
 
 ## Pattern instance
 
@@ -930,7 +949,8 @@ the `x` field of the returned `Point`, whose fields appear in the
 and `[]` selecting elements, with the extent each form requires. The path lets
 validation check the clause against the type at that location.
 
-See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
+See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about)
+and the [place grammar](reference/notation.md#places).
 Rules: [`C1`](contracts.md#c1), [`L5`](language.md#l5).
 
 ## Producer
@@ -1145,8 +1165,8 @@ package example::canvas version "1" {
 ```
 
 `@position::canvas` selects the named parameter. `@position::result` selects
-the result, whose type follows `->`. In these references, `::` joins the
-callable name and slot name. The callback `Filter` in the
+the returned `Geometry::Point`. Both references identify the slot through
+its owning callable. The callback `Filter` in the
 [callback example](language.md#reading-aid-non-normative-names-references-and-callable-slots)
 has its own result, referenced as `@Filter::result`; each result belongs to
 its own invocation. Inside `position`, `$canvas` and `$result` address those
@@ -1165,7 +1185,8 @@ local spelling is the same.
 | `@Filter::point` | `$point` inside `Filter` | The callback's `Geometry::Point` parameter |
 | `@Filter::result` | `$result` inside `Filter` | The callback's Boolean result |
 
-See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
+See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about)
+and the [names and references grammar](reference/notation.md#names).
 Rules: [`C1`](contracts.md#c1), [`L2`](language.md#l2).
 
 ## Source identity

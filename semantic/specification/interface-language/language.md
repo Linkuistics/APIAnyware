@@ -3,7 +3,7 @@
 <!-- reading-aid: page-context -->
 > **Purpose:** rules with reading aids — follow AIL's notation, identities and publication requirements.
 > **Reader:** language designers reading the proposal, and API authors or tool implementers checking exact rules.
-> **Before this:** nothing; [Using an API across languages](explanation/unsaid.md) introduces the binding domain.
+> **Before this:** [A model of API behaviour and binding obligations](explanation/model.md); [Using an API across languages](explanation/unsaid.md) introduces the binding domain.
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -32,6 +32,10 @@ Rules have stable identifiers for diagnostics; wording can change during review.
 
 **Reading aid (non-normative): a document contains a package**
 
+L1 connects [The published description](explanation/model.md#description)
+to [Writers, checkers and users](explanation/model.md#agreement): the document
+identifies an API account and the language rules used to interpret it.
+
 An AIL document describes an API through a named, versioned
 [package](glossary.md#package). In this fragment, `example::geometry` is the
 package name and `"1"` is its version. Inside the package, `record Point`
@@ -57,24 +61,16 @@ package example::geometry version "1" {
 }
 ```
 
-Read from the header into the braces: the outer pair encloses package items,
-and the inner pair encloses `Point`'s fields. Semicolons end the header,
-clauses and fields. `exports` takes a list, written `[...]`; `@Point` selects
-the declaration named inside that list. [L2](#l2) locates such references and
-[L3](#l3) explains what exporting a declaration claims.
+`exports([@Point])` makes `Point` a public root of the description. The fields
+belong to that record; the publication clauses describe the package that
+contains it. [L2](#l2) explains how `@Point` identifies the declaration, and
+[L3](#l3) explains the completeness claim made by exporting it.
 
-[Package-shell grammar and railroad view](reference/notation.md#shell).
-
-Use this view to locate the fragment's header, package braces and clauses.
-The first `string` is `"0.1"` in this example; L1 fixes that version value.
-The [clause and values view](reference/notation.md#clause)
-expands the arguments used by `surface` and `exports`.
-
-The [grammar](grammar.ebnf)'s `document` production follows this same path:
-header, package name and version, then zero or more `item` occurrences inside
-braces. Each item can be an import, provider dependency, environment,
-declaration or clause. This syntactic permission to repeat or omit items is
-separate from the requirements for a complete package in [L3](#l3).
+A package can also contain imports, provider dependencies and environments.
+The [package-shell grammar](reference/notation.md#shell) locates these items;
+the [clause grammar](reference/notation.md#clause) gives their common fact syntax.
+L3 determines which facts a complete description needs, even where the grammar
+admits a document without them.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -125,10 +121,11 @@ conditional compilation, includes or executable annotations occur during parsing
 
 **Reading aid (non-normative): clauses contain values**
 
-A clause ends with a semicolon. Within its arguments, a constructor groups
-values without ending the clause. Here `deprecated` is the clause and
-`since("2")` is a constructor value; the second argument is a message string
-([L1](#l1), [L5](#l5)).
+A clause records a fact about its containing subject. Here `deprecated`
+describes `Point`, `since("2")` records when deprecation began, and the message
+guides readers toward an alternative. This is advisory information in
+[The published description](explanation/model.md#description); availability
+separately determines where `Point` is offered ([L1](#l1), [L5](#l5)).
 
 Fragment — shows a deprecation clause in a record. The header, package context,
 fields and other nominal contracts are omitted. The message is illustrative;
@@ -144,21 +141,15 @@ package example::geometry version "2" {
 }
 ```
 
-Compare `deprecated(no);`: `no` is a bare name, while `since("2")` is a
-constructor because `(` follows its name. L5 defines both as permitted values
-of this clause. A made-up `deprecated(maybe);` has the generic clause shape
-but fails L1's closed vocabulary. Recognising a path through the grammar
-therefore supplies only the first part of checking a description.
+Compare `deprecated(no);`, which states that the declaration is not deprecated.
+L5 defines both alternatives. A made-up `deprecated(maybe);` has the generic
+clause shape but fails L1's closed vocabulary: it supplies no recognized
+deprecation fact. Parsing is only the first part of checking a description.
 
-[Clause and values grammar and railroad view](reference/notation.md#clause).
-
-Trace `deprecated` along `clause`, then its first argument through `value` to
-`constructor` for `since("2")`. Return to `arguments` for the comma and message
-string. The semicolon occurs only after the clause's closing parenthesis.
-For `deprecated(no);`, choose the bare `name` branch of `value` instead.
-For the earlier `exports([@Point]);`, choose `list`, then `reference` for its
-element. These paths show nesting; L1 and L5 decide
-which values the clause admits.
+The values also have different jobs: `since("2")` supplies a version to the
+deprecation fact, while `@Point` in `exports([@Point])` identifies a declaration.
+The [clause and values grammar](reference/notation.md#clause) gives the exact
+forms; L1 and L5 determine which values each clause admits.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -181,6 +172,10 @@ namespace. A profile's vocabulary MUST be equally closed and typed.
 
 **Reading aid (non-normative): locate the declarations first**
 
+L2 expresses identity and dependencies in
+[The published description](explanation/model.md#description), so a reader
+can locate each declaration and follow the definitions it uses.
+
 Consider two invented API descriptions. `example::geometry` defines a `Point`
 record containing coordinates. `example::canvas` defines a `Canvas` resource
 and an operation that reads its position as a `Point`. The caller passes a
@@ -190,7 +185,7 @@ layout hidden. AIL describes this kind of handle as an
 [C2](contracts.md#c2)). These fragments focus on where the declarations live.
 
 Start with the geometry package. Its `Point` declaration is **local** when
-reading that package: its definition occurs inside these package braces
+reading that package: its definition belongs to this package
 ([L2](#l2)).
 
 Fragment — shows the first package and its record. Publication clauses,
@@ -217,7 +212,7 @@ owned by `example::geometry` ([L2](#l2)).
 
 ![Two package folders: canvas contains sibling declarations Canvas, position and Filter; geometry contains Point. A member arrow connects position to Canvas, and an import arrow names Geometry. Each callable contains its own parameter and result slots.](figures/g9-model.svg)
 
-Read the model from packages to their declarations, then from the operation to
+Read the language-containment view from packages to their declarations, then from the operation to
 its parameter and result. `Canvas` and `position` sit at the same package
 level. A separate member relation associates `position` with `Canvas`.
 The import relation leads from the canvas package to the geometry package;
@@ -288,6 +283,10 @@ overloads. External/source names do not determine identity.
 
 **Reading aid (non-normative): names, references and callable slots**
 
+To identify [Operations and their values](explanation/model.md#operations),
+distinguish a declaration's identity from the value a clause addresses during
+one invocation.
+
 The `position` signature gives its parameter the bare type name `Canvas` and
 its result the imported type name `Geometry::Point`. The `@Canvas` in its
 `member` clause instead selects a declaration as a clause argument. These
@@ -350,38 +349,23 @@ uses these slot references as actual clause arguments. [C1](contracts.md#c1)
 explains longer places such as `$result.x`, which selects the coordinate field
 of `position`'s result.
 
-[Names and references grammar and railroad view](reference/notation.md#names).
+`@Geometry::Point` and `@position::result` have the same reference form but
+resolve to different subjects: an imported declaration and a local callable's
+result slot. The [language-containment view](#l2) locates those subjects;
+the [names and references grammar](reference/notation.md#names) supplies
+their spellings. L2 determines resolution from the containing package.
 
-Follow `import` using the preceding model fragment: `example::geometry` fills
-`name`, the version and placeholder digest fill the two `string` positions,
-and `Geometry` fills the alias `identifier`. In `reference`, `@Canvas` takes
-the shortest `name` path. `@Geometry::Point`, `@position::canvas`,
-`@position::result`, `@Filter::point` and `@Filter::result` each take one
-`::` repetition. The [model above](#l2) supplies their different referents.
+Both functions and callback declarations use the
+[callable grammar](reference/notation.md#callable). Their bodies can describe
+[outcomes](contracts.md#c5), [callback registrations](contracts.md#c6) and
+[access paths](profiles.md#a2), as the relevant rules permit. Here `position`
+describes the call that reads a point; `Filter` describes the callback invocation
+that receives one and returns a Boolean decision.
 
-[Callable grammar and railroad view](reference/notation.md#callable).
-
-This view locates the signature and body of both `position` and `Filter`.
-Choose `fn` for `position` or `callback` for `Filter`. Each example takes the
-parameter path once: `canvas: Canvas` or `point: Geometry::Point`. The result
-`type` follows `->`; these examples bypass `throws`. A bare type name has no
-`@`. The loop inside the braces admits clauses, outcomes, callback-use blocks
-and access blocks syntactically; the rules determine their applicability.
-[C5](contracts.md#c5), [C6](contracts.md#c6) and
-[A2](profiles.md#a2) expand the three nested block forms.
-
-[Place grammar and railroad view](reference/notation.md#places).
-
-Use the short path for `$canvas` inside `position`. For `$result.x`, start
-with `result` and take the dot-plus-identifier branch with `x`. The square
-boxes for `[` and `]` are adjacent: the element selector contains no index.
-[C1's located examples](contracts.md#c1) show what each selection addresses.
-
-In the [grammar](grammar.ebnf), `reference` is `@` followed by `name`, and
-`name` is one identifier followed by any number of `::`-separated identifiers.
-The grammar admits both `@Geometry::Point` and `@position::result`; L2 and the
-containing context determine what they resolve to. A `place` starts with `$`
-and a local identifier, with optional field, pointee or element selections.
+The [place grammar](reference/notation.md#places) supplies field, pointee and
+element selections. `$result.x` addresses one coordinate of `position`'s
+returned point. An element selection addresses every element uniformly;
+[C1's located examples](contracts.md#c1) explain its type and extent requirements.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -486,6 +470,9 @@ when different import aliases are used.
 
 **Reading aid (non-normative): keep provider and API names distinct**
 
+For [Reaching the code](explanation/model.md#access), distinguish the selected
+machine-level definitions from the API declarations that use them.
+
 A package can also name definitions supplied by tooling. A
 [profile](glossary.md#profile) defines extra vocabulary or ways to reach an
 API; an [ABI entry](glossary.md#abi-entry) defines how calls and values cross
@@ -559,6 +546,10 @@ declared alias; an arbitrary string cannot masquerade as an installed provider.
 
 **Reading aid (non-normative): state what the package covers**
 
+L3 connects [The published description](explanation/model.md#description)
+with [Writers, checkers and users](explanation/model.md#agreement), so tools
+can check a complete account within its stated scope and configurations.
+
 Suppose the invented canvas library also has drawing operations. An author can
 publish a description covering only its position API. `surface` states that
 chosen subset and release. `exports` selects the public declarations within
@@ -625,12 +616,9 @@ description; evidence that a library honours it comes from elsewhere
 ([L3](#l3), [C2](contracts.md#c2)). See
 [What a package claims](explanation/packages.md#what-a-package-claims).
 
-[Environment grammar and railroad view](reference/notation.md#environment).
-
-Use this view to locate `test` and its `target` and `platform` clauses in
-the fragment. The grammar permits an empty environment body; L3 requires
-the target and platform facts. The [clause view](reference/notation.md#clause)
-expands each clause's parentheses and values.
+For the exact forms, see the [environment grammar](reference/notation.md#environment)
+and [clause grammar](reference/notation.md#clause). L3 requires the target and
+platform facts even though the grammar admits an empty environment body.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -677,6 +665,10 @@ the author's assertions.
 
 **Reading aid (non-normative): give a value its shape**
 
+L4 distinguishes [Operations and their values](explanation/model.md#operations)
+from [Entities that outlive a call](explanation/model.md#entities), so a reader
+can tell a value's contents from a handle to an entity with a separate lifetime.
+
 A record groups fields in a stated order. The `Point` record in [L2](#l2) has
 two signed 32-bit coordinates. This next record combines other values: a
 Boolean, a coordinate, four unsigned 16-bit counts and a complex value.
@@ -703,8 +695,8 @@ package example::geometry version "1" {
 }
 ```
 
-`array<u16, 4>` has two arguments: the element type and a nonnegative length.
-`complex<f32>` has one argument and denotes a real/imaginary pair with
+`array<u16, 4>` holds four unsigned 16-bit values.
+`complex<f32>` denotes a real/imaginary pair with
 32-bit floating components; `complex<f64>` chooses 64-bit components.
 The record holds these values directly. Their native layout at a call boundary
 comes from the selected provider ([L4](#l4), [A3](profiles.md#a3)).
@@ -874,7 +866,7 @@ package example::collections version "1" {
 Here `collections` would be a profile alias and `Sequence<i32>` its type
 application. The core `array<i32, 4>` already defines a fixed-length value;
 a provider-defined sequence would get its meaning from that provider.
-Following the grammar's angle-bracket syntax alone establishes neither the
+The type application alone establishes neither the
 meaning nor the support of `Sequence` ([L4](#l4), [A1](profiles.md#a1)).
 
 </blockquote>
@@ -895,6 +887,11 @@ selectors and other source constructs; no such type has an implicit core meaning
 <a id="reading-aid-non-normative-attach-each-clause-to-its-subject"></a>
 
 **Reading aid (non-normative): attach each clause to its subject**
+
+L5 attaches facts to [Operations and their values](explanation/model.md#operations),
+[Entities that outlive a call](explanation/model.md#entities) and
+[The published description](explanation/model.md#description), so readers can
+identify the subject and scope of each clause.
 
 The [L2 member function](#l2) uses `input($canvas, borrow)` once for its handle
 parameter. A two-handle operation can state that input obligation once for
@@ -1088,7 +1085,7 @@ relations also need to remain acyclic ([L5](#l5)).
 
 **Reading aid (non-normative): choose a member kind explicitly**
 
-The model's `position` is an instance member using the `canvas` receiver.
+The canvas example's `position` is an instance member using the `canvas` receiver.
 A static member names its owner but has no receiver. An initializer member
 still names a receiver parameter; its ownership clauses determine what happens
 to that value ([L5](#l5)).
@@ -1234,6 +1231,10 @@ spelling alone does not establish conformance.
 
 **Reading aid (non-normative): bind roles to participants**
 
+L6 records recurring arrangements around
+[Entities that outlive a call](explanation/model.md#entities), so a reader can
+connect concrete participants to their lifecycle and ordering obligations.
+
 An author can group the four slots of `position` and `Filter` under the name
 `samples`. In the example below, `inspection` describes what may belong to
 that group, and `canvas_slots` lists the four participants using [L2's slot
@@ -1332,17 +1333,13 @@ bound once, including the empty ones. Participants determine the instance's
 availability by intersection; they need at least one environment in common,
 and pattern composition cannot cycle ([L6](#l6)).
 
-[Pattern and instance grammar and railroad view](reference/notation.md#pattern).
-
-These tracks separate declaring a role from binding its participants.
-In the first fragment, `inspection` fills the pattern's `identifier`;
-`samples: slot many` follows the role's two choice points. The instance then
-uses `canvas_slots` as its own name and `inspection` as the pattern `name`.
-Its `bind(...)` is a clause inside the instance. In the Store extract,
-`law(...)` follows the pattern body's `clause` branch beside its roles.
-The two role choices spell the kind and cardinality;
-L6 checks that the bound participants satisfy them. The
-[L2 model](#l2) locates the callable slots used by `canvas_slots`.
+The pattern defines eligible participants and any laws; the instance selects
+the declarations or slots that fulfil those roles. `inspection` groups slots
+without a law, while `lifetime` adds a checked destructor relationship. L6
+checks participant kinds, cardinalities and the contracts required by the law.
+The [language-containment view](#l2) locates the slots used by `canvas_slots`;
+the [pattern and instance grammar](reference/notation.md#pattern) gives the
+forms for declaring and binding roles.
 
 </blockquote>
 <!-- /reading-aid -->

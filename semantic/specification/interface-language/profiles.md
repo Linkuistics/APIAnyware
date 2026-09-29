@@ -3,7 +3,7 @@
 <!-- reading-aid: page-context -->
 > **Purpose:** rules with reading aids — connect API declarations to provider definitions and ways to reach code or data.
 > **Reader:** language designers new to API binding, and authors or implementers checking provider boundaries.
-> **Before this:** [the package and declaration model](language.md#l2); [the contract rules](contracts.md#c1) explain value and call obligations.
+> **Before this:** [A model of API behaviour and binding obligations](explanation/model.md); [the language-containment view](language.md#l2) locates declarations, and [the contract rules](contracts.md#c1) explain their obligations.
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -31,6 +31,10 @@ is implemented by these documents.
 <a id="reading-aid-non-normative-name-the-definitions-the-package-depends-on"></a>
 
 **Reading aid (non-normative): name the definitions the package depends on**
+
+A1 connects [Reaching the code](explanation/model.md#access) with
+[Writers, checkers and users](explanation/model.md#agreement), so tools can
+identify the selected definitions and establish whether they support them.
 
 A tool needs definitions for how to reach an API and how its values cross the
 machine boundary. An AIL package selects those definitions by name, version and
@@ -75,19 +79,13 @@ an unsupported mechanism can still have recognisable syntax, but the
 cannot claim complete validation. The supplied definition must explain the
 mechanism's meaning as well as its spelling ([A1](#a1)).
 
-[Dependency grammar and railroad view](reference/notation.md#dependency).
-
-Use the `profile` branch for `fixture` and the `abi` branch for `native` in
-the fragment. In each path, the first `identifier` is the local alias; the
-three `string` positions supply the external identifier, version and digest.
-The [package shell](language.md#l1) places each
-dependency among the package's items. F1 defines the special digest tokens
-used here; the path alone cannot establish a valid pin.
-
-The [grammar](grammar.ebnf)'s `dependency` production starts with `use`, selects
-`profile` or `abi`, then gives an alias, identifier string, version and digest.
-It describes a reference to an external definition; it does not embed the
-manifest's schema. See [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries).
+Each dependency selects an external definition whose manifest supplies the
+rules. The [package-shell example](language.md#l1) locates dependencies in
+the package, and the [dependency grammar](reference/notation.md#dependency)
+gives their exact form. F1 defines the special test tokens used here;
+ordinary pins identify exact manifest bytes. See
+[Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries)
+for how those definitions guide consumers.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -138,9 +136,8 @@ package example::objects version "1" {
 ```
 
 `fixture::sendability(nonconforming)` selects a clause defined by the profile
-aliased `fixture`. The `::` separates the namespace from its clause name.
-The manifest defines the allowed values and locations; the ordinary clause
-syntax still ends in `;`. `sharing(confined)` and `isolation(main)` remain
+aliased `fixture`. The manifest defines the allowed values and locations.
+`sharing(confined)` and `isolation(main)` remain
 core facts about permitted use. The conformance fact describes a different
 property and leaves those obligations in place ([C2](contracts.md#c2), [F1](#f1)).
 
@@ -175,6 +172,10 @@ unsupported package as text, but MUST NOT label it a validated authoritative mod
 <a id="reading-aid-non-normative-read-one-declaration-with-two-ways-to-reach-it"></a>
 
 **Reading aid (non-normative): read one declaration with two ways to reach it**
+
+A2 expresses [Reaching the code](explanation/model.md#access), so a consumer
+can choose a supported implementation path that preserves the declaration's
+whole contract.
 
 Counter has a member function that reads its count. A consumer can reach that
 same operation by sending a message or by compiling a source call. Each
@@ -242,21 +243,13 @@ The path's local name `direct`, the source spelling and the declaration's
 identity each have their own role. Merely knowing the source name supplies
 none of these access clauses.
 
-[Access-path grammar and railroad view](reference/notation.md#access).
-
-Take the `access` branch inside the [callable body track](reference/notation.md#callable)
-for each of `read_count`'s two paths. The first `identifier` here is
-`objc_like` or `swift_like`; the one after `[` is `test`. That first environment
-has no bypass, so the list cannot be empty. The return track adds a comma
-and another environment. Inside the braces, the clause track carries `abi`,
-`via`, `mapping` and `compatibility` from the example.
-The grammar permits any number of clauses; A2 requires
-exactly one of each core access clause and checks the environment coverage.
-
-The [grammar](grammar.ebnf)'s `access` production gives a local path name,
-`in` and a nonempty environment list, then a clause block. [G3's access view](explanation/packages.md#reaching-the-code)
-shows the Counter paths and provider relationships; the syntax view locates
-their braces and clauses.
+Both paths apply in `test`. A2 requires each to supply its ABI, mechanism,
+mapping and compatibility domain, and checks that the available paths cover
+every environment where the declaration is offered.
+[G3's access view](explanation/packages.md#reaching-the-code) shows how the
+Counter paths relate to their providers. For their exact forms, see the
+[access-path grammar](reference/notation.md#access) and its enclosing
+[callable grammar](reference/notation.md#callable).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -357,6 +350,10 @@ The same applies to managed projections and wire protocols.
 
 **Reading aid (non-normative): distinguish a stored pointer from an address of storage**
 
+A3 supplies the representation and data-access facts for
+[Reaching the code](explanation/model.md#access), so a tool can realize the
+declared values at the selected boundary.
+
 To pass a `Geometry::Point` between caller and callee, a tool needs to know
 where its `x` and `y` fields are stored. The record in [L2](language.md#l2)
 declares their types and order. The selected ABI/profile supplies their native
@@ -448,6 +445,9 @@ effectful evaluations require explicit profile semantics.
 
 **Reading aid (non-normative): state which definitions can be used together**
 
+A4 states compatibility conditions for [Reaching the code](explanation/model.md#access),
+so a consumer can establish when the selected representations work together.
+
 The two `read_count` paths at [A2](#a2) state different conditions for using
 their representations. The message path's `compatibility(stable)` uses the
 ABI entry's promised fixture domain. The source path's
@@ -513,6 +513,10 @@ its qualification are in the [survey](../../docs/research/2026-09-22-interface-l
 
 **Reading aid (non-normative): keep the same API facts in different presentations**
 
+A5 connects [Writers, checkers and users](explanation/model.md#agreement),
+so readers can recover the same API contract from different presentations
+and recognize a consumer's own limitations.
+
 A documentation renderer can explain the Store view as “the bytes remain usable
 until Store destruction.” A binding generator needs the same fact when it
 arranges access to that pointer. The [C1 fragment](contracts.md#c1) locates the
@@ -575,6 +579,10 @@ contract. It must report that limitation separately from malformed/incomplete AI
 <a id="reading-aid-non-normative-read-examples-within-their-supplied-provider-boundary"></a>
 
 **Reading aid (non-normative): read examples within their supplied provider boundary**
+
+F1 gives a synthetic definition of [Reaching the code](explanation/model.md#access),
+so readers can inspect example access paths against a stated catalogue of
+supported mechanisms and representations.
 
 The example packages use an invented provider so their contracts can be
 inspected without assuming an operating-system implementation. The dependency

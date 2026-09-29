@@ -3,7 +3,7 @@
 <!-- reading-aid: page-context -->
 > **Purpose:** rules with reading aids — follow the obligations attached to values and calls.
 > **Reader:** language designers new to API binding, and authors or implementers checking exact contracts.
-> **Before this:** [the package and declaration model](language.md#l2); [Using an API across languages](explanation/unsaid.md) introduces the domain.
+> **Before this:** [A model of API behaviour and binding obligations](explanation/model.md); [the language-containment view](language.md#l2) locates packages, declarations and slots.
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -31,6 +31,10 @@ that it has not established. All clauses below are closed, typed vocabulary.
 <a id="reading-aid-non-normative-address-a-value-inside-its-callable"></a>
 
 **Reading aid (non-normative): address a value inside its callable**
+
+C1 connects [Operations and their values](explanation/model.md#operations)
+to [Validity](explanation/model.md#validity), so a reader can identify the
+value a contract addresses and the lifetime that bounds its use.
 
 The invented canvas model has a `Canvas` resource and imports the record
 `Geometry::Point`, with integer fields `x` and `y` ([L2](language.md#l2)).
@@ -84,26 +88,20 @@ have their own parameter, result and exception slots. The longer spelling
 `@position::result` identifies a slot from outside its callable; `$result`
 selects it locally ([L2](language.md#l2)).
 
-[Place grammar and railroad view](reference/notation.md#places).
+Each place selects a particular subject for a contract:
 
-Use the [place production](reference/notation.md#places)
-to build each selection in the example. The examples take these paths:
-
-| Place | Slot identifier | Selection path, in order |
+| Place | Starting slot | Value or storage addressed |
 |---|---|---|
-| `$selection.canvas` | `selection` | `.` then field identifier `canvas` |
-| `$items[]` | `items` | `[` then `]`, with no index between them |
-| `$point.*.x` | `point` | `.*`, then `.` and field identifier `x` |
-| `$result.x` in `position` | `result` | `.` then field identifier `x` |
+| `$selection.canvas` | `selection` | The record's Canvas reference |
+| `$items[]` | `items` | Every Canvas reference in the array, under the same policy |
+| `$point.*.x` | `point` | The `x` coordinate in the single pointed-to record |
+| `$result.x` in `position` | `result` | The returned point's `x` coordinate |
 
-The table shows syntax steps; the clauses and types above establish which
-steps are meaningful. Return to the [package model](language.md#l2) to locate
-`position` and its imported result type.
-
-The [grammar](grammar.ebnf)'s `place` starts with `$` and an identifier, then
-repeats field, `.*` or `[]` selections. A syntax path only spells a place;
-C1 checks that each selection fits the type. The [glossary's place entry](glossary.md#place)
-provides a shorter reminder of that distinction.
+The types and extent clauses determine whether each selection is meaningful;
+C1 checks the complete place against them. The [place grammar](reference/notation.md#places)
+supplies the exact forms. Return to the [language-containment view](language.md#l2)
+to locate `position` and its imported result type, or the
+[glossary's place entry](glossary.md#place) for a shorter reminder.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -168,8 +166,9 @@ package example::buffers version "1" {
 
 `valid($store, call)` asks the caller to keep the Store valid through this
 invocation. `give($result, borrow(owner($store)))` lets the caller use the
-returned bytes until that Store is destroyed. Here `owner($store)` is a
-constructor nested inside `borrow(...)`, itself an argument of `give(...)`.
+returned bytes until that Store is destroyed. The owner is the Store passed
+to this invocation, so the caller keeps that particular Store alive while
+using the view.
 `invalidated_by($result, [])` states that no operation ends the borrow before
 its region ends ([C5](#c5)).
 
@@ -205,6 +204,12 @@ recipient. A shorter mutation lifetime is expressed by
 <a id="reading-aid-non-normative-name-who-releases-a-handle-and-where-it-can-be-used"></a>
 
 **Reading aid (non-normative): name who releases a handle and where it can be used**
+
+C2 connects [Entities that outlive a call](explanation/model.md#entities)
+with [Release responsibility](explanation/model.md#responsibility),
+[Where and when calls run](explanation/model.md#execution) and
+[Callbacks and their schedules](explanation/model.md#callbacks), so readers
+can establish a value's lifetime and permitted use, including callback captures.
 
 The caller who receives an [owned](glossary.md#owned) `Store` handle becomes
 responsible for destroying it. The `Store` declaration names `destroy` as the
@@ -318,6 +323,12 @@ executor, unless a profile defines a specific legal transfer protocol.
 <a id="reading-aid-non-normative-read-the-call-conditions-before-its-inputs"></a>
 
 **Reading aid (non-normative): read the call conditions before its inputs**
+
+C3 records [How a call finishes](explanation/model.md#outcomes),
+[Release responsibility](explanation/model.md#responsibility),
+[Validity](explanation/model.md#validity), [Storage](explanation/model.md#storage)
+and [Where and when calls run](explanation/model.md#execution), so callers
+can establish the conditions for entering an operation with its inputs.
 
 When calling `view`, the caller supplies a Store and receives a pointer to its
 bytes. The author also describes when the call finishes, where it may enter,
@@ -587,6 +598,10 @@ platform/receiver distinction.
 
 **Reading aid (non-normative): count initialized data and allocated space separately**
 
+C4 expresses [Storage](explanation/model.md#storage), so callers and tools
+can determine how much memory exists, which elements are initialized and
+how to interpret them.
+
 The preceding `copy_bytes` example describes sixteen writable bytes with
 `extent($destination, buffer(16, 16, elements))`. The first number is the
 initialized length supplied by a valid output; the second is allocated
@@ -681,6 +696,11 @@ representation facts supplied by an access provider under [A4](profiles.md#a4-re
 
 **Reading aid (non-normative): use an observable result to choose the output contract**
 
+C5 connects [How a call finishes](explanation/model.md#outcomes) to
+[Release responsibility](explanation/model.md#responsibility) and
+[Validity](explanation/model.md#validity), so callers know which outputs they
+can use and which obligations arrive with them.
+
 The Store copy operation returns a Boolean. On `true`, its destination contains
 sixteen initialized bytes; on `false`, the destination cannot be read as output.
 The Boolean remains valid in both cases so the caller can decide which case
@@ -728,19 +748,14 @@ result's domain in one outcome. `any` is the single unpartitioned case, as in
 `view` at [C1](#c1). A partition within one completion uses the same valid
 discriminator throughout ([C5](#c5)).
 
-[Outcome grammar and railroad view](reference/notation.md#outcome).
-
-Take the `outcome` branch of the [callable body track](reference/notation.md#callable)
-once for `copied` and again for `failed`. This detail shows where their
-`when`, `meaning` and `state` clauses belong. The grammar permits an empty
-outcome body; C5 requires the applicable clauses.
-The [values track](reference/notation.md#clause)
-shows how `equal($result, true)` nests inside `when(...)`.
-
-The [grammar](grammar.ebnf) nests an `outcome` inside `callable`, with clauses
-inside the outcome's braces. The generic syntax permits several outcomes;
-C5 checks their coverage and exclusivity. [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end)
-explains why a caller needs this complete partition.
+Both outcomes belong to `copy_bytes`; each states what its caller may observe
+and read for that case. C5 checks that they cover every permitted finish
+without overlap and supply the applicable output clauses.
+[Every way a call can end](explanation/contracts.md#every-way-a-call-can-end)
+explains why a caller needs this complete partition. For exact syntax, see
+the [outcome](reference/notation.md#outcome),
+[callable](reference/notation.md#callable) and
+[clause-value](reference/notation.md#clause) grammar sections.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -870,6 +885,10 @@ an access profile, not an interchangeable path to the same operation.
 
 **Reading aid (non-normative): separate one callback invocation from its registration**
 
+C6 expresses [Callbacks and their schedules](explanation/model.md#callbacks),
+so a caller can relate permitted invocations to registration and determine
+when callback state can be released.
+
 The synthetic notification API receives a Handler value and returns a
 Subscription that keeps it registered. First read the Handler declaration:
 its parameter `value` is the integer delivered during one callback invocation.
@@ -968,28 +987,20 @@ until destruction. The effects of `subscribe` itself remain synchronous in
 both cases; later callback delivery is described by the callback-use block.
 See [Callbacks](explanation/contracts.md#callbacks).
 
-[Callback-use grammar and railroad view](reference/notation.md#callback-use).
-
-Follow the `callback_use` branch inside the [callable body track](reference/notation.md#callable)
-for `subscribe`, then substitute `$handler` for this detail's `place`.
-Its repeated clauses describe the registration schedule. The grammar permits
-an empty callback-use body; C6 supplies the required facts.
-
 Use this comparison to keep the two occurrences of `callback` attached to
 their own subjects:
 
-| Example above | Grammar path | What the body describes |
+| Example above | Subject | What the body describes |
 |---|---|---|
-| `callback Handler(value: u64) -> unit` | `callable`: `callback`, identifier and signature | One Handler invocation and the callable value |
-| `callback $handler` inside `subscribe` | `callback_use`: `callback` and `place` | The schedule for this registration's handler |
+| `callback Handler(value: u64) -> unit` | The Handler type | One Handler invocation and the callable value |
+| `callback $handler` inside `subscribe` | The supplied `handler` value | The schedule for this registration's handler |
 
-Retention, owner scope and quiescence are checked together by C6; the paths
-only distinguish the two block shapes. The [callback timing explanation](explanation/contracts.md#callbacks)
-shows when invocations may run and what teardown promises.
-
-The [grammar](grammar.ebnf) distinguishes `callback` followed by an identifier
-and signature from `callback` followed by a `place` and clause block.
-The syntax view can show that nesting; C6 supplies the schedule constraints.
+C6 checks retention, owner scope and quiescence together. The
+[callback timing explanation](explanation/contracts.md#callbacks) shows when
+invocations may run and what teardown promises. The
+[callable grammar](reference/notation.md#callable) describes declarations such
+as Handler; the [callback-use grammar](reference/notation.md#callback-use)
+describes schedule blocks attached to a callable-local place.
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1033,6 +1044,10 @@ a profile with explicit events and ordering. Such APIs MUST NOT be flattened int
 <a id="reading-aid-non-normative-describe-the-value-a-global-read-supplies"></a>
 
 **Reading aid (non-normative): describe the value a global read supplies**
+
+C7 describes persistent global storage among [Entities that outlive a call](explanation/model.md#entities),
+so a reader can identify the storage being read and the obligations attached
+to its loaded value.
 
 A global declaration describes accessible storage. In the synthetic Counter
 package, `pointer_value` stores a pointer to four bytes that remain usable
@@ -1100,6 +1115,10 @@ and have no mutation contract. Literal scalar constants need no ownership clause
 <a id="reading-aid-non-normative-check-a-stated-fact-against-its-rule"></a>
 
 **Reading aid (non-normative): check a stated fact against its rule**
+
+C8 sets the agreement among [Writers, checkers and users](explanation/model.md#agreement),
+so they can distinguish a consistent description from evidence about the
+implementation and restrictions imposed by a binding.
 
 A tool can check whether the description is internally consistent before a
 binding generator decides how to use it. For example, the Store view declares
