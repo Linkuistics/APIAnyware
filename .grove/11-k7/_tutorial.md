@@ -171,10 +171,11 @@ All six checkpoints still match `7891f92a`; `task docs:check` passed.
 There is no outstanding draft handoff. Copy-edit, art and proof remain the
 queued stages for the whole tutorial.
 
-## Handed forward
+## Figures in the model-first run
 
-- Art (tutorial-k83): the five tutorial figures' adjacent links still lead
-  to the publication workflow. In parts 1–4, connect each figure's caption
-  to its named model concept or G11 as your queued charter requires; keep
-  `tutorial-model` identified as language containment. Copy-edit preserved
-  figure sources and facts, all examples and navigation anchors.
+The five tutorial figures now name their model concepts in adjacent
+captions and link back to G11. The package figure explicitly shows language
+containment serving the published description. Sources, SVGs, labels and
+alt text retain the same facts and names. The index map, reference/place
+tables and part 5's access and ownership comparisons retain their stated
+reader takeaways. No art handoff remains; tutorial-k84 is the queued proof.

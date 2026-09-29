@@ -83,7 +83,11 @@ creation to return either its handle or null. Destruction takes a `Card`
 and returns `unit`, which has no value ([`L2`](../language.md#l2),
 [`L4`](../language.md#l4)).
 
-Use this language-containment view to locate the three declarations.
+Use this language-containment view of the label-card package to locate the
+three declarations. It shows how AIL organizes
+[The published description](../explanation/model.md#description).
+The [API model overview](../explanation/model.md#the-model-at-a-glance)
+shows the behaviour and obligations those declarations record.
 Start with the package folder, then read the boxes inside it. `Card`,
 `create_card` and `destroy_card` are siblings in `tutorial::lifetime` version
 `"1"`. Each function's compartment shows its own parameters and result.
@@ -98,8 +102,8 @@ explains that clause. Other package items and contracts are omitted from
 this view (non-normative; [`L2`](../language.md#l2), [`L4`](../language.md#l4),
 [`C2`](../contracts.md#c2)).
 
-[Label-card model source](../figures/tutorial-model.puml) ·
-[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+[Language-containment diagram source](../figures/tutorial-model.puml) ·
+[API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
 Here all three declarations are [local](../glossary.md#local-and-imported-declaration)
 to `tutorial::lifetime`: their definitions occur inside this package. The
@@ -258,7 +262,8 @@ outcome. Its `mutation(none)` describes changes to live input contents;
 destruction itself is already described by consumption and lifecycle
 ([`C2–C3`](../contracts.md#c2)).
 
-Use the state diagram to follow who is responsible for destroying a card.
+Use the state diagram to follow [Release responsibility](../explanation/model.md#responsibility)
+through the card's lifetime: who destroys it, and when that duty moves.
 Start at the top box and follow the labelled arrows. If `create_card` returns
 null, the program stays in the same state, with nothing to destroy. If it
 returns a card, the program owns that card and becomes responsible for its
@@ -277,7 +282,7 @@ return requires a separate guarantee (non-normative; [`C2–C3`](../contracts.md
 ![From the top state, null creation loops back to no Card. Successful creation makes the program responsible for destruction. destroy_card takes responsibility at entry, then the library destroys the Card before returning.](../figures/tutorial-lifetime.svg)
 
 [Card lifecycle diagram source](../figures/tutorial-lifetime.puml) ·
-[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+[API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
 <a id="2-name-the-package-and-the-api-it-covers"></a>
 

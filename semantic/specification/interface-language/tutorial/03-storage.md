@@ -287,7 +287,9 @@ complete `copy_text` with its effects and synthetic
 [symbol access path](../glossary.md#access-path)
 ([`L3`](../language.md#l3), [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
-Use the layout to see why seven text bytes need an eight-byte allocation.
+Use the layout to connect [Storage](../explanation/model.md#storage) with
+[How a call finishes](../explanation/model.md#outcomes). It shows why seven
+text bytes need an eight-byte allocation and which outcome permits reading them.
 The program reserves all eight bytes before calling `copy_text`; it may
 leave them uninitialized. After the call returns, the program reads the
 status and chooses the matching grid. Read byte positions from left to right.
@@ -307,7 +309,7 @@ The view focuses on storage; the call sequence and access paths are omitted
 ![An eight-element destination holds R E A D Y ! ! at indices 0 through 6 and zero at index 7 on success. On failure all eight output elements are invalid to read, while the returned status remains valid.](../figures/tutorial-storage.svg)
 
 [Buffer layout source](../figures/tutorial-storage.puml) ·
-[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+[API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
 ## Checkpoint package
 

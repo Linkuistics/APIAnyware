@@ -274,8 +274,9 @@ dependencies, these form the [dependency closure](../glossary.md#dependency-clos
 needed to interpret this package. Keep the first checkpoint as its own
 smaller example ([`L3`](../language.md#l3)).
 
-Compare the two timelines to find when the program stops using a borrowed
-label. Read each case separately from top to bottom. Both begin with the
+Compare the two timelines to apply [Validity](../explanation/model.md#validity):
+find when the program stops using a borrowed label.
+Read each case separately from top to bottom. Both begin with the
 program lending its card to `current_label` until that call finishes. The
 library then returns the card's current label, which the program can use
 after the call has finished. The card keeps ownership of the label.
@@ -297,7 +298,7 @@ paths remain in the checkpoint (non-normative;
 ![Read each case downward. The program lends Card during current_label and receives borrowed Label access after return. Case 1 ends that access at refresh entry while Card lives on. Case 2 ends access when Card is destroyed.](../figures/tutorial-borrow.svg)
 
 [Label borrow diagram source](../figures/tutorial-borrow.puml) ·
-[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+[API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
 ## Checkpoint package
 

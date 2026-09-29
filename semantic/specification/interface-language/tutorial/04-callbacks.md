@@ -459,8 +459,10 @@ the four declarations, and keep the earlier declarations. Complete both new
 functions with their effects and synthetic symbol paths. The callback uses
 the representation clauses from step 3 ([`L3`](../language.md#l3), [`A2`](../profiles.md#a2)).
 
-Use the timeline to distinguish when the library takes responsibility for
-the watch from when the program knows all callback use has ended. Read from
+Use the timeline to connect [Callbacks and their schedules](../explanation/model.md#callbacks)
+with [Release responsibility](../explanation/model.md#responsibility).
+Distinguish when the library takes responsibility for the watch from when
+the program knows all callback use has ended. Read from
 top to bottom. During `watch_labels`, the program lends its handler and the
 library keeps its own reference for the watch's lifetime. Registration then
 returns an owned watch to the program. Notifications may start after that
@@ -488,7 +490,7 @@ rather than elapsed time; native scheduling is omitted (non-normative;
 ![Read downward: watch_labels returns a Watch before notifications may start. One handler invocation runs while the program calls destroy_watch from outside the callback. The library takes responsibility at entry. At return, all callback use for the subscription has ended.](../figures/tutorial-callbacks.svg)
 
 [Watch callback diagram source](../figures/tutorial-callbacks.puml) ·
-[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
+[API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
 ## Checkpoint package
 
