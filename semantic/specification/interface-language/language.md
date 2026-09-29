@@ -63,11 +63,11 @@ clauses and fields. `exports` takes a list, written `[...]`; `@Point` selects
 the declaration named inside that list. [L2](#l2) locates such references and
 [L3](#l3) explains what exporting a declaration claims.
 
-![Railroads for document, item and clause: the package body repeats items, and each clause ends with a semicolon.](figures/g10-shell.svg)
+[Package-shell grammar and railroad view](reference/notation.md#shell).
 
 Use this view to locate the fragment's header, package braces and clauses.
 The first `string` is `"0.1"` in this example; L1 fixes that version value.
-The [values view below](#reading-aid-non-normative-clauses-contain-values)
+The [clause and values view](reference/notation.md#clause)
 expands the arguments used by `surface` and `exports`.
 
 The [grammar](grammar.ebnf)'s `document` production follows this same path:
@@ -150,7 +150,7 @@ of this clause. A made-up `deprecated(maybe);` has the generic clause shape
 but fails L1's closed vocabulary. Recognising a path through the grammar
 therefore supplies only the first part of checking a description.
 
-![Railroads for clause, arguments, value, constructor and list: a clause adds the final semicolon outside its values.](figures/g10-clause.svg)
+[Clause and values grammar and railroad view](reference/notation.md#clause).
 
 Trace `deprecated` along `clause`, then its first argument through `value` to
 `constructor` for `since("2")`. Return to `arguments` for the comma and message
@@ -350,7 +350,7 @@ uses these slot references as actual clause arguments. [C1](contracts.md#c1)
 explains longer places such as `$result.x`, which selects the coordinate field
 of `position`'s result.
 
-![Railroads for import, reference and name: an import supplies a package pin and alias; every reference is an at sign followed by a qualified name.](figures/g10-names.svg)
+[Names and references grammar and railroad view](reference/notation.md#names).
 
 Follow `import` using the preceding model fragment: `example::geometry` fills
 `name`, the version and placeholder digest fill the two `string` positions,
@@ -359,7 +359,7 @@ the shortest `name` path. `@Geometry::Point`, `@position::canvas`,
 `@position::result`, `@Filter::point` and `@Filter::result` each take one
 `::` repetition. The [model above](#l2) supplies their different referents.
 
-![Railroads for callable, parameters and parameter: fn or callback, a named signature, an optional throws type, and repeated body items.](figures/g10-callable.svg)
+[Callable grammar and railroad view](reference/notation.md#callable).
 
 This view locates the signature and body of both `position` and `Filter`.
 Choose `fn` for `position` or `callback` for `Filter`. Each example takes the
@@ -370,7 +370,7 @@ and access blocks syntactically; the rules determine their applicability.
 [C5](contracts.md#c5), [C6](contracts.md#c6) and
 [A2](profiles.md#a2) expand the three nested block forms.
 
-![Place railroad: a dollar sign and slot identifier followed by zero or more field, single-pointee or element selections.](figures/g10-places.svg)
+[Place grammar and railroad view](reference/notation.md#places).
 
 Use the short path for `$canvas` inside `position`. For `$result.x`, start
 with `result` and take the dot-plus-identifier branch with `x`. The square
@@ -625,11 +625,11 @@ description; evidence that a library honours it comes from elsewhere
 ([L3](#l3), [C2](contracts.md#c2)). See
 [What a package claims](explanation/packages.md#what-a-package-claims).
 
-![Environment railroad: the environment keyword, its identifier and a braced sequence of clauses.](figures/g10-environment.svg)
+[Environment grammar and railroad view](reference/notation.md#environment).
 
 Use this view to locate `test` and its `target` and `platform` clauses in
 the fragment. The grammar permits an empty environment body; L3 requires
-the target and platform facts. The [clause view](#reading-aid-non-normative-clauses-contain-values)
+the target and platform facts. The [clause view](reference/notation.md#clause)
 expands each clause's parentheses and values.
 
 </blockquote>
@@ -1332,7 +1332,7 @@ bound once, including the empty ones. Participants determine the instance's
 availability by intersection; they need at least one environment in common,
 and pattern composition cannot cycle ([L6](#l6)).
 
-![Railroads for pattern, role and instance: roles occur inside a pattern and an instance names its pattern before supplying clauses.](figures/g10-pattern.svg)
+[Pattern and instance grammar and railroad view](reference/notation.md#pattern).
 
 These tracks separate declaring a role from binding its participants.
 In the first fragment, `inspection` fills the pattern's `identifier`;

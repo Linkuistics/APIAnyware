@@ -75,7 +75,7 @@ an unsupported mechanism can still have recognisable syntax, but the
 cannot claim complete validation. The supplied definition must explain the
 mechanism's meaning as well as its spelling ([A1](#a1)).
 
-![Dependency railroad: use selects profile or abi, followed by an alias, identifier string, version string and digest string.](figures/g10-dependency.svg)
+[Dependency grammar and railroad view](reference/notation.md#dependency).
 
 Use the `profile` branch for `fixture` and the `abi` branch for `native` in
 the fragment. In each path, the first `identifier` is the local alias; the
@@ -242,9 +242,9 @@ The path's local name `direct`, the source spelling and the declaration's
 identity each have their own role. Merely knowing the source name supplies
 none of these access clauses.
 
-![Access railroad: a path name, in and a nonempty identifier list, then a braced sequence of clauses.](figures/g10-access.svg)
+[Access-path grammar and railroad view](reference/notation.md#access).
 
-Take the `access` branch inside the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+Take the `access` branch inside the [callable body track](reference/notation.md#callable)
 for each of `read_count`'s two paths. The first `identifier` here is
 `objc_like` or `swift_like`; the one after `[` is `test`. That first environment
 has no bypass, so the list cannot be empty. The return track adds a comma

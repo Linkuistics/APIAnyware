@@ -84,6 +84,15 @@ former locations; examples and semantic diagrams remain; non-normative prose
 omits familiar punctuation lessons; `task docs:check` passes. Reference-k16
 extends the grammar page later without replacing it or its anchors.
 
+Grammar routes from concepts-k85 are now at `reference/notation.md`, with
+explicit anchors `shell`, `clause`, `names`, `callable`, `places`, `environment`,
+`pattern`, `outcome`, `callback-use`, `dependency` and `access`. The k85 task
+records the old-to-new route table. Canonical aids link there and retain all
+examples and incoming anchors. Following explanation and tutorial drafts can
+replace their own G10 embeds with these same section links; k76 still owns
+the canonical aids' meaning-focused prose revision. Reference-k16 extends the
+page with conventions and index routes while preserving these anchors.
+
 ## Second human reading correction (completed)
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires

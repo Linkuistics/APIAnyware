@@ -84,9 +84,9 @@ have their own parameter, result and exception slots. The longer spelling
 `@position::result` identifies a slot from outside its callable; `$result`
 selects it locally ([L2](language.md#l2)).
 
-![Place railroad: a slot identifier after a dollar sign, then repeated field, single-pointee or element selections.](figures/g10-places.svg)
+[Place grammar and railroad view](reference/notation.md#places).
 
-Use the same track as the [L2 place view](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+Use the [place production](reference/notation.md#places)
 to build each selection in the example. The examples take these paths:
 
 | Place | Slot identifier | Selection path, in order |
@@ -728,13 +728,13 @@ result's domain in one outcome. `any` is the single unpartitioned case, as in
 `view` at [C1](#c1). A partition within one completion uses the same valid
 discriminator throughout ([C5](#c5)).
 
-![Outcome railroad: the outcome keyword and a local name followed by a braced sequence of clauses.](figures/g10-outcome.svg)
+[Outcome grammar and railroad view](reference/notation.md#outcome).
 
-Take the `outcome` branch of the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+Take the `outcome` branch of the [callable body track](reference/notation.md#callable)
 once for `copied` and again for `failed`. This detail shows where their
 `when`, `meaning` and `state` clauses belong. The grammar permits an empty
 outcome body; C5 requires the applicable clauses.
-The [values track](language.md#reading-aid-non-normative-clauses-contain-values)
+The [values track](reference/notation.md#clause)
 shows how `equal($result, true)` nests inside `when(...)`.
 
 The [grammar](grammar.ebnf) nests an `outcome` inside `callable`, with clauses
@@ -968,9 +968,9 @@ until destruction. The effects of `subscribe` itself remain synchronous in
 both cases; later callback delivery is described by the callback-use block.
 See [Callbacks](explanation/contracts.md#callbacks).
 
-![Callback-use railroad: callback followed by a place and a braced sequence of schedule clauses.](figures/g10-callback-use.svg)
+[Callback-use grammar and railroad view](reference/notation.md#callback-use).
 
-Follow the `callback_use` branch inside the [callable body track](language.md#reading-aid-non-normative-names-references-and-callable-slots)
+Follow the `callback_use` branch inside the [callable body track](reference/notation.md#callable)
 for `subscribe`, then substitute `$handler` for this detail's `place`.
 Its repeated clauses describe the registration schedule. The grammar permits
 an empty callback-use body; C6 supplies the required facts.
