@@ -107,7 +107,7 @@ different reading purpose.
 | Place names and references in their containing packages | [The two-package language-containment view](language.md#l2), followed by member and slot examples |
 | Interpret an example beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package-shell aid](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Look up exact syntax and railroad views | [Grammar and notation](reference/notation.md), with sections for [package shells](reference/notation.md#shell), [names](reference/notation.md#names), [clauses](reference/notation.md#clause) and [callables](reference/notation.md#callable) |
-| Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
+| Review the design | [Reading the conformance examples](review/walkthroughs.md), with clause readings and trace questions; [pressure cases](conformance.md#pressure-cases-outside-the-synthetic-profile) for limits |
 | Look up a term or exact rule | [Reference](reference/README.md), with types, declarations, model/rule indexes and clause applicability; [Glossary](glossary.md) for terms |
 
 Continue from the domain page to
