@@ -435,7 +435,7 @@ restriction ([L2](#l2)).
 
 **Reading aid (non-normative): supply the exact dependencies**
 
-To turn the canvas model into a resolvable description, its author would first
+To turn the canvas fragment into a resolvable description, its author would first
 finish the geometry document, compute SHA-256 over that document's exact bytes,
 and replace the placeholder pin. The tool checking canvas then needs both
 packages in an explicitly supplied [resolution set](glossary.md#resolution-set).
@@ -710,8 +710,8 @@ other types, but an alias cycle cannot yield a type ([L4](#l4)).
 
 **Reading aid (non-normative): distinguish a handle from its storage**
 
-`Canvas` in the model is a resource handle. In `inspect`, the caller passes
-that handle alongside two pointers to byte storage. The `ptr` permits reading
+`Canvas` in the language-containment view is a resource handle. In `inspect`,
+the caller passes that handle alongside two pointers to byte storage. The `ptr` permits reading
 storage; `mutptr` permits reading and writing. Their extents and the callee's
 actual read/write obligations need further clauses ([L4](#l4), [C4](contracts.md#c4)).
 
@@ -1243,7 +1243,7 @@ references](#l2). AIL calls `inspection` a [pattern](glossary.md#pattern),
 [pattern instance](glossary.md#pattern-instance). The role accepts any number
 of slots; this instance binds it to four ([L6](#l6)).
 
-Fragment — uses the canvas model's function and callback slots. The header,
+Fragment — uses the canvas example's function and callback slots. The header,
 publication context and the two callable declarations are omitted. No law is
 attached to this grouping.
 
@@ -1406,7 +1406,7 @@ role and consistency checks ([L5](#l5), [L6](#l6)). Other kinds of law need a
 versioned profile defining their operands and obligations; explanatory text
 cannot supply that definition.
 
-See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 
 </blockquote>
 <!-- /reading-aid -->

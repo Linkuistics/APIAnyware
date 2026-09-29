@@ -2,7 +2,7 @@
 
 > **Purpose:** reference — find AIL's syntax forms and the rules that give them meaning.
 > **Reader:** language designers, API authors and tool implementers familiar with grammars and railroad diagrams.
-> **Before this:** [A model of API behaviour and binding obligations](../explanation/model.md); [the language-containment view](../language.md#l2) locates packages, declarations and callable slots.
+> **Before this:** [A model of API behaviour and binding obligations](../explanation/model.md); [the language-containment view](../language.md#l2) locates packages, declarations and callable [slots](../glossary.md#slot).
 > **Status:** Draft 0.1 is a proposal under review through its specification
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
@@ -11,7 +11,7 @@
 The [API model](../explanation/model.md) explains what a description records.
 This page locates the grammar forms used to write those facts. For example,
 an operation's parameters become callable slots, and the ways it can finish
-become named outcomes. Use [the model-to-notation map](../explanation/model.md#from-the-model-to-ail)
+become named [outcomes](../glossary.md#outcome). Use [the model-to-notation map](../explanation/model.md#from-the-model-to-ail)
 to start from a concept rather than a syntax form.
 
 ## Grammar source and dialect
@@ -47,7 +47,8 @@ complete packages.
 ## Package shell
 
 **Expresses:** [The published description](../explanation/model.md#description).
-Use the shell to identify the API description and locate its declarations.
+Use the [package](../glossary.md#package) shell to identify the API description
+and locate its [declarations](../glossary.md#declaration).
 **Productions:** `document`, `item`, `clause`.
 
 Fragment — shows the invented geometry package and its `Point` record.
@@ -70,7 +71,7 @@ package example::geometry version "1" {
 
 The language version selects AIL draft 0.1; the package version identifies
 this API description independently. `surface` states its scope, and
-`exports` names `Point` as a public root. These are summaries of
+`exports` names `Point` as a [public root](../glossary.md#exports). These are summaries of
 [L1–L3](../language.md#l1); the [located shell example](../language.md#reading-aid-non-normative-a-document-contains-a-package)
 connects the package items to those rules.
 
@@ -84,8 +85,9 @@ connects the package items to those rules.
 
 **Expresses:** facts about the model's subjects; here,
 [The published description](../explanation/model.md#description) records a
-declaration's deprecation. Use the clause's subject and arguments to identify
-which fact it states. **Productions:** `clause`, `arguments`, `value`,
+declaration's deprecation. Use the subject and arguments of a
+[clause](../glossary.md#clause) to identify which fact it states.
+**Productions:** `clause`, `arguments`, `value`,
 `constructor`, `list`.
 
 Fragment — shows deprecation in a record. The header, package context, fields
@@ -147,8 +149,9 @@ package example::canvas version "1" {
 }
 ```
 
-`position` and `Canvas` are sibling declarations; `member` associates the
-function with its owner. `canvas` is an explicitly named parameter designated
+`position` and `Canvas` are sibling declarations; the
+[`member`](../glossary.md#member) clause associates the function with its owner.
+`canvas` is an explicitly named parameter designated
 as the receiver. `Geometry::Point` is the result type from the imported
 package. In a clause argument, `@Canvas` refers to the local declaration,
 `@Geometry::Point` to the imported one, and `@position::canvas` to the
@@ -241,8 +244,8 @@ show the types and storage facts that make each selection meaningful.
 
 **Expresses:** configurations covered by
 [The published description](../explanation/model.md#description).
-Use an environment to name the configuration in which declarations are
-available. **Production:** `environment`.
+Use an [environment](../glossary.md#environment) to name the configuration
+in which declarations are available. **Production:** `environment`.
 
 Fragment — shows publication scope and availability in the canvas package.
 The import, providers and other contracts needed for a complete description
@@ -369,7 +372,7 @@ outcome inside its [callable](#callable). See the
 
 **Expresses:** [Callbacks and their schedules](../explanation/model.md#callbacks).
 Use a callback-use block to describe when a registration may invoke its
-callback and when that registration is quiescent.
+callback and when that registration reaches [quiescence](../glossary.md#quiescence).
 **Production:** `callback_use`.
 
 Fragment — shows registration and teardown in the synthetic callbacks API.
@@ -420,7 +423,8 @@ form in [Callables](#callable) describes one invocation and the callable value.
 
 **Expresses:** shared definitions selected by
 [The published description](../explanation/model.md#description).
-Use provider dependencies to identify the profile and ABI definitions that
+Use [provider](../glossary.md#provider) dependencies to identify the
+[profile](../glossary.md#profile) and [ABI](../glossary.md#abi) definitions that
 tools need to interpret the package. **Production:** `dependency`.
 
 Fragment — shows dependencies and an environment in the invented objects
@@ -460,8 +464,8 @@ connects the aliases to clauses that use them.
 ## Access paths
 
 **Expresses:** [Reaching the code](../explanation/model.md#access).
-Use an access path to identify how a tool reaches an implementation in a
-named environment. **Production:** `access`.
+Use an [access path](../glossary.md#access-path) to identify how a tool reaches
+an implementation in a named environment. **Production:** `access`.
 
 Fragment — shows a path in the invented canvas package. The header, import,
 synthetic `fixture` and `native` provider pins, `test` environment, `Canvas`

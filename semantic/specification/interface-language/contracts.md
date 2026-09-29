@@ -36,7 +36,7 @@ C1 connects [Operations and their values](explanation/model.md#operations)
 to [Validity](explanation/model.md#validity), so a reader can identify the
 value a contract addresses and the lifetime that bounds its use.
 
-The invented canvas model has a `Canvas` resource and imports the record
+The invented canvas package declares a `Canvas` resource and imports the record
 `Geometry::Point`, with integer fields `x` and `y` ([L2](language.md#l2)).
 Suppose an inspection operation also receives a record containing a canvas
 and an array of two canvases. Each input occupies a named [slot](glossary.md#slot).
@@ -284,7 +284,7 @@ copying the value without reference obligations. A record containing a Canvas
 reference needs a policy that accounts for that reference. A callback's
 `sharing` and `isolation` describe the callable value and its saved
 [callback captures](glossary.md#callback-captures); [C6](#c6) separately
-shows when the API may invoke it. See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+shows when the API may invoke it. See [Entities and their lifecycles](explanation/contracts.md#entities-and-their-lifecycles).
 
 </blockquote>
 <!-- /reading-aid -->

@@ -18,11 +18,11 @@ By the end, you should be able to identify the model facts expressed by the
 clauses in the three
 [conformance examples](../conformance.md#positive-specifications).
 
-Those examples describe invented APIs using a synthetic fixture
-[profile](../glossary.md#profile), a versioned semantic extension,
-catalogue and [digest tokens](../glossary.md#digest-pin)
-([`F1`](../profiles.md#f1)). Their stated behaviour belongs to those invented
-APIs. Extracts below are labelled fragments because
+Those examples describe invented APIs using the synthetic fixture's
+[profile](../glossary.md#profile), ABI catalogue and
+[digest tokens](../glossary.md#digest-pin) ([`F1`](../profiles.md#f1)).
+The profile defines a versioned semantic extension. The stated behaviour
+belongs to the invented APIs. Extracts below are labelled fragments because
 the surrounding declarations and [package](../glossary.md#package) still matter.
 The alternatives compare design possibilities. Their benefits and costs are
 assessments of the published rules; draft 0.1 remains the contract under review.
@@ -33,8 +33,8 @@ that description to explain the obligations on each call.
 
 ## From signature to contract
 
-[Operations and their values](model.md#operations) gives the starting point:
-identify a call and the values its contract concerns. Recall the watch handle
+To describe [operations and their values](model.md#operations), start by
+identifying a call and the values its contract concerns. Recall the watch handle
 passed to `watch_close`. In this constructed case, the call takes responsibility
 for destroying the watch and returns successfully; an API author would need
 evidence that the library behaves this way.
@@ -143,8 +143,8 @@ A complete function also states its effects and how a tool reaches its code
 
 ## Naming what a contract talks about
 
-[Operations and their values](model.md#operations) also asks which value or
-storage each fact concerns. To read an obligation, locate that subject first.
+When reading about [operations and their values](model.md#operations),
+locate the value or storage that each obligation concerns.
 Recall the address of the watch API's length variable: the pointer can be
 usable before the library writes a readable integer through it. The constructed
 `read_length` below isolates those two subjects.
@@ -402,9 +402,9 @@ the corresponding signature and provider support
 
 ## Entities and their lifecycles
 
-[Entities that outlive a call](model.md#entities) connects a handle used by
-several operations to one identity and lifetime. To find how an owned handle
-is released, read the type's [lifecycle](../glossary.md#lifecycle). Recall the
+For [entities that outlive a call](model.md#entities), a handle lets several
+operations refer to one identity with its own lifetime. To find how an owned
+handle is released, read the type's [lifecycle](../glossary.md#lifecycle). Recall the
 watch that remains alive between opening and closing it. The synthetic
 `Store` has a unique destruction obligation; the reference-counted `Counter`
 can remain alive while several parties hold references ([`C2`](../contracts.md#c2)).
@@ -482,9 +482,9 @@ reference from an owned value to its lifecycle ([`C2`](../contracts.md#c2),
 
 ## Who owns what
 
-[Release responsibility](model.md#responsibility) asks who owes the release
-established by the lifecycle. To track that duty through a call, read its
-input transfer and the selected outcome's delivery clauses. Recall the watch
+[Release responsibility](model.md#responsibility) identifies who owes the
+release established by the lifecycle. To track that duty through a call, read
+its input transfer and the selected outcome's delivery clauses. Recall the watch
 cases: reading a view leaves the duty with the program, closing takes it,
 and a successful open gives the program a new duty. The synthetic store
 uses the same three arrangements.
@@ -606,7 +606,7 @@ that obligation unless it explicitly returns it as an owned output
 
 Strong retention is a separate event, as the handler example shows. It creates
 an additional release obligation while the caller keeps its own; that event
-is outside this figure. Ownership also leaves exclusive access to other rules.
+is outside this figure. Separate rules determine whether access is exclusive.
 
 ![Three separate synthetic watch cases: watch_view leaves closing to the program; watch_close takes responsibility at entry and destroys the watch; a non-null owned watch_open result gives closing responsibility to the program. A null result gives none.](../figures/g4-ownership.svg)
 
@@ -984,9 +984,9 @@ its clause name. The provider selection is introduced in
 
 ## Callbacks
 
-[Callbacks and their schedules](model.md#callbacks) separates one invocation
-from the registration that permits it. To find when callback state can be
-released, read that registration's schedule through to its teardown boundary.
+For [callbacks and their schedules](model.md#callbacks), distinguish one
+invocation from the registration that permits it. To find when callback state
+can be released, read that registration's schedule through to its teardown boundary.
 Recall the watch notification: use can finish within the opening call or
 continue until the returned owner is destroyed. The examples below compare
 a constructed call-scoped handler with a synthetic subscription.
@@ -1149,8 +1149,8 @@ it actually supplies that boundary ([`C6`](../contracts.md#c6)).
 
 ## Patterns and laws
 
-[Entities that outlive a call](model.md#entities) also includes obligations
-connecting several declarations. To inspect one of these relationships, find
+Contracts for [entities that outlive a call](model.md#entities) can also
+connect several declarations. To inspect one of these relationships, find
 its participants and the law they satisfy. Recall the watch handle and its
 closing operation; the buffer example similarly connects `Store` to `destroy`.
 AIL calls the reusable form of such a relationship a

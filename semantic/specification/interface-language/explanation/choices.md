@@ -10,9 +10,9 @@
 
 ## How to read this page
 
-Judge each language choice by how well it serves describing the
-[API model](model.md) and the reader's task. A reviewer should be able to
-find what an API promises, relate that promise to the other obligations,
+Judge each language choice by how well it helps authors express the
+[API model](model.md) and readers inspect its contracts. A reviewer should
+be able to find what an API promises, relate that promise to the other obligations,
 and see what the notation asks authors and tools to supply. The sections
 below name the concepts each choice concerns and compare what it makes easy
 or hard to express and inspect.
@@ -58,7 +58,7 @@ fn view(store: Store) -> ptr<u8> {
 
 The signature names a `Store` parameter and a pointer-to-byte result.
 `$store` addresses the input and `$result` the return value locally to `view`.
-`outcome viewed` describes [how the call finishes](model.md#outcomes) and
+`outcome viewed` describes [how a call finishes](model.md#outcomes) and
 contains the returned obligations; `give` supplies borrowing within the
 owner's lifetime, and `invalidated_by($result, [])` records no
 earlier [invalidator](../glossary.md#invalidation). The full function later
@@ -121,11 +121,11 @@ borrowed view.
 | API contract | The library promises how long storage stays usable: until store destruction, or until an earlier replacement. |
 | AIL notation | The author writes the owner lifetime in `give` and earlier cutoffs in `invalidated_by`. |
 
-All conformance examples mentioned here use the synthetic fixture
-[profile](../glossary.md#profile), a versioned semantic extension,
-catalogue and
+All conformance examples mentioned here use the synthetic fixture's
+[profile](../glossary.md#profile), ABI catalogue and
 [digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
-They describe invented APIs rather than actual platform contracts.
+The profile defines a versioned semantic extension. The examples describe
+invented APIs rather than actual platform contracts.
 
 The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
 shows what API authors and tools do with a description. This page asks what
@@ -748,8 +748,9 @@ neither a representation recipe nor a new law
 
 **Several real-API problems already have core forms.** A simple error-output
 API can use exhaustive outcomes to describe [how a call finishes](model.md#outcomes)
-and when its output is readable. An opaque handle can name the release protocol
-for an [entity that outlives a call](model.md#entities), establishing
+and when its output is readable. An author can name a release protocol for
+[entities that outlive a call](model.md#entities), represented by opaque handles,
+establishing
 [release responsibility](model.md#responsibility). A mutable borrow can state
 its [validity](model.md#validity) by listing earlier invalidators. Among
 [operations and their values](model.md#operations), an open enum can retain

@@ -8,7 +8,7 @@
 > are future work.
 > **Rules:** [`L2–L5`](../language.md#l2) and [`A1–A5`](../profiles.md#a1) are canonical; this page gives non-normative explanations.
 
-In the model's [published description](model.md#description), the author
+In [The published description](model.md#description), the author
 establishes which part and release of an API the account covers. Recall the
 watch API: a description of `watch_view` also needs the watch type, its release
 operation and the other definitions its contract refers to. The description
@@ -699,8 +699,9 @@ applicable recipe and rejects conflicting recipes ([`A1`](../profiles.md#a1),
 The alternative is to put every runtime mechanism in the core. Profiles keep
 those definitions separate, at the cost of additional dependencies and uneven
 consumer support. A consumer identifies unsupported dependencies before claiming
-complete validation. A syntax reader may preserve unsupported text without
-calling it a validated authoritative model ([`A1`](../profiles.md#a1)).
+complete validation. A syntax reader may preserve unsupported text while
+leaving validation to a tool that understands the selected definitions
+([`A1`](../profiles.md#a1)).
 
 ## The synthetic fixture
 

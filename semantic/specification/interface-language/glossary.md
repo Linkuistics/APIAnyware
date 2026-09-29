@@ -304,7 +304,7 @@ answers a separate question about how often a registered callback runs.
 
 Model: [Entities that outlive a call](explanation/model.md#entities).
 
-See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
 
 ## Clause
@@ -892,7 +892,7 @@ contracts, beyond describing a usual order of calls.
 
 Model: [Entities that outlive a call](explanation/model.md#entities).
 
-See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
 
 Example: [roles bound to concrete participants](language.md#l6).
@@ -908,7 +908,7 @@ pattern's laws consistently with the resource's existing lifecycle.
 
 Model: [Entities that outlive a call](explanation/model.md#entities).
 
-See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
 
 ## Place
@@ -1125,7 +1125,7 @@ parameter name without confusing their participants.
 
 Model: [Entities that outlive a call](explanation/model.md#entities).
 
-See [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns).
+See [Patterns and laws](explanation/contracts.md#patterns-and-laws).
 Rule: [`L6`](language.md#l6).
 
 ## Shared
