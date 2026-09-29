@@ -71,6 +71,28 @@ glossary route to the model page; the k64 residues named in orientation-k69
 are repaired; proof walks landing → domain → model and two direct concept
 entries; `task docs:check` passes.
 
+## Handed forward
+
+- **art — G11**, `explanation/model.md`, *The model at a glance*: insert the
+  API-model overview at the source comment before the prose walk. Use the
+  eleven concept names from §10 and the watch names from the page, not AIL
+  keywords. The prose establishes these relations: operations receive inputs
+  and deliver results/write output storage; outcomes identify observable
+  finishes, meanings and readable outputs; handles identify persistent
+  entities; lifecycles govern release and call contracts move responsibility;
+  a borrowed view depends on an owner's lifetime and any earlier invalidator;
+  storage has bounds and contents; execution rules govern entry, overlap and
+  nesting; registration connects a callback to its schedule, saved state and
+  quiescence. The published description gathers declarations/contracts for a
+  surface, dependencies and configurations; access paths connect operations
+  to code through machine-level definitions; writers submit descriptions,
+  checkers establish completeness/consistency, and users retain the same
+  facts. Implementation behaviour needs separate evidence. Keep the watch
+  alternatives distinct, especially refresh versus no earlier invalidator and
+  call-scoped versus owner-scoped callback use. One overview or two linked
+  views (call layer; description layer) are admitted. Commit source plus SVG,
+  with caption and alt text; no other new figure is requested by this draft.
+
 ## Current human-directed correction
 
 The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires

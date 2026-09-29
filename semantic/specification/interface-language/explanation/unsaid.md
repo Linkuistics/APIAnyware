@@ -71,6 +71,9 @@ notification can be waiting, running or finished. The following sections
 compare contracts that relate these states. They are alternative cases to
 reason about, rather than one complete implementation of this header.
 
+The model's [operations and their values](model.md#operations) connect these
+signatures to the particular values and storage each contract describes.
+
 <a id="what-the-header-does-not-say"></a>
 
 ## The caller's and implementer's obligations
@@ -127,6 +130,10 @@ consuming the caller's reference. These are non-normative summaries of
 [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3) and
 [`C5`](../contracts.md#c5).
 
+The model separates [entities that outlive a call](model.md#entities) from
+[release responsibility](model.md#responsibility): the lifecycle defines how
+the watch is released, and each call says who holds that duty.
+
 ### How long can the caller use a view?
 
 Suppose `watch_view` lends bytes from its watch. In one contract the bytes remain
@@ -161,6 +168,9 @@ contracts. Keeping the watch alive is enough only in the first case.
 | Bytes last until watch destruction | When the watch is destroyed | Finish reading before closing the watch |
 | A later `watch_view` refreshes the bytes | At entry to that refresh, or at watch destruction, whichever comes first | Finish reading before either event |
 
+The model's [validity](model.md#validity) concept brings together the
+lifetime bound and the events that end borrowed access earlier.
+
 ### How many bytes exist, and what do they contain?
 
 Suppose a successful view reports a length of three. Three initialized binary
@@ -194,6 +204,9 @@ for the `length` variable itself, and keeps that storage usable during the call.
 These are non-normative summaries of
 [`C3`](../contracts.md#c3) and [`C4`](../contracts.md#c4).
 
+The model's [storage](model.md#storage) concept connects bounds and contents
+to the caller's and callee's permitted reads and writes.
+
 ### What can the caller read when a call fails?
 
 Suppose `watch_view` returns null on failure. One contract could promise that it
@@ -225,6 +238,9 @@ null test. A binding preserves the way the API reports failure. If the API
 returns a status code, the binding exposes that code; an operation that reports
 failure differently needs a separate description. These are non-normative summaries of
 [`C3`](../contracts.md#c3) and [`C5`](../contracts.md#c5).
+
+The model's [how a call finishes](model.md#outcomes) concept connects each
+observable case to its meaning and readable outputs.
 
 ### Which calls may run together, and where?
 
@@ -262,6 +278,9 @@ stated executor; that restriction is its
 overlap and nested-call rules, and callback registrations state when callbacks
 can run. These are non-normative summaries of [`C2`](../contracts.md#c2),
 [`C3`](../contracts.md#c3) and [`C6`](../contracts.md#c6).
+
+The model's [where and when calls run](model.md#execution) concept relates
+entry, overlap and nested calls to restrictions on the values they use.
 
 ### When is it safe to discard callback state?
 
@@ -318,6 +337,9 @@ releasing state kept alive for notifications.
 | Notifications continue until quiescent watch destruction | Return from the destructor, with no invocation running or able to start |
 | Cancellation only requests a stop | A separate acknowledgement establishing quiescence, under a profile that defines that protocol |
 
+The model's [callbacks and their schedules](model.md#callbacks) concept
+relates each registration to its invocations, saved state and end of use.
+
 <a id="why-the-signature-cannot-be-the-contract"></a>
 
 ## A shared description for API tools
@@ -353,6 +375,10 @@ All producers meet the same completeness requirements. This choice makes
 authoring demanding: the producer has to settle a required lifetime fact before
 publishing the description. The [design discussion](choices.md) examines that
 cost.
+
+The model's [published description](model.md#description) gathers this scope
+and its dependencies; [writers, checkers and users](model.md#agreement)
+explains how the same facts pass between the tools.
 
 ## Reaching the code
 
@@ -410,6 +436,9 @@ particular binding generator's capabilities. That generator reports its own
 limitation separately from the package's validity (non-normative;
 [`A2`](../profiles.md#a2), [`A5`](../profiles.md#a5)).
 
+The model's [reaching the code](model.md#access) concept connects the
+operation's contract to its access paths and machine-level agreements.
+
 <a id="what-your-language-design-knowledge-covers-and-where-it-misleads"></a>
 
 ## Reading AIL's terms
@@ -456,9 +485,11 @@ qualify the word ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
 
 ## Where next
 
-Continue to [How AIL states a contract](contracts.md) to see these obligations
-in AIL, using the [glossary](../glossary.md) for terms. For exact obligations,
-see [the memory and behavioural rules](../contracts.md).
+Continue to [A model of API behaviour and binding obligations](model.md)
+to connect these cases into one account of what a description records. Then
+read [How AIL states a contract](contracts.md) for the notation, using the
+[glossary](../glossary.md) for terms. For exact obligations, see
+[the memory and behavioural rules](../contracts.md).
 
 To see which package or function each name belongs to before reading a rule, use the
 [package shell](../language.md#l1) and

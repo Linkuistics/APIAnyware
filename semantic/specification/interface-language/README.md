@@ -7,6 +7,9 @@ alive. A tool generating code to call that library needs to preserve that
 relationship; a tool generating documentation needs to explain it to callers.
 AIL gives both tools the same description to work from.
 
+This documentation explains a model of API behaviour and binding obligations,
+then shows how AIL writes that model down.
+
 An [API binding](glossary.md#binding) is the code that makes an API available in
 another language. The rules for using the API — what callers supply, what the
 implementation promises, and who releases its resources — form its
@@ -91,25 +94,31 @@ different reading purpose.
 
 | If you want to… | Start at… |
 |---|---|
+| Understand what a description records | [A model of API behaviour and binding obligations](explanation/model.md) |
 | Understand why the contract is needed | [Using an API across languages](explanation/unsaid.md) |
 | Understand how clauses express obligations | [How AIL states a contract](explanation/contracts.md) |
 | Understand package scope and how calls reach code | [Packages, environments and access paths](explanation/packages.md) |
 | Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
 | Learn to read and write the notation | [Describing a small API](tutorial/README.md), with complete checkpoint packages |
 | Place names and references in their containing packages | [The language model and two named packages](language.md#l2), followed by member and slot examples |
-| Follow the syntax beside a rule | [The package shell and railroad reading key](language.md#l1), then [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
+| Follow the syntax beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package shell](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 
-Continue from the domain page to [How AIL states a contract](explanation/contracts.md).
+Continue from the domain page to
+[A model of API behaviour and binding obligations](explanation/model.md), then
+[How AIL states a contract](explanation/contracts.md).
 Then read [Packages, environments and access paths](explanation/packages.md)
-and [Design choices, limits and open questions](explanation/choices.md).
+and [Design choices, limits and open questions](explanation/choices.md), followed
+by [the tutorial](tutorial/README.md).
 
-For a direct entry into the notation, start with the package shell, then the
-two-package model. The model locates a declaration in its own package and shows
-how another package refers to it through an import. The accompanying snippets
+For a direct entry into the notation, choose a concept from
+[the model-to-notation map](explanation/model.md#from-the-model-to-ail).
+The [package shell](language.md#l1) and [two-package language model](language.md#l2)
+then supply the containing context. The language model locates a declaration
+in its own package and shows how another package refers to it through an import. The accompanying snippets
 also show a function associated with a type and the parameters and result that
-belong to that function. The railroad views show how to follow the syntax;
+belong to that function. The railroad views show the syntax productions;
 the adjacent rules determine what the names mean and whether a description is
 valid. The [glossary](glossary.md#declaration) gives shorter examples for lookup.
 
@@ -125,8 +134,8 @@ Rule identifiers are stable citation targets; wording can change during review.
 Explanations and glossary entries help interpret those rules. When checking an
 exact requirement, follow their citations back to the canonical files above.
 Within those files, sections labelled **Reading aid (non-normative)** provide
-examples and diagrams, with an explicit end marker. The rule text outside
-those sections remains the authority.
+examples and diagrams inside a visible left border. The bold label and border
+delimit each aid; the rule text outside the border remains the authority.
 The supporting material is:
 
 - [Conformance requirements, mutations and review limits](conformance.md).
