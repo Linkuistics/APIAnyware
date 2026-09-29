@@ -2,7 +2,7 @@ candidate	kind	target	concept	status	owner	reason
 head:abi	entry	reference/clauses-access.md#abi	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:accessors	entry	reference/clauses-package.md#accessors	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:alias::clause	covered	keyword:use				Schematic profile-qualified clause spelling, not a literal provider name.
-head:aliasing	entry	reference/clauses-callable.md#aliasing	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:aliasing	entry	reference/clauses-callable.md#aliasing	storage	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:available	entry	reference/clauses-package.md#available	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:base	entry	reference/clauses-package.md#base	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:bind	entry	reference/clauses-access.md#bind	entities	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
@@ -11,29 +11,29 @@ head:buffer	covered	head:extent				Value constructor covered with the clause tha
 head:callback_abi	entry	reference/clauses-access.md#callback_abi	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:capability	covered	head:requires				Value constructor covered with the clause that admits it; not an independent clause.
 head:compatibility	entry	reference/clauses-access.md#compatibility	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
-head:completions	entry	reference/clauses-callable.md#completions	outcomes	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
-head:concurrency	entry	reference/clauses-callable.md#concurrency	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
-head:contents	entry	reference/clauses-callable.md#contents	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:completions	entry	reference/clauses-callable.md#completions	outcomes	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:concurrency	entry	reference/clauses-callable.md#concurrency	execution	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:contents	entry	reference/clauses-callable.md#contents	storage	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:copy	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
 head:count	entry	reference/clauses-outcomes.md#count	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:declarations	non-vocabulary					Ordinary prose followed by a parenthesis; not AIL vocabulary.
 head:defaults	non-vocabulary					Ordinary prose followed by a parenthesis; not AIL vocabulary.
 head:deprecated	entry	reference/clauses-package.md#deprecated	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:direction	entry	reference/clauses-callable.md#direction	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:direction	entry	reference/clauses-callable.md#direction	storage	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:doc	entry	reference/clauses-package.md#doc	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:equal	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
-head:execution	entry	reference/clauses-callable.md#execution	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
-head:executor	entry	reference/clauses-callable.md#executor	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:execution	entry	reference/clauses-callable.md#execution	execution	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:executor	entry	reference/clauses-callable.md#executor	execution	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:exports	entry	reference/clauses-package.md#exports	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:extends	entry	reference/clauses-package.md#extends	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:extension	entry	reference/clauses-package.md#extension	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:extent	entry	reference/clauses-callable.md#extent	storage	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:extent	entry	reference/clauses-callable.md#extent	storage	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:feature	entry	reference/clauses-package.md#feature	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:fixture::actor	entry	reference/clauses-access.md#fixture-actor	execution	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:fixture::sendability	entry	reference/clauses-access.md#fixture-sendability	execution	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:give	entry	reference/clauses-outcomes.md#give	responsibility	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:implements	entry	reference/clauses-package.md#implements	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:input	entry	reference/clauses-callable.md#input	responsibility	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:input	entry	reference/clauses-callable.md#input	responsibility	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:invalidated_by	entry	reference/clauses-outcomes.md#invalidated_by	validity	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:isolation	entry	reference/clauses-package.md#isolation	execution	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:law	entry	reference/clauses-access.md#law	entities	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
@@ -44,7 +44,7 @@ head:mapping	entry	reference/clauses-access.md#mapping	access	pending	reference-
 head:meaning	entry	reference/clauses-outcomes.md#meaning	outcomes	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:member	entry	reference/clauses-package.md#member	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:mutable	entry	reference/clauses-package.md#mutable	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:mutation	entry	reference/clauses-callable.md#mutation	validity	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:mutation	entry	reference/clauses-callable.md#mutation	validity	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:nonnull	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
 head:null	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
 head:outside_callback	covered	head:requires				Value constructor covered with the clause that admits it; not an independent clause.
@@ -55,11 +55,11 @@ head:platform	entry	reference/clauses-package.md#platform	description	ready	refe
 head:quiescence	entry	reference/clauses-outcomes.md#quiescence	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:range	covered	head:when				Value constructor covered with the clause that admits it; not an independent clause.
 head:receiver	entry	reference/clauses-package.md#receiver	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:reentrancy	entry	reference/clauses-callable.md#reentrancy	execution	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:reentrancy	entry	reference/clauses-callable.md#reentrancy	execution	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:representation	entry	reference/clauses-access.md#representation	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:requirement	entry	reference/clauses-package.md#requirement	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:requires	entry	reference/clauses-callable.md#requires	callbacks	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
-head:retain	entry	reference/clauses-callable.md#retain	responsibility	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:requires	entry	reference/clauses-callable.md#requires	callbacks	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:retain	entry	reference/clauses-callable.md#retain	responsibility	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:runtime	entry	reference/clauses-package.md#runtime	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:satisfies	entry	reference/clauses-package.md#satisfies	entities	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:scope	entry	reference/clauses-outcomes.md#scope	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
@@ -76,9 +76,9 @@ head:text	covered	head:contents				Value constructor covered with the clause tha
 head:timing	entry	reference/clauses-outcomes.md#timing	callbacks	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:toolchain	entry	reference/clauses-package.md#toolchain	description	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
 head:unretained	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
-head:valid	entry	reference/clauses-callable.md#valid	validity	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:valid	entry	reference/clauses-callable.md#valid	validity	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:values	entry	reference/clauses-package.md#values	operations	ready	reference-k21	Clause; scope and rules are recorded in declarations.md#applicability.
-head:variadic	entry	reference/clauses-callable.md#variadic	operations	pending	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
+head:variadic	entry	reference/clauses-callable.md#variadic	operations	ready	reference-k22	Clause; scope and rules are recorded in declarations.md#applicability.
 head:via	entry	reference/clauses-access.md#via	access	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.
 head:weak	covered	head:retain				Value constructor covered with the clause that admits it; not an independent clause.
 head:when	entry	reference/clauses-outcomes.md#when	outcomes	pending	reference-k23	Clause; scope and rules are recorded in declarations.md#applicability.

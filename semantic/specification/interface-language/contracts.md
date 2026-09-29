@@ -391,6 +391,8 @@ A scalar argument such as an integer coordinate needs no ownership transfer
 clause. [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value)
 explains the distinction in domain terms.
 
+Lookup: [`execution`](reference/clauses-callable.md#execution), [`completions`](reference/clauses-callable.md#completions), [`executor`](reference/clauses-callable.md#executor), [`concurrency`](reference/clauses-callable.md#concurrency), [`reentrancy`](reference/clauses-callable.md#reentrancy), [`mutation`](reference/clauses-callable.md#mutation), [`variadic`](reference/clauses-callable.md#variadic).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -468,6 +470,8 @@ that the subscription fixture implements those alternatives. The selected
 provider and companion clauses would have to support the chosen policy.
 See [Retention](glossary.md#retention) and [C2](#c2) for the lifetime constraints.
 
+Lookup: [`input`](reference/clauses-callable.md#input), [`retain`](reference/clauses-callable.md#retain), [`valid`](reference/clauses-callable.md#valid).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -527,6 +531,8 @@ An old reference read from `inout` storage has its own input obligation. A new
 reference written there has an output obligation. [C5](#c5) shows the two sides
 of replacement with `$value.*`. With `out` storage, there is no initialized old
 reference to consume. See [Output state](glossary.md#output-state).
+
+Lookup: [`direction`](reference/clauses-callable.md#direction), [`aliasing`](reference/clauses-callable.md#aliasing), [`mutation`](reference/clauses-callable.md#mutation).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -589,6 +595,8 @@ A teardown operation can instead require
 `requires(...)` clauses attached to the operation whose entry they constrain.
 The [availability glossary entry](glossary.md#availability) revisits the
 platform/receiver distinction.
+
+Lookup: [`requires`](reference/clauses-callable.md#requires).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -666,6 +674,8 @@ For one pointed-to record, `extent($point, one)` in [C1](#c1) supplies a single
 pointee instead of a buffer. Native field offsets and array stride come from the
 selected representation provider ([A3](profiles.md#a3)). See [How many bytes exist,
 and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-do-they-contain).
+
+Lookup: [`extent`](reference/clauses-callable.md#extent), [`contents`](reference/clauses-callable.md#contents).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1016,6 +1026,8 @@ invocations may run and what teardown promises. The
 [callable grammar](reference/notation.md#callable) describes declarations such
 as Handler; the [callback-use grammar](reference/notation.md#callback-use)
 describes schedule blocks attached to a callable-local place.
+
+Lookup: [`executor`](reference/clauses-callable.md#executor), [`concurrency`](reference/clauses-callable.md#concurrency), [`reentrancy`](reference/clauses-callable.md#reentrancy), and [`requires`](reference/clauses-callable.md#requires).
 
 </blockquote>
 <!-- /reading-aid -->

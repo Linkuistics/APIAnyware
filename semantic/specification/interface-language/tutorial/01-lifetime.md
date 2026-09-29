@@ -480,6 +480,8 @@ part of every complete function description. [Part 5](05-access-and-change.md)
 explains them individually ([`A2`](../profiles.md#a2)); the
 [access grammar](../reference/notation.md#access) gives their enclosing form.
 
+Clause lookup: [`input`](../reference/clauses-callable.md#input), [`execution`](../reference/clauses-callable.md#execution), [`completions`](../reference/clauses-callable.md#completions), [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency), [`reentrancy`](../reference/clauses-callable.md#reentrancy), [`mutation`](../reference/clauses-callable.md#mutation), [`variadic`](../reference/clauses-callable.md#variadic).
+
 ## Checkpoint package
 
 Compare your work with this complete [lifetime file](../examples/tutorial/01-lifetime.ail).

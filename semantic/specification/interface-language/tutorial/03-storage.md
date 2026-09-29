@@ -311,6 +311,8 @@ The view focuses on storage; the call sequence and access paths are omitted
 [Buffer layout source](../figures/tutorial-storage.puml) ·
 [API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
+Clause lookup: [`direction`](../reference/clauses-callable.md#direction), [`aliasing`](../reference/clauses-callable.md#aliasing), [`extent`](../reference/clauses-callable.md#extent), [`contents`](../reference/clauses-callable.md#contents), [`mutation`](../reference/clauses-callable.md#mutation).
+
 ## Checkpoint package
 
 Compare your work with the complete [text-copying file](../examples/tutorial/03-storage.ail).

@@ -141,6 +141,8 @@ body and several rule lookups. Putting ownership in types is an alternative;
 A complete function also states its effects and how a tool reaches its code
 ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
+Clause lookup: [`execution`](../reference/clauses-callable.md#execution), [`completions`](../reference/clauses-callable.md#completions), [`mutation`](../reference/clauses-callable.md#mutation), [`variadic`](../reference/clauses-callable.md#variadic).
+
 ## Naming what a contract talks about
 
 When reading about [operations and their values](model.md#operations),
@@ -398,6 +400,8 @@ These examples only return; thrown, cancelled or terminated completion needs
 the corresponding signature and provider support
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
+Clause lookup: [`completions`](../reference/clauses-callable.md#completions).
+
 <a id="lifecycles-and-patterns"></a>
 
 ## Entities and their lifecycles
@@ -620,6 +624,8 @@ AIL's choice exposes each event rather than compressing them into a single
 annotation would be shorter, but would need additional meanings to distinguish
 borrowing with strong retention from consumption without retention.
 
+Clause lookup: [`input`](../reference/clauses-callable.md#input), [`retain`](../reference/clauses-callable.md#retain).
+
 ## How long a borrow lasts
 
 [Validity](model.md#validity) tells the caller when to stop using borrowed
@@ -753,6 +759,8 @@ across entry and outcome clauses. That cost is [Q5](choices.md#q5).
 The mutable variant illustrates only the relationship: its omitted operation
 contracts are needed to check whether the named invalidator is legal.
 
+Clause lookup: [`valid`](../reference/clauses-callable.md#valid), [`mutation`](../reference/clauses-callable.md#mutation).
+
 ## Buffers and strings
 
 [Storage](model.md#storage) supplies the bounds and interpretation needed
@@ -856,6 +864,8 @@ The bound can still vary between calls. Where the API supplies a length in an
 integer parameter or output, the extent can name that scalar slot instead of
 using a fixed number. The applicable input or output contract establishes when
 that length is valid ([`C4`](../contracts.md#c4)).
+
+Clause lookup: [`direction`](../reference/clauses-callable.md#direction), [`aliasing`](../reference/clauses-callable.md#aliasing), [`extent`](../reference/clauses-callable.md#extent), [`contents`](../reference/clauses-callable.md#contents).
 
 ## Threads and sharing
 
@@ -984,6 +994,8 @@ The `fixture::` prefix selects the profile's vocabulary; `sendability` is
 its clause name. The provider selection is introduced in
 [What it depends on](packages.md#what-it-depends-on)
 ([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
+
+Clause lookup: [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency), [`reentrancy`](../reference/clauses-callable.md#reentrancy).
 
 ## Callbacks
 
@@ -1150,6 +1162,8 @@ would leave these distinctions unanswered. A different teardown protocol, such
 as a cancellation request with later acknowledgement, needs profile-defined
 events and ordering; cancellation return cannot be labelled quiescence unless
 it actually supplies that boundary ([`C6`](../contracts.md#c6)).
+
+Clause lookup: [`requires`](../reference/clauses-callable.md#requires), [`retain`](../reference/clauses-callable.md#retain).
 
 ## Patterns and laws
 

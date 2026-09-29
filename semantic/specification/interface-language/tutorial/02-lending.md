@@ -300,6 +300,8 @@ paths remain in the checkpoint (non-normative;
 [Label borrow diagram source](../figures/tutorial-borrow.puml) ·
 [API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
+Clause lookup: [`input`](../reference/clauses-callable.md#input), [`retain`](../reference/clauses-callable.md#retain), [`valid`](../reference/clauses-callable.md#valid), [`mutation`](../reference/clauses-callable.md#mutation).
+
 ## Checkpoint package
 
 Compare your work with the complete [lending file](../examples/tutorial/02-lending.ail).

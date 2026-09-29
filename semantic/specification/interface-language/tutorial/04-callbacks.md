@@ -492,6 +492,8 @@ rather than elapsed time; native scheduling is omitted (non-normative;
 [Watch callback diagram source](../figures/tutorial-callbacks.puml) ·
 [API model overview (G11)](../explanation/model.md#the-model-at-a-glance)
 
+Clause lookup: [`retain`](../reference/clauses-callable.md#retain), [`requires`](../reference/clauses-callable.md#requires), [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency), [`reentrancy`](../reference/clauses-callable.md#reentrancy).
+
 ## Checkpoint package
 
 Compare your work with the complete [subscription file](../examples/tutorial/04-callbacks.ail).

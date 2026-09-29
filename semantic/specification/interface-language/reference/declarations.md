@@ -1131,14 +1131,14 @@ support declaration remains subject to its applicable contracts
 | [`values`](clauses-package.md#values) | Enum/flags: required `open` or `closed` domain | [L4](../language.md#l4) |
 | [`lifecycle`](clauses-package.md#lifecycle) | Resource/object/interface: required; `unique` only on resources | [C2](../contracts.md#c2) |
 | [`sharing`](clauses-package.md#sharing), [`isolation`](clauses-package.md#isolation) | Record/resource/object/interface/enum/flags/alias/callback: required. Globals also require them; accessed constants obey C7's output rules | [C2](../contracts.md#c2), [C7](../contracts.md#c7) |
-| `execution`, `completions`, `mutation`, `variadic` | Every function/callback declaration: required | [C3](../contracts.md#c3) |
-| `executor`, `concurrency`, `reentrancy` | Every function/callback declaration and every callback-use block: required, with distinct invocation/registration scopes | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
-| `input`, `retain` | Callable body: required per input reference leaf, including references read from `in`/`inout` storage | [C1](../contracts.md#c1), [C3](../contracts.md#c3) |
-| `valid` | Callable body: required per borrowed input reference leaf | [C3](../contracts.md#c3) |
-| `direction`, `aliasing` | Callable body: required per pointer parameter | [C3](../contracts.md#c3) |
-| `extent` | Callable body: required per pointer leaf, including results and nested pointers; also pointer-typed globals/accessed constants | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
-| `contents` | Callable body: required for pointer parameters; other pointer slots when their pointee is byte/integer character storage; C7 also covers pointer data | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
-| `requires` | Callable body: repeatable applicable capability or outside-callback preconditions | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
+| [`execution`](clauses-callable.md#execution), [`completions`](clauses-callable.md#completions), [`mutation`](clauses-callable.md#mutation), [`variadic`](clauses-callable.md#variadic) | Every function/callback declaration: required | [C3](../contracts.md#c3) |
+| [`executor`](clauses-callable.md#executor), [`concurrency`](clauses-callable.md#concurrency), [`reentrancy`](clauses-callable.md#reentrancy) | Every function/callback declaration and every callback-use block: required, with distinct invocation/registration scopes | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
+| [`input`](clauses-callable.md#input), [`retain`](clauses-callable.md#retain) | Callable body: required per input reference leaf, including references read from `in`/`inout` storage | [C1](../contracts.md#c1), [C3](../contracts.md#c3) |
+| [`valid`](clauses-callable.md#valid) | Callable body: required per borrowed input reference leaf | [C3](../contracts.md#c3) |
+| [`direction`](clauses-callable.md#direction), [`aliasing`](clauses-callable.md#aliasing) | Callable body: required per pointer parameter | [C3](../contracts.md#c3) |
+| [`extent`](clauses-callable.md#extent) | Callable body: required per pointer leaf, including results and nested pointers; also pointer-typed globals/accessed constants | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
+| [`contents`](clauses-callable.md#contents) | Callable body: required for pointer parameters; other pointer slots when their pointee is byte/integer character storage; C7 also covers pointer data | [C4](../contracts.md#c4), [C7](../contracts.md#c7) |
+| [`requires`](clauses-callable.md#requires) | Callable body: repeatable applicable capability or outside-callback preconditions | [C3](../contracts.md#c3), [C6](../contracts.md#c6) |
 | `when`, `meaning` | Each outcome: exactly one each | [C5](../contracts.md#c5) |
 | `state` | Outcome: one per applicable non-unit result, thrown value or writable pointee; aggregate state covers children and forbids overlapping child state | [L5](../language.md#l5), [C5](../contracts.md#c5) |
 | `give` | Outcome: required per valid output reference leaf; directly in global/accessed-constant bodies as C7 requires | [C5](../contracts.md#c5), [C7](../contracts.md#c7) |
@@ -1151,8 +1151,8 @@ support declaration remains subject to its applicable contracts
 | `subject` | Pattern instance: one per operation role used in a `before` law | [L5](../language.md#l5), [L6](../language.md#l6) |
 | `fixture::sendability`, `fixture::actor` | Synthetic fixture only: optional once on object/record/enum/flags/interface; actor identity agrees with isolation | [F1](../profiles.md#f1) |
 
-Slot clauses (`input`, `retain`, `valid`, `direction`, `aliasing`, `extent`,
-`contents`, `state`, `give`, `invalidated_by`) repeat **by place**, exactly one
+Slot clauses ([`input`](clauses-callable.md#input), [`retain`](clauses-callable.md#retain), [`valid`](clauses-callable.md#valid), [`direction`](clauses-callable.md#direction), [`aliasing`](clauses-callable.md#aliasing), [`extent`](clauses-callable.md#extent),
+[`contents`](clauses-callable.md#contents), `state`, `give`, `invalidated_by`) repeat **by place**, exactly one
 of each applicable clause per slot in its scope. Only aggregate `state`
 applies recursively; other slot clauses address the exact leaf
 ([L5](../language.md#l5)). The [storage example](../tutorial/03-storage.md)

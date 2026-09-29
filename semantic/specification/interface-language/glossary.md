@@ -131,6 +131,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rules: [`C1`](contracts.md#c1), [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
 
+Clause lookup: [`input`](reference/clauses-callable.md#input), [`valid`](reference/clauses-callable.md#valid).
+
 ## Borrow validity
 
 Borrow validity describes how long borrowed access remains usable. A view's
@@ -143,6 +145,8 @@ Model: [Validity](explanation/model.md#validity).
 
 See [How long can the caller use a view?](explanation/unsaid.md#how-long-can-the-caller-use-a-view).
 Rules: [`C1`](contracts.md#c1), [`C5`](contracts.md#c5).
+
+Clause lookup: [`valid`](reference/clauses-callable.md#valid).
 
 ## Buffer extent
 
@@ -157,6 +161,8 @@ Model: [Storage](explanation/model.md#storage).
 
 See [How many bytes exist, and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-do-they-contain).
 Rule: [`C4`](contracts.md#c4).
+
+Clause lookup: [`extent`](reference/clauses-callable.md#extent).
 
 ## Callable
 
@@ -383,6 +389,8 @@ See the callable-effects definition in [`C3`](contracts.md#c3) and
 [Every way a call can end](explanation/contracts.md#every-way-a-call-can-end).
 Outcome rule: [`C5`](contracts.md#c5).
 
+Clause lookup: [`completions`](reference/clauses-callable.md#completions).
+
 ## Concurrency
 
 Concurrency describes whether independent calls or callback invocations may
@@ -395,6 +403,8 @@ Model: [Where and when calls run](explanation/model.md#execution).
 
 See [Which calls may run together, and where?](explanation/unsaid.md#which-calls-may-run-together-and-where).
 Rules: [`C3`](contracts.md#c3), [`C6`](contracts.md#c6).
+
+Clause lookup: [`concurrency`](reference/clauses-callable.md#concurrency).
 
 ## Consume
 
@@ -409,6 +419,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rule: [`C3`](contracts.md#c3).
+
+Clause lookup: [`input`](reference/clauses-callable.md#input).
 
 ## Consumer
 
@@ -435,6 +447,8 @@ Model: [Storage](explanation/model.md#storage).
 See [How many bytes exist, and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-do-they-contain).
 Rule: [`C4`](contracts.md#c4).
 
+Clause lookup: [`contents`](reference/clauses-callable.md#contents).
+
 ## Copy
 
 Copy [retention](#retention) creates an independent semantic copy according to
@@ -448,6 +462,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 
 See [Reading AIL's terms](explanation/unsaid.md#reading-ails-terms).
 Rules: [`C3`](contracts.md#c3), [`F1`](profiles.md#f1).
+
+Clause lookup: [`retain`](reference/clauses-callable.md#retain).
 
 ## Declaration
 
@@ -555,6 +571,8 @@ Model: [Where and when calls run](explanation/model.md#execution).
 See [Which calls may run together, and where?](explanation/unsaid.md#which-calls-may-run-together-and-where).
 Rules: [`C2–C3`](contracts.md#c2), [`C6`](contracts.md#c6).
 
+Clause lookup: [`executor`](reference/clauses-callable.md#executor).
+
 ## Exports
 
 Exports are the public declarations explicitly listed as roots of a package's
@@ -619,6 +637,8 @@ Model: [Validity](explanation/model.md#validity).
 
 See [How long can the caller use a view?](explanation/unsaid.md#how-long-can-the-caller-use-a-view).
 Rules: [`C1`](contracts.md#c1), [`C5`](contracts.md#c5).
+
+Clause lookup: [`mutation`](reference/clauses-callable.md#mutation).
 
 ## Isolation
 
@@ -1035,6 +1055,8 @@ Model: [Callbacks and their schedules](explanation/model.md#callbacks).
 See [callback teardown](explanation/unsaid.md#when-is-it-safe-to-discard-callback-state).
 Rule: [`C6`](contracts.md#c6).
 
+Clause lookup: [`requires`](reference/clauses-callable.md#requires).
+
 ## Re-entrancy
 
 Re-entrancy occurs when an active call leads to a nested call on the same
@@ -1048,6 +1070,8 @@ Model: [Where and when calls run](explanation/model.md#execution).
 
 See [Which calls may run together, and where?](explanation/unsaid.md#which-calls-may-run-together-and-where).
 Rules: [`C3`](contracts.md#c3), [`C6`](contracts.md#c6).
+
+Clause lookup: [`reentrancy`](reference/clauses-callable.md#reentrancy).
 
 ## Reference leaf
 
@@ -1116,6 +1140,8 @@ Model: [Release responsibility](explanation/model.md#responsibility).
 
 See the [ownership explanation](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Definition and rule: [`C3`](contracts.md#c3).
+
+Clause lookup: [`retain`](reference/clauses-callable.md#retain).
 
 ## Role
 
