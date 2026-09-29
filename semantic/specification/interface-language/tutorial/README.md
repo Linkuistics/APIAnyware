@@ -38,7 +38,7 @@ succeeds, the program receives a card and becomes responsible for destroying it.
 AIL calls that result [owned](../glossary.md#owned). If creation
 returns null, allocation failed and there is nothing to destroy. The first
 part records both results and names `destroy_card` as the operation that
-takes over and completes the destruction responsibility.
+takes over responsibility and destroys the card.
 
 The card owns its current label. `current_label` lends the program access to
 that label while the card keeps ownership. This is a [borrow](../glossary.md#borrow):
@@ -65,8 +65,8 @@ one code unit. Other UTF-8 text can use several code units for a character;
 the contract counts code units. A refresh can choose another label of the
 same length, and the exact spelling is left open.
 
-[How a call finishes](../explanation/model.md#outcomes) connects those bytes
-to the status that the function returns. `copied` (`0`) means the program can read
+To describe [How a call finishes](../explanation/model.md#outcomes), connect
+the readable bytes to the status that the function returns. `copied` (`0`) means the program can read
 the text. `unavailable` (`1`) means the program reads the status and leaves
 the output bytes unread. Part 3 describes the storage required before the
 call and what the library promises on each result.
@@ -117,8 +117,8 @@ what an API promises and how AIL expresses it.
 
 ## The five parts
 
-The model's [published description](../explanation/model.md#description)
-gathers these API facts. Each part supplies a complete
+Apply [The published description](../explanation/model.md#description)
+to gather these API facts. Each part supplies a complete
 [package](../glossary.md#package): a named, versioned description of the
 operations included so far. The first package
 contains everything needed to create and destroy a card. Later packages add
@@ -149,7 +149,7 @@ handle or null, and destruction receives a handle with no result value.
 The three [declarations](../glossary.md#declaration) share the package's
 name and version ([`L1–L2`](../language.md#l1), [`L4`](../language.md#l4)).
 Part 1 develops the [located card contracts](01-lifetime.md#steps).
-For exact syntax, see the [package-shell reference](../reference/notation.md#shell).
+For exact syntax, see [Package shell](../reference/notation.md#shell) in the grammar reference.
 
 Use the map to open a part or its complete checkpoint file. The final row
 includes both the assembled example and the separate ownership exercise.

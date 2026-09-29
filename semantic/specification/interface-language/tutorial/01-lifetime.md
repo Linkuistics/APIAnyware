@@ -23,12 +23,12 @@ This part covers the invented API's card lifetime; label access comes next.
 ## The model
 
 A card is one of the model's [Entities that outlive a call](../explanation/model.md#entities):
-creation can finish while the card remains available for later operations.
+after successful creation, the program can use the card in later operations.
 [How a call finishes](../explanation/model.md#outcomes) distinguishes a returned
 card from allocation failure. [Release responsibility](../explanation/model.md#responsibility)
 then answers who destroys a successfully created card: the
-[caller](../glossary.md#caller-and-callee) holds that duty until destruction
-passes it to the library.
+[caller](../glossary.md#caller-and-callee) holds that duty until it calls
+`destroy_card`, which takes over responsibility at entry.
 
 At this checkpoint, you can follow that duty from creation through destruction
 and explain why a null result creates none. You will also use
@@ -50,15 +50,16 @@ selected later supplies their calling rules.
    void destroy_card(Card *card);
    ```
 
-Suppose a program calls `create_card`. On success it receives a handle to a
-new card and eventually passes that handle to `destroy_card`. On allocation
+Suppose a program calls `create_card`. On success it receives a [handle](../glossary.md#handle)
+to a new card and eventually passes it to `destroy_card`. On allocation
 failure it receives null and has no card to destroy. You will write those
 two cases explicitly in AIL.
 
 In AIL, `Card` will be an [opaque resource](../glossary.md#opaque-resource).
 Its value is already a [handle](../glossary.md#handle) identifying a card whose
 internal layout stays private. The following shell shows where that type
-and the operations using it are declared ([`L4`](../language.md#l4)).
+and the operations using it appear as [declarations](../glossary.md#declaration)
+([`L4`](../language.md#l4)).
 
 Fragment — locates the card and its operations in the first package.
 The [complete checkpoint](#checkpoint-package) also supplies publication,
@@ -116,8 +117,8 @@ and [callable signatures](../reference/notation.md#callable).
 
 ### 2. Give `Card` its lifetime
 
-For [Entities that outlive a call](../explanation/model.md#entities), record
-how the lifetime ends. A successfully created card remains alive until its
+For the card, one of the [Entities that outlive a call](../explanation/model.md#entities),
+record how its lifetime ends. A successfully created card remains alive until its
 owner asks the library to destroy it. Name that release operation in the
 resource's contract.
 
@@ -242,8 +243,8 @@ The signature introduces `card`; `$card` selects that parameter's value.
 `any` covers the returned case without testing a value: this function has
 a `unit` result ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-Give `destroy_card` one `Card` parameter and a `unit` result. The caller
-supplies a valid, non-null card that it owns. Write
+To accept the caller's valid, non-null owned card, give `destroy_card` one
+`Card` parameter and a `unit` result. Write
 `input($card, consume)` so responsibility passes to the library as soon as
 the call begins. This transfer is [consumption](../glossary.md#consume).
 Write `retain($card, none)` and one successful returned outcome, as in the
@@ -269,8 +270,8 @@ these states so that transfer at entry and completed destruction remain
 visible as different events. The arrows describe changes of state.
 
 This is the invented API's card-lifetime view; part 2 adds label access.
-The contract describes what happens if a call returns; it supplies no guarantee
-that the call eventually finishes (non-normative; [`C2–C3`](../contracts.md#c2),
+If a call returns, the contract describes what holds at that point. Eventual
+return requires a separate guarantee (non-normative; [`C2–C3`](../contracts.md#c2),
 [`C5`](../contracts.md#c5)).
 
 ![From the top state, null creation loops back to no Card. Successful creation makes the program responsible for destruction. destroy_card takes responsibility at entry, then the library destroys the Card before returning.](../figures/tutorial-lifetime.svg)
@@ -414,7 +415,7 @@ is not deprecated. Apply those publication facts to both functions below
 
 For `Card`, add `sharing(transferable)` so sole ownership can move between
 [executors](../glossary.md#executor), such as threads. A caller can hand the
-card to another thread, which then uses it; concurrent access is forbidden.
+card to another thread, which then uses it. Callers use the card one at a time.
 Add `isolation(none)` to record that the type adds no executor restriction.
 The individual operations still state where and how callers enter them
 ([`C2–C3`](../contracts.md#c2)).

@@ -170,3 +170,11 @@ semantic figures remain. G10 links now point to the grammar reference.
 All six checkpoints still match `7891f92a`; `task docs:check` passed.
 There is no outstanding draft handoff. Copy-edit, art and proof remain the
 queued stages for the whole tutorial.
+
+## Handed forward
+
+- Art (tutorial-k83): the five tutorial figures' adjacent links still lead
+  to the publication workflow. In parts 1–4, connect each figure's caption
+  to its named model concept or G11 as your queued charter requires; keep
+  `tutorial-model` identified as language containment. Copy-edit preserved
+  figure sources and facts, all examples and navigation anchors.

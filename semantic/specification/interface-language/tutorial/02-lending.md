@@ -24,15 +24,15 @@ part 1 keep their contracts.
 
 ## The model
 
-[Release responsibility](../explanation/model.md#responsibility) asks who
-releases the label: the card keeps ownership while the
+For [Release responsibility](../explanation/model.md#responsibility), record
+who releases the label: the card keeps ownership while the
 [caller](../glossary.md#caller-and-callee) receives access.
-[Validity](../explanation/model.md#validity) asks how long that access lasts:
-the caller keeps the card alive and finishes using the label before refresh.
+For [Validity](../explanation/model.md#validity), record how long that access
+lasts: the caller keeps the card alive and finishes using the label before refresh.
 
 At the checkpoint, you can distinguish the card lent during the getter call
 from the label lent after it returns. You can name both events that end label
-access and explain why the caller cannot destroy a borrowed label. The
+access and explain why the card keeps responsibility for destroying the label. The
 [borrow explanation](../explanation/contracts.md#how-long-a-borrow-lasts)
 develops the same relationship in another API.
 
@@ -70,9 +70,11 @@ the returned borrow ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 Apply [Entities that outlive a call](../explanation/model.md#entities) and
 [Release responsibility](../explanation/model.md#responsibility) to the
-label: record how an owner releases it. Place the label and its destructor
+label: record how an owner releases it through its [lifecycle](../glossary.md#lifecycle).
+Place the label and its destructor
 beside the card declarations, using the same relationship as for `Card`.
-The type defines the release operation; the getter will say who holds the duty.
+The type defines the release operation; the getter's contract will say who
+holds the duty.
 
 Fragment — shows the label's lifecycle in `tutorial::lending`. The
 [complete checkpoint](#checkpoint-package) also supplies publication and
@@ -181,9 +183,8 @@ fn current_label(card: Card) -> Label {
 ```
 
 `$result` selects the returned label; `$card` still selects the enclosing
-function's input. Read `borrow(owner($card))` from inside out.
-`owner($card)` names the card's lifetime, and `borrow(...)` describes
-access bounded by that lifetime. The `give` clause associates that access
+function's input. `owner($card)` names the card's lifetime, and
+`borrow(...)` describes access bounded by that lifetime. The `give` clause associates that access
 with the result. These values describe the contract; tools do not evaluate
 them as executable expressions ([`L1`](../language.md#l1),
 [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).

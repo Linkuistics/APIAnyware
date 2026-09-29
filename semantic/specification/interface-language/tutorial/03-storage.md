@@ -24,17 +24,18 @@ continue to apply.
 
 ## The model
 
-[Storage](../explanation/model.md#storage) asks how much room the caller
-supplies and what the library may write. Here the caller reserves eight
+To describe [Storage](../explanation/model.md#storage), record how much room
+the caller supplies and what the library may write. Here the caller reserves eight
 bytes that overlap no other memory accessed by the call.
-[How a call finishes](../explanation/model.md#outcomes) then decides what is
-readable: a successful status permits reading the text; failure leaves the
-output unread.
+For [How a call finishes](../explanation/model.md#outcomes), connect each
+returned status to the caller's next action: after success, it can read the
+text; after failure, it leaves the output unread.
 
 At the checkpoint, you can account for all eight bytes, distinguish the
-pointer from its output elements and explain which output state accompanies
-each status. The earlier label [Validity](../explanation/model.md#validity)
-contract still applies throughout copying.
+pointer from its output elements and explain which [output state](../glossary.md#output-state)
+accompanies each status. [Validity](../explanation/model.md#validity) still
+requires the caller to keep the label's card alive and prevent refresh
+throughout copying.
 
 ## Steps
 
@@ -174,9 +175,10 @@ fn copy_text(label: Label, destination: mutptr<u8>) -> CopyStatus {
 
 The four pointer clauses select `$destination`. `mutation(arguments)`
 describes which input state the call may change ([`C3`](../contracts.md#c3)).
-The extent describes initialized length and allocated capacity; the
-contents contract interprets the stored units as text. Read those facts
-together to account for the terminator ([`C4`](../contracts.md#c4)).
+The [extent](../glossary.md#buffer-extent) describes initialized length and
+allocated capacity; the [contents](../glossary.md#contents) contract interprets
+the stored units as text. Read those facts together to account for the
+terminator ([`C4`](../contracts.md#c4)).
 
 Write `direction($destination, out)`. The library writes through this
 pointer and leaves its prior contents unread. Write

@@ -25,15 +25,16 @@ the label lifetimes from parts 2–3 still govern label access.
 
 ## The model
 
-[Callbacks and their schedules](../explanation/model.md#callbacks) asks when
-the library may notify the program and when that use ends. Here registration
+For [Callbacks and their schedules](../explanation/model.md#callbacks), record
+when the library may notify the program and when that use ends. Here registration
 returns a watch, and notifications may start afterwards. The library keeps
 the handler available until watch destruction ends all callback use.
 
-[Where and when calls run](../explanation/model.md#execution) asks which
-execution contexts the handler can support and whether invocations may
-overlap or nest. This subscription permits entry on any thread, with serial,
-non-nested invocations. At the checkpoint, you can explain those permissions
+[Where and when calls run](../explanation/model.md#execution) describes the
+handler's permitted execution contexts and whether invocations may overlap
+or nest. For this subscription, the library may invoke the handler on any
+thread. It runs invocations one at a time and starts each after the preceding
+one finishes. At the checkpoint, you can explain those permissions
 and distinguish the transfer of the watch's
 [Release responsibility](../explanation/model.md#responsibility) at
 destruction entry from the end of callback use at destruction return.
@@ -73,7 +74,8 @@ callback LabelChanged(change: u64) -> unit {
 The `callback` keyword introduces a named callable type. Its parameter
 `change` has type `u64`, and its `unit` result contains no value. Like a
 function, it contains clauses and outcomes describing one invocation
-([`L4`](../language.md#l4), [`C3`](../contracts.md#c3)).
+([`L4`](../language.md#l4), [`C3`](../contracts.md#c3)). For the signature's
+grammar, see [Callables](../reference/notation.md#callable).
 
 Declare `callback LabelChanged(change: u64) -> unit`. The library invokes
 this function with a scalar change number. For that invocation, the library
@@ -376,9 +378,9 @@ the caller can rely on quiescence at return ([`C6`](../contracts.md#c6)).
 For [Callbacks and their schedules](../explanation/model.md#callbacks),
 state where the program may begin teardown so it can wait for callback use
 to finish. The precondition refers back to the handler use in registration.
-[Operations and their values](../explanation/model.md#operations) supplies
-the named parameter slot that identifies that use. The two declarations
-below locate both ends of the reference.
+Use [Operations and their values](../explanation/model.md#operations) to
+identify the handler's named parameter [slot](../glossary.md#slot).
+The two declarations below locate both ends of the reference.
 
 Fragment — shows a reference to another function's parameter in
 `tutorial::callbacks`. The [complete checkpoint](#checkpoint-package) also

@@ -32,13 +32,13 @@ ownership exercise.
 
 ## The model
 
-[Reaching the code](../explanation/model.md#access) asks how a tool calls
+For [Reaching the code](../explanation/model.md#access), follow how a tool calls
 the implementation of `current_label`. The access path names that code and
 the machine-level definitions needed to pass a card and receive a label.
 The implementation fulfils the operation's whole contract, including the
 result's ownership.
 
-The exercise changes [Release responsibility](../explanation/model.md#responsibility):
+In the exercise, change [Release responsibility](../explanation/model.md#responsibility):
 the caller receives an independent label and becomes responsible for
 destroying it. That changes the result's [Validity](../explanation/model.md#validity)
 relationship with the card: refresh and card destruction end use of the
@@ -565,9 +565,10 @@ continuing responsibility.
 
 #### 2. Give the changed API a separate package
 
-Give [The published description](../explanation/model.md#description) an
-identity for the changed contract. The variant keeps the label's lifecycle
-declaration: as one of the [Entities that outlive a call](../explanation/model.md#entities),
+For [The published description](../explanation/model.md#description), give
+the changed contract its own package identity. The variant keeps the label's
+[lifecycle](../glossary.md#lifecycle) declaration: as one of the
+[Entities that outlive a call](../explanation/model.md#entities),
 the snapshot needs a defined way for its new owner to release it.
 
 Fragment — shows the owned variant's package context. The
