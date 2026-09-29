@@ -2,9 +2,11 @@
 
 Step 1 of the documentation rework: the linting and structural audit that
 comes before any rewriting. Audited 2026-09-23 at revision `1c4b8e7ec3da`.
-Line references below are to that revision. Step 2, the rewritten
-documentation, is planned in the
-[documentation plan](../design/2026-09-23-interface-language-documentation-plan.md).
+Line references in the original audit below are to that revision. The closing
+[Step 2: refactored output](#step-2-refactored-output) indexes the resulting
+documentation and the questions that remain open. The
+[documentation plan](../design/2026-09-23-interface-language-documentation-plan.md)
+records its structure and editorial contract.
 
 The audit reads the material as its primary reader would. That reader knows
 language design, notation aesthetics and what developers expect. The reader
@@ -349,3 +351,150 @@ defects this rework may fix. The audit is not a semantic review of draft 0.1.
   validator (none exists) and tested no reader. Reader outcomes are unmeasured
   until the reader checkpoints in the plan.
 - Counts are for this revision only.
+
+## Step 2: refactored output
+
+The documentation now introduces the binding problem, explains the model of
+API behaviour and binding obligations, and shows how AIL expresses it. Exact
+lookup has its own reference. The pages below supply the presentation remedies
+for Step 1; their existence and consistency do not establish that every reader
+understands them or that the language design is adequate.
+
+### The rewritten set
+
+Paths below are relative to `semantic/specification/interface-language/`.
+The [landing map](../../specification/interface-language/README.md#paths-through-the-documentation)
+is the reader's entry point. The learning route runs from the domain through
+the model and three explanations, then the tutorial and review guide.
+
+| Purpose | Pages |
+|---|---|
+| Orientation and vocabulary | [README.md](../../specification/interface-language/README.md), [glossary.md](../../specification/interface-language/glossary.md) |
+| Domain and model | [explanation/unsaid.md](../../specification/interface-language/explanation/unsaid.md), [explanation/model.md](../../specification/interface-language/explanation/model.md) |
+| AIL's account of the model and its choices | [explanation/contracts.md](../../specification/interface-language/explanation/contracts.md), [explanation/packages.md](../../specification/interface-language/explanation/packages.md), [explanation/choices.md](../../specification/interface-language/explanation/choices.md) |
+| Tutorial and lifetime | [tutorial/README.md](../../specification/interface-language/tutorial/README.md), [tutorial/01-lifetime.md](../../specification/interface-language/tutorial/01-lifetime.md) |
+| Lending and storage | [tutorial/02-lending.md](../../specification/interface-language/tutorial/02-lending.md), [tutorial/03-storage.md](../../specification/interface-language/tutorial/03-storage.md) |
+| Callbacks and access | [tutorial/04-callbacks.md](../../specification/interface-language/tutorial/04-callbacks.md), [tutorial/05-access-and-change.md](../../specification/interface-language/tutorial/05-access-and-change.md) |
+| Reference indexes and grammar | [reference/README.md](../../specification/interface-language/reference/README.md), [reference/notation.md](../../specification/interface-language/reference/notation.md) |
+| Type and declaration lookup | [reference/types.md](../../specification/interface-language/reference/types.md), [reference/declarations.md](../../specification/interface-language/reference/declarations.md) |
+| Publication and input clauses | [reference/clauses-package.md](../../specification/interface-language/reference/clauses-package.md), [reference/clauses-callable.md](../../specification/interface-language/reference/clauses-callable.md) |
+| Outcome and access clauses | [reference/clauses-outcomes.md](../../specification/interface-language/reference/clauses-outcomes.md), [reference/clauses-access.md](../../specification/interface-language/reference/clauses-access.md) |
+| Review dimensions, examples and tasks | [review/README.md](../../specification/interface-language/review/README.md), [review/walkthroughs.md](../../specification/interface-language/review/walkthroughs.md), [review/tasks.md](../../specification/interface-language/review/tasks.md) |
+
+The canonical [language](../../specification/interface-language/language.md),
+[contract](../../specification/interface-language/contracts.md) and
+[profile](../../specification/interface-language/profiles.md) pages retain
+their rules and add bordered, non-normative reading aids. Each first aid
+locates the rule's model concepts, gives local example context and offers
+lookup and review routes. The
+[grammar](../../specification/interface-language/grammar.ebnf) remains the
+syntax authority. The [conformance corpus](../../specification/interface-language/conformance.md)
+and [existing-model inventory](../../specification/interface-language/baseline.md)
+remain supporting evidence, with their purpose and limits signposted.
+
+The three frozen [buffer](../../specification/interface-language/examples/buffers.ail),
+[callback](../../specification/interface-language/examples/callbacks.ail) and
+[object](../../specification/interface-language/examples/objects.ail) packages
+have clause-by-clause walkthroughs. The tutorial index links its six complete
+checkpoints, including the owned-snapshot variant. Teaching fragments are
+linked beside their extracts and retain omission labels. Semantic diagrams
+remain with the cases they explain; the eleven G10 syntax views are gathered
+with the grammar in `reference/notation.md`. Figure sources and generated SVGs
+live together under `figures/`.
+
+### Disposition of F1–F12
+
+“Supplied” below means that the named documentation implements the presentation
+remedy. Human comprehension and language decisions have the separate status
+recorded in the following sections.
+
+| Finding | Supplied remedy and resolving pages | Remaining boundary |
+|---|---|---|
+| F1 — domain introduction | [Using an API across languages](../../specification/interface-language/explanation/unsaid.md) starts with the C watch API and failures its signature cannot prevent; [the model](../../specification/interface-language/explanation/model.md) gathers the agreements a description records. | The watch header illustrates alternative contracts; it is not an implemented API. |
+| F2 — unfamiliar or colliding terms | [Glossary](../../specification/interface-language/glossary.md), model-concept links and local definitions provide meaning and familiar-usage warnings. | Q2 still asks whether the normative overlap in “closure” should change. |
+| F3 — rationale and alternatives | [Design choices](../../specification/interface-language/explanation/choices.md) compares syntax, publication, explicitness, ownership placement, environments and extensions. | The ownership decision's missing evidence remains Q3; an illustrative comparison does not supply its historical rationale. |
+| F4 — mixed purposes | The [landing map](../../specification/interface-language/README.md#paths-through-the-documentation) separates explanation, tutorial, review and reference. [Review walkthroughs](../../specification/interface-language/review/walkthroughs.md) interpret the conformance examples; [limits](../../specification/interface-language/explanation/choices.md#extending-coverage-beyond-draft-01) expose the pressure cases. | The conformance verification record and maintainer inventory remain labelled supporting material. |
+| F5 — assembled lookup | [Reference indexes](../../specification/interface-language/reference/README.md), [applicability](../../specification/interface-language/reference/declarations.md#applicability), fixed-field entries and stable rule anchors connect syntax, operands, scopes, requirements and rejection conditions. | The inventory is a documentation check, not an AIL parser or semantic validator; Q6 remains open. |
+| F6 — density at first encounter | [The domain](../../specification/interface-language/explanation/unsaid.md), [model](../../specification/interface-language/explanation/model.md), [contract explanation](../../specification/interface-language/explanation/contracts.md) and [package explanation](../../specification/interface-language/explanation/packages.md) develop concrete relationships before notation. | The terse normative wording stays intact. Full-path comprehension remains to be assessed. |
+| F7 — unexplained examples | [Five-part tutorial](../../specification/interface-language/tutorial/README.md), [conformance walkthroughs](../../specification/interface-language/review/walkthroughs.md) and [review tasks](../../specification/interface-language/review/tasks.md) provide progression, local extracts and expected observations. | Observations are checked by inspection; no runtime or validator output is claimed. |
+| F8 — one-way navigation | The [landing map](../../specification/interface-language/README.md#paths-through-the-documentation), [model map](../../specification/interface-language/explanation/model.md#from-the-model-to-ail), page-one blocks and task/entry back-links support learning and direct entry. | Automated reachability does not establish that a reader finds the right link. |
+| F9 — checkout-local links | [The existing-model inventory](../../specification/interface-language/baseline.md) names the external workspace paths as text. | The historical temporary checker remains a record, not a runnable tool supplied here. |
+| F10 — force signals | [Normative wording](../../specification/interface-language/reference/notation.md#normative-wording) explains the convention and routes readers to authoritative text. | Editorial work preserves case and requirements; uniform presentation is still the authors' Q1 decision. |
+| F11 — missing relationship figures | [Model views](../../specification/interface-language/explanation/model.md#the-model-at-a-glance), [ownership and validity figures](../../specification/interface-language/explanation/contracts.md), [containment/access views](../../specification/interface-language/explanation/packages.md) and [grammar views](../../specification/interface-language/reference/notation.md) sit beside prose or productions serving the same question. | The figures illustrate stated contracts and syntax; they do not establish implementation behaviour. |
+| F12 — sentence-level patterns | The [domain](../../specification/interface-language/explanation/unsaid.md), [explanations](../../specification/interface-language/explanation/contracts.md), [tutorial](../../specification/interface-language/tutorial/README.md) and [review guide](../../specification/interface-language/review/README.md) name actors and develop affirmative accounts, under the plan's prose contract. | The canonical rules are preserved. The final navigation additions still pass through copy-edit, art and proof. |
+
+### Language questions still open
+
+All six questions remain open in
+[Design choices](../../specification/interface-language/explanation/choices.md#open-questions).
+The documentation explains the current rules and gives reviewers concrete
+ways to investigate them; it does not decide their merits.
+
+| Question | Status and review route |
+|---|---|
+| [Q1 — keyword presentation](../../specification/interface-language/explanation/choices.md#q1) | Open for the authors. Use [normative wording](../../specification/interface-language/reference/notation.md#normative-wording) and cite any specific rule whose force is unclear. |
+| [Q2 — two meanings of closure](../../specification/interface-language/explanation/choices.md#q2) | Open vocabulary choice. The [glossary](../../specification/interface-language/glossary.md#closure) separates dependency closure from callback captures. |
+| [Q3 — ownership placement](../../specification/interface-language/explanation/choices.md#q3) | Open evidence gap. [Compare](../../specification/interface-language/review/tasks.md#compare) makes the earlier sketch and draft 0.1 inspectable without inventing the decision's rationale. |
+| [Q4 — slot and reference spelling](../../specification/interface-language/explanation/choices.md#q4) | Open design trade-off. [Trace](../../specification/interface-language/review/tasks.md#trace) follows imports, members and callable slots. |
+| [Q5 — split borrow validity](../../specification/interface-language/explanation/choices.md#q5) | Open discoverability question. [Predict](../../specification/interface-language/review/tasks.md#predict) and [Model fit](../../specification/interface-language/review/tasks.md#model-fit) recover input and output obligations. |
+| [Q6 — rule granularity](../../specification/interface-language/explanation/choices.md#q6) | Open diagnostic/citation choice. The [mutation index](../../specification/interface-language/reference/README.md#mutations) connects IDs to rules and entries; finer rule identifiers have not been introduced. |
+
+The current question register contains Q1–Q6. The navigation integration adds
+no language question. The guide's [six dimensions](../../specification/interface-language/review/README.md#the-six-dimensions)
+and [feedback template](../../specification/interface-language/review/README.md#recording-feedback)
+also invite new criticisms, including challenges to the model itself.
+
+### Navigation and verification limits
+
+The navigation walk follows the guided route and the five direct-entry types
+in plan §3. A rule entry such as [C6](../../specification/interface-language/contracts.md#c6)
+keeps its local example, then links to its model concept, schedule entries and
+the Stretch task. Each model concept and map row links to reference entries
+and a review task, with concept links back from those destinations. An example
+file is paired with its walkthrough in the landing page and review index;
+the frozen `.ail` files themselves remain unchanged. A term such as
+[quiescence](../../specification/interface-language/glossary.md#quiescence)
+leads to its domain case, model concept, rule, clause entry and review task.
+A reference entry supplies its concept, rule, rationale and example routes;
+entries used by the review tasks also link back to those tasks.
+
+All Markdown pages have an inbound link from the landing map or their parent
+index. Syntax routes from explanations, tutorial parts, canonical aids,
+glossary entries and review material reach the relevant section of
+`reference/notation.md`; the local snippets and semantic figures remain at
+their introductions. The G10 embeds occur only in that grammar reference.
+
+`task docs:check` checks local links and anchors, reachability, tagged fences,
+example/source agreement, diagram regeneration and enumerated reference
+coverage. External URLs are listed without being fetched. These checks do
+not parse AIL, validate its contracts, exercise a native implementation or
+measure reader comprehension. The navigation walk checks that destinations
+answer the linked question; the human checkpoint assesses their usability.
+
+### Reader evidence and unresolved work
+
+At the earlier reading checkpoint, the human clarified, “I mean your
+improvement is good.” They then asked for the model to lead the learning
+route, because the language serves as a tool. They also requested removal of
+railroad-reading instruction boxes and asked for visible boundaries around
+reading aids. At the later model-reading checkpoint, they said the material was
+“looking good”, praised the example fragments and asked that grammar and
+railroad views live together, with links from explanations. Those directions
+are reflected in the pages indexed above.
+
+Neither checkpoint reported the full extent or order of the reading. The
+later feedback identified a passage in the contract explanation; it did not
+establish that every model section had been read. The reported broken G11
+images in VS Code were resolved by opening the containing documentation folder
+before previewing the model page. That repair establishes image loading,
+not comprehension. Earlier labelled proxy readings likewise do not establish
+human understanding.
+
+The full-set human reading still needs to assess the connected learning
+route, direct lookup and the ability to explain and change a contract. In
+particular, the earlier difficulty locating the tutorial's ownership exercise
+has new local routes, but no reported human re-test. The final navigation set
+also awaits its copy-edit, art and whole-document proof stages. The remaining
+language decisions are Q1–Q6; production parsing, validation, provider support,
+implementation truth and runtime safety remain outside this documentation
+deliverable.

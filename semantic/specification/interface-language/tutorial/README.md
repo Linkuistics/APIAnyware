@@ -198,3 +198,5 @@ citations for deeper lookup.
 
 Return: [API Interface Language](../README.md).
 Next: [1. A package and one resource](01-lifetime.md).
+After part 5: [Reviewing AIL](../review/README.md), with
+[tasks](../review/tasks.md) for assessing the model and notation.

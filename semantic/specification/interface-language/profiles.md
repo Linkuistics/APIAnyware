@@ -8,6 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [A1](#a1), [A2](#a2), [A3](#a3), [A4](#a4) and [A5](#a5) below are canonical; [F1](#f1) defines the synthetic fixture catalogue.
+> **Routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
 > **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an example. The paragraphs
@@ -87,6 +88,8 @@ gives their exact form. F1 defines the special test tokens used here;
 ordinary pins identify exact manifest bytes. See
 [Profiles and ABI entries](explanation/packages.md#profiles-and-abi-entries)
 for how those definitions guide consumers.
+
+Review: [Author a complete call contract](review/tasks.md#author).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -258,6 +261,8 @@ Counter paths relate to their providers. For their exact forms, see the
 
 Lookup: [`abi`](reference/clauses-access.md#abi), [`via`](reference/clauses-access.md#via), [`mapping`](reference/clauses-access.md#mapping), and [`compatibility`](reference/clauses-access.md#compatibility).
 
+Review: [Author a complete call contract](review/tasks.md#author).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -422,6 +427,8 @@ native offsets are hidden ([A3](#a3), [F1](#f1)). See [Reaching the code](explan
 
 Lookup: [`via`](reference/clauses-access.md#via) distinguishes loads from symbol addresses.
 
+Review: [Read the object access walkthrough](review/walkthroughs.md#objects).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -500,6 +507,8 @@ discusses why native representations need this explicit boundary.
 
 Lookup: [`compatibility`](reference/clauses-access.md#compatibility).
 
+Review: [Compare the getter's two access paths](review/walkthroughs.md#read-count-one-member-two-ways-to-call-it).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -571,6 +580,8 @@ limitation separately from malformed AIL and explains any extra restrictions
 it imposes. See [Consumer](glossary.md#consumer) and
 [Validation](glossary.md#validation).
 
+Review: [Assess fitness for producers and consumers](review/README.md#fitness-for-producers-and-consumers).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -640,6 +651,8 @@ synthetic provider. [C2](contracts.md#c2) locates the runtime clauses, and
 facts within F1's supported scope. Optional members, generic families or thrown
 completion would require capabilities this catalogue does not supply; the
 language's ability to spell them does not extend the catalogue.
+
+Review: [Review the fixture's limits](review/README.md#limits).
 
 </blockquote>
 <!-- /reading-aid -->

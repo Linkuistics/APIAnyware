@@ -160,6 +160,14 @@ The supporting material is:
   [objects and access alternatives](examples/objects.ail).
 - [Mapping from the existing implementation](baseline.md), for maintainers.
 
+If you arrived at an example file, follow its clause-by-clause walkthrough:
+[buffers](review/walkthroughs.md#buffers),
+[callbacks](review/walkthroughs.md#callbacks) or
+[objects](review/walkthroughs.md#objects). For the tutorial's separate card API,
+the [checkpoint map](tutorial/README.md) pairs each complete package with its
+teaching part. The reference and rule-reading fragments are linked beside the
+examples they illustrate; their omission labels identify their limited scope.
+
 These examples describe invented APIs. Their synthetic fixture
 [profile](glossary.md#profile), catalogue and [digest tokens](glossary.md#digest-pin)
 let readers inspect the language under stated test assumptions. Applying AIL

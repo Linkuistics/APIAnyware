@@ -797,5 +797,7 @@ package remains valid AIL
 
 Next: [Design choices, limits and open questions](choices.md).
 Then write a complete package in [Describing a small API](../tutorial/README.md).
+For review, [Trace](../review/tasks.md#trace) follows imported names and members;
+the [object walkthrough](../review/walkthroughs.md#objects) compares access paths.
 Return to [How AIL states a contract](contracts.md) for semantic obligations,
 or [the overview](../README.md) for the document map.

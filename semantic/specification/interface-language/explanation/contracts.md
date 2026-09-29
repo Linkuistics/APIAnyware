@@ -1346,6 +1346,9 @@ target language ([`C8`](../contracts.md#c8), [`A5`](../profiles.md#a5)).
 Next: [Packages, environments and access paths](packages.md), then
 [Design choices, limits and open questions](choices.md).
 For a guided exercise, follow [Describing a small API](../tutorial/README.md).
+For review, [Predict](../review/tasks.md#predict) tests a returned borrow,
+[Change](../review/tasks.md#change) adds pointer obligations, and
+[Stretch](../review/tasks.md#stretch) examines callback teardown.
 See [the canonical contract rules](../contracts.md) for exact obligations. Return to the
 [overview](../README.md) for the document map or the [domain explanation](unsaid.md)
 for the failures these contracts prevent.

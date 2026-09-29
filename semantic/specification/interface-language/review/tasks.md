@@ -97,6 +97,8 @@ contracts and other package items are omitted.
 
 ![The canvas package contains the sibling declarations Canvas, position and Filter. A member arrow connects position to Canvas. The import Geometry leads to Point in the geometry package. Each callable box contains its own parameter and result slots.](../figures/g9-model.svg)
 
+Reference lookup: [`import`](../reference/declarations.md#import), [`member`](../reference/clauses-package.md#member), [`receiver`](../reference/clauses-package.md#receiver) and [places](../reference/notation.md#places).
+
 **Steps**
 
 1. Write the package/version/declaration identity of `Canvas`, `position`
@@ -180,6 +182,8 @@ fn view(store: Store) -> ptr<u8> {
 delivery. These are separate obligations ([C1](../contracts.md#c1),
 [C3](../contracts.md#c3), [C5](../contracts.md#c5)). Exact syntax:
 [clauses and their values](../reference/notation.md#clause).
+
+Reference lookup: [`valid`](../reference/clauses-callable.md#valid), [`give`](../reference/clauses-outcomes.md#give) and [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by).
 
 **Steps**
 
@@ -277,6 +281,8 @@ order ([C3–C4](../contracts.md#c3), [A2](../profiles.md#a2),
 [F1](../profiles.md#f1)). Exact syntax: [callables](../reference/notation.md#callable),
 [clauses](../reference/notation.md#clause) and [access](../reference/notation.md#access).
 
+Reference lookup: [`input`](../reference/clauses-callable.md#input), [`retain`](../reference/clauses-callable.md#retain), [`valid`](../reference/clauses-callable.md#valid), [`direction`](../reference/clauses-callable.md#direction), [`aliasing`](../reference/clauses-callable.md#aliasing), [`extent`](../reference/clauses-callable.md#extent) and [`contents`](../reference/clauses-callable.md#contents).
+
 **Steps**
 
 1. For each of the seven `$tag` clauses, name the exercise fact it records
@@ -369,6 +375,8 @@ replacement operation gives it an earlier invalidation event.
 Use [the clause grammar](../reference/notation.md#clause) for draft 0.1,
 and [the ownership comparison](../explanation/choices.md#expressing-ownership)
 for the trade-off.
+
+Reference lookup: [`input`](../reference/clauses-callable.md#input), [`retain`](../reference/clauses-callable.md#retain), [`give`](../reference/clauses-outcomes.md#give) and [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by).
 
 **Steps**
 
@@ -466,6 +474,8 @@ boundary ([C2–C3](../contracts.md#c2), [C6](../contracts.md#c6)). For the two
 lifetime arrangements, see [the callback schedule view](../explanation/contracts.md#callbacks).
 For exact syntax, see [callback-use blocks](../reference/notation.md#callback-use).
 
+Reference lookup: [callback use](../reference/declarations.md#callback-use), [`scope`](../reference/clauses-outcomes.md#scope), [`quiescence`](../reference/clauses-outcomes.md#quiescence) and [`requires`](../reference/clauses-callable.md#requires).
+
 **Steps**
 
 1. Trace the original schedule through `Subscription`'s lifecycle to
@@ -525,7 +535,11 @@ missing model concept from a missing language form or provider definition.
 duty, and what may the caller assume when the call returns?
 [Entities that outlive a call](../explanation/model.md#entities) supplies
 the watch's lifecycle; [Release responsibility](../explanation/model.md#responsibility)
-describes this operation's transfer.
+describes this operation's transfer. The completed contract also states
+[How a call finishes](../explanation/model.md#outcomes),
+[Where and when calls run](../explanation/model.md#execution) and
+[Reaching the code](../explanation/model.md#access). The final check asks what
+[Writers, checkers and users](../explanation/model.md#agreement) still need to establish.
 
 **Goal:** write one callable contract from stated API facts, then account
 for the work its clauses require.
@@ -550,6 +564,13 @@ function symbol `watch_close` using the `c` convention with identity
 mapping and stable fixture-domain compatibility. The public operation is
 available in `test` and not deprecated. These are invented provider facts,
 not a mapping of the full watch header's callback/context protocol.
+
+Reference lookup:
+
+- Signature and lifecycle: [`fn`](../reference/declarations.md#fn), [`resource`](../reference/declarations.md#resource) and [`lifecycle`](../reference/clauses-package.md#lifecycle).
+- Completion: [`outcome`](../reference/declarations.md#outcome), [`when`](../reference/clauses-outcomes.md#when) and [`state`](../reference/clauses-outcomes.md#state).
+- Execution: [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency) and [`reentrancy`](../reference/clauses-callable.md#reentrancy).
+- Access and provider support: [`access`](../reference/declarations.md#access), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping), [`compatibility`](../reference/clauses-access.md#compatibility) and [`use`](../reference/declarations.md#use).
 
 **Steps**
 
@@ -698,6 +719,8 @@ their borrowed-region clauses in outcomes. Both forms still identify a
 lifetime bound and any earlier invalidators ([C5](../contracts.md#c5),
 [C7](../contracts.md#c7)). Exact syntax: [declaration productions](../grammar.ebnf)
 and [outcomes](../reference/notation.md#outcome).
+
+Reference lookup: [`give`](../reference/clauses-outcomes.md#give), [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by), [`scope`](../reference/clauses-outcomes.md#scope), [`quiescence`](../reference/clauses-outcomes.md#quiescence) and [`law`](../reference/clauses-access.md#law).
 
 **Steps**
 

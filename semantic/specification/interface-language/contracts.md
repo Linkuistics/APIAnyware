@@ -8,6 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [C1](#c1), [C2](#c2), [C3](#c3), [C4](#c4), [C5](#c5), [C6](#c6), [C7](#c7) and [C8](#c8) below are canonical.
+> **Routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
 > **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an invented example.
@@ -103,6 +104,8 @@ C1 checks the complete place against them. The [place grammar](reference/notatio
 supplies the exact forms. Return to the [language-containment view](language.md#l2)
 to locate `position` and its imported result type, or the
 [glossary's place entry](glossary.md#place) for a shorter reminder.
+
+Review: [Predict an escaping borrow's validity](review/tasks.md#predict).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -292,6 +295,8 @@ Lookup: [lifecycle](reference/clauses-package.md#lifecycle),
 [sharing](reference/clauses-package.md#sharing), and
 [isolation](reference/clauses-package.md#isolation).
 
+Review: [Author a complete call contract](review/tasks.md#author).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -392,6 +397,8 @@ clause. [Who is responsible for releasing a value?](explanation/unsaid.md#who-is
 explains the distinction in domain terms.
 
 Lookup: [`execution`](reference/clauses-callable.md#execution), [`completions`](reference/clauses-callable.md#completions), [`executor`](reference/clauses-callable.md#executor), [`concurrency`](reference/clauses-callable.md#concurrency), [`reentrancy`](reference/clauses-callable.md#reentrancy), [`mutation`](reference/clauses-callable.md#mutation), [`variadic`](reference/clauses-callable.md#variadic).
+
+Review: [Change a pointer input](review/tasks.md#change).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -677,6 +684,8 @@ and what do they contain?](explanation/unsaid.md#how-many-bytes-exist-and-what-d
 
 Lookup: [`extent`](reference/clauses-callable.md#extent), [`contents`](reference/clauses-callable.md#contents).
 
+Review: [Change a pointer input](review/tasks.md#change).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -784,6 +793,8 @@ the [outcome](reference/notation.md#outcome),
 
 
 Lookup: [`when`](reference/clauses-outcomes.md#when), [`meaning`](reference/clauses-outcomes.md#meaning), and [`state`](reference/clauses-outcomes.md#state).
+
+Review: [Predict an escaping borrow's validity](review/tasks.md#predict).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1038,6 +1049,8 @@ Lookup: [`executor`](reference/clauses-callable.md#executor), [`concurrency`](re
 
 Lookup for schedule facts: [`timing`](reference/clauses-outcomes.md#timing), [`count`](reference/clauses-outcomes.md#count), [`scope`](reference/clauses-outcomes.md#scope), and [`quiescence`](reference/clauses-outcomes.md#quiescence).
 
+Review: [Assess cancellation and teardown](review/tasks.md#stretch).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -1137,6 +1150,8 @@ Lookup: [mutable](reference/clauses-package.md#mutable),
 
 Lookup for returned references: [`give`](reference/clauses-outcomes.md#give) and [`invalidated_by`](reference/clauses-outcomes.md#invalidated_by).
 
+Review: [Trace validity across the model](review/tasks.md#model-fit).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -1197,6 +1212,8 @@ as its own restriction and retains the API's `reentrancy(allowed)` fact
 ([A5](profiles.md#a5)). See [Validation](glossary.md#validation) and the
 [conformance record](conformance.md) for the distinction between specification
 checks and an implemented validator.
+
+Review: [Author a complete call contract](review/tasks.md#author).
 
 </blockquote>
 <!-- /reading-aid -->

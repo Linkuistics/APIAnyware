@@ -835,7 +835,7 @@ mutations that cite the several distinct obligations in [`C3`](../contracts.md#c
 can leave the reader searching for the exact rejecting condition.
 
 Next: [Describing a small API](../tutorial/README.md) guides you through writing
-and reading complete checkpoint packages. The guide *Reviewing AIL* is forthcoming.
-For more examples, inspect the [conformance packages](../conformance.md#positive-specifications)
-with their expected interpretations.
+and reading complete checkpoint packages. Then use [Reviewing AIL](../review/README.md)
+to assess the design and record feedback. For more examples, follow the
+[conformance walkthroughs](../review/walkthroughs.md).
 Return to [packages and access paths](packages.md) or [the overview](../README.md).

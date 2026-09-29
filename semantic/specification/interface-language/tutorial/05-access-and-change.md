@@ -834,6 +834,7 @@ for this result. The label's lifecycle explains how an owner releases it;
 that clause leaves a required fact unanswered.
 
 Return: [Describing a small API](README.md).
-Next: [Conformance examples and pressure cases](../conformance.md) provides
-other contracts to inspect; [Design choices and open questions](../explanation/choices.md)
-collects questions for reviewing the language.
+Next: [Reviewing AIL](../review/README.md) connects the contracts you have written
+to six review dimensions and a feedback template. Try [Compare](../review/tasks.md#compare)
+for another ownership design or [Model fit](../review/tasks.md#model-fit) to trace
+validity across the conformance packages.

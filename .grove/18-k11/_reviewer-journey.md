@@ -45,3 +45,26 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
 - The audit ends with "Step 2: refactored output", as §9.6 specifies.
 - `proof` has walked the reviewer journey from every entry type in the plan's
   §3, and the survey's R1–R5 criteria hold for the whole set.
+
+## Current navigation surface
+
+The draft completes model-section/map-to-reference/task routes and their
+returns, adds canonical-aid review routes, replaces the choices page's stale
+forthcoming-guide mention and routes the tutorial's end to Reviewing AIL.
+Reference entries used by tasks have task back-links, including exact-syntax
+entries in notation.md. The landing page pairs frozen example files with their
+walkthroughs; those `.ail` files themselves remain unchanged.
+
+Step 2 is the audit's closing section. It indexes the complete page set,
+maps F1–F12 to remedies and remaining boundaries, leaves Q1–Q6 open, and
+separates navigation/consistency checks from the partial human assessments
+at first-path-reading-k64 and model-reading-k73. The full-set human checkpoint
+still owns comprehension; no new language question or figure is introduced.
+
+## Handed forward
+
+- **proof** — Update the audit's Step 2 F12 boundary and final paragraph when
+  this navigation pipeline has actually completed. They currently identify
+  copy-edit, art and proof as remaining. Preserve the distinct unresolved
+  full-set human assessment and Q1–Q6; do not turn passed document checks into
+  a comprehension claim.

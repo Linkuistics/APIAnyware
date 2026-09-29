@@ -8,6 +8,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [L1](#l1), [L2](#l2), [L3](#l3), [L4](#l4), [L5](#l5) and [L6](#l6) below, together with the [grammar](grammar.ebnf), are canonical.
+> **Routes:** [Documentation map](README.md#paths-through-the-documentation) · [review guide](review/README.md).
 > **Lookup:** [Reference](reference/README.md), [types](reference/types.md), and [declaration applicability](reference/declarations.md#applicability).
 
 Each bordered **Reading aid (non-normative)** explains an example. The rule
@@ -72,6 +73,8 @@ The [package-shell grammar](reference/notation.md#shell) locates these items;
 the [clause grammar](reference/notation.md#clause) gives their common fact syntax.
 L3 determines which facts a complete description needs, even where the grammar
 admits a document without them.
+
+Review: [Author a complete call contract](review/tasks.md#author).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -269,6 +272,8 @@ package has a different tuple. Two overloads in this package would need distinct
 local declaration names ([L2](#l2)).
 
 For the larger package picture, see [Packages, environments and access paths](explanation/packages.md).
+
+Review: [Trace names and members](review/tasks.md#trace).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -628,6 +633,8 @@ Lookup: [surface](reference/clauses-package.md#surface),
 [available](reference/clauses-package.md#available), and
 [environment clauses](reference/clauses-package.md#target).
 
+Review: [Author a complete call contract](review/tasks.md#author).
+
 </blockquote>
 <!-- /reading-aid -->
 
@@ -758,6 +765,8 @@ values, its clauses still need to account for each reference leaf; record
 aggregation does not remove ownership obligations ([L4](#l4), [C1](contracts.md#c1)).
 
 See [Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about).
+
+Review: [Change a pointer input](review/tasks.md#change).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -944,6 +953,8 @@ fields. Adding `state($result.x, valid);` beside that parent state is forbidden.
 Other slot clauses address the exact reference leaf, so stating an obligation
 for an aggregate does not also state its children's obligations ([L5](#l5)).
 The role-name and law-tuple repetition rules become concrete in [L6](#l6).
+
+Review: [Trace names and members](review/tasks.md#trace).
 
 </blockquote>
 <!-- /reading-aid -->
@@ -1372,6 +1383,8 @@ forms for declaring and binding roles.
 
 
 Lookup: [`bind`](reference/clauses-access.md#bind) and [`law`](reference/clauses-access.md#law).
+
+Review: [Trace validity across the model](review/tasks.md#model-fit).
 
 </blockquote>
 <!-- /reading-aid -->

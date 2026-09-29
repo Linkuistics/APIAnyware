@@ -122,6 +122,9 @@ contracts talk about (non-normative; [`L4`](../language.md#l4),
 
 Notation and practice: [From signature to contract](contracts.md#from-signature-to-contract) · [tutorial 1](../tutorial/01-lifetime.md).
 
+Reference: [`fn`](../reference/declarations.md#fn) and [places](../reference/notation.md#places).
+Review: [Trace](../review/tasks.md#trace).
+
 <a id="outcomes"></a>
 
 ## How a call finishes
@@ -148,6 +151,9 @@ finishes; it supplies no guarantee that the call eventually finishes
 (non-normative; [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 Notation and practice: [Every way a call can end](contracts.md#every-way-a-call-can-end) · [tutorial 3](../tutorial/03-storage.md).
+
+Reference: [`outcome`](../reference/declarations.md#outcome), [`when`](../reference/clauses-outcomes.md#when) and [`state`](../reference/clauses-outcomes.md#state).
+Review: [Author](../review/tasks.md#author).
 
 <a id="entities"></a>
 
@@ -177,6 +183,9 @@ call sequence from a sequence that is merely convenient (non-normative;
 [`C7`](../contracts.md#c7)).
 
 Notation and practice: [Entities and their lifecycles](contracts.md#entities-and-their-lifecycles), [Patterns and laws](contracts.md#patterns-and-laws) · [tutorial 1](../tutorial/01-lifetime.md).
+
+Reference: [`resource`](../reference/declarations.md#resource), [`lifecycle`](../reference/clauses-package.md#lifecycle) and [`law`](../reference/clauses-access.md#law).
+Review: [Author](../review/tasks.md#author).
 
 <a id="responsibility"></a>
 
@@ -213,6 +222,9 @@ obligation unless it explicitly returns that obligation as an owned output
 
 Notation and practice: [Who owns what](contracts.md#who-owns-what) · [tutorial 1](../tutorial/01-lifetime.md).
 
+Reference: [`input`](../reference/clauses-callable.md#input), [`retain`](../reference/clauses-callable.md#retain) and [`give`](../reference/clauses-outcomes.md#give).
+Review: [Compare](../review/tasks.md#compare).
+
 <a id="validity"></a>
 
 ## Validity
@@ -240,6 +252,9 @@ remain unchanged after use becomes invalid (non-normative;
 [`C5`](../contracts.md#c5)).
 
 Notation and practice: [How long a borrow lasts](contracts.md#how-long-a-borrow-lasts) · [tutorial 2](../tutorial/02-lending.md).
+
+Reference: [`valid`](../reference/clauses-callable.md#valid) and [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by).
+Review: [Predict](../review/tasks.md#predict).
 
 <a id="storage"></a>
 
@@ -270,6 +285,9 @@ the core describes explicit bounds (non-normative;
 
 Notation and practice: [Buffers and strings](contracts.md#buffers-and-strings) · [tutorial 3](../tutorial/03-storage.md).
 
+Reference: [`direction`](../reference/clauses-callable.md#direction), [`aliasing`](../reference/clauses-callable.md#aliasing), [`extent`](../reference/clauses-callable.md#extent) and [`contents`](../reference/clauses-callable.md#contents).
+Review: [Change](../review/tasks.md#change).
+
 <a id="execution"></a>
 
 ## Where and when calls run
@@ -298,6 +316,9 @@ with the operation's behaviour (non-normative;
 [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3)).
 
 Notation and practice: [Threads and sharing](contracts.md#threads-and-sharing) · [tutorial 4](../tutorial/04-callbacks.md).
+
+Reference: [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency) and [`reentrancy`](../reference/clauses-callable.md#reentrancy).
+Review: [Author](../review/tasks.md#author).
 
 <a id="callbacks"></a>
 
@@ -337,6 +358,9 @@ a stop request from the point where callback state is safe to release
 
 Notation and practice: [Callbacks](contracts.md#callbacks) · [tutorial 4](../tutorial/04-callbacks.md).
 
+Reference: [callback use](../reference/declarations.md#callback-use), [`scope`](../reference/clauses-outcomes.md#scope) and [`quiescence`](../reference/clauses-outcomes.md#quiescence).
+Review: [Stretch](../review/tasks.md#stretch).
+
 <a id="description"></a>
 
 ## The published description
@@ -373,6 +397,9 @@ facts before publication; uncertainty in the producer's investigation remains wo
 
 Notation and practice: [What a package claims](packages.md#what-a-package-claims) · [tutorial 1](../tutorial/01-lifetime.md).
 
+Reference: [`package`](../reference/declarations.md#package), [`import`](../reference/declarations.md#import) and [`available`](../reference/clauses-package.md#available).
+Review: [Trace](../review/tasks.md#trace).
+
 <a id="access"></a>
 
 ## Reaching the code
@@ -407,6 +434,9 @@ observe (non-normative; [`A1–A4`](../profiles.md#a1),
 [`F1`](../profiles.md#f1)).
 
 Notation and practice: [Reaching the code](packages.md#reaching-the-code) · [tutorial 5](../tutorial/05-access-and-change.md).
+
+Reference: [`access`](../reference/declarations.md#access), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping) and [`compatibility`](../reference/clauses-access.md#compatibility).
+Review: [Author](../review/tasks.md#author).
 
 <a id="agreement"></a>
 
@@ -446,6 +476,9 @@ questions (non-normative; [`L1`](../language.md#l1),
 
 Notation and practice: [One contract, several views](packages.md#one-contract-several-views) · [tutorial checking](../tutorial/README.md#how-to-check-your-work).
 
+Reference: [`use`](../reference/declarations.md#use).
+Review: [Author](../review/tasks.md#author).
+
 ## From the model to AIL
 
 The rest of the learning route connects AIL notation to these concepts.
@@ -457,17 +490,17 @@ questions](choices.md) develops that assessment.
 
 | Model concept | What AIL writes | Where the notation is introduced and exercised | Canonical rules |
 |---|---|---|---|
-| [Operations and their values](#operations) | `fn`, callable signatures; `record` and `field`, `alias`, `enum`, `flags`, scalars and pointers; parameter, result and thrown-value slots; `@operation::slot` and places such as `$p`, `.*`, `[]`, `.field` | [From signature to contract](contracts.md#from-signature-to-contract), [Naming what a contract talks about](contracts.md#naming-what-a-contract-talks-about); [tutorial 1](../tutorial/01-lifetime.md#1-identify-the-values-the-caller-receives) | [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C1`](../contracts.md#c1) |
-| [How a call finishes](#outcomes) | `completions`, `outcome`, [`when`](../reference/clauses-outcomes.md#when), `null`, `nonnull`, `equal`, `range`, [`meaning`](../reference/clauses-outcomes.md#meaning), [`state`](../reference/clauses-outcomes.md#state) | [Every way a call can end](contracts.md#every-way-a-call-can-end); [tutorial 1](../tutorial/01-lifetime.md#3-describe-creations-success-and-failure), [tutorial 3](../tutorial/03-storage.md#5-state-what-the-caller-can-read-on-each-outcome) | [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
-| [Entities that outlive a call](#entities) | `resource`, `object`, `interface`, `global`, `constant`, `property`; `lifecycle`, `member`, `receiver`; `pattern`, `role`, `instance`, [`law`](../reference/clauses-access.md#law) | [Entities and their lifecycles](contracts.md#entities-and-their-lifecycles), [Patterns and laws](contracts.md#patterns-and-laws), [member example](packages.md#packages-contain-declarations); [tutorial 1](../tutorial/01-lifetime.md#card-lifetime) | [`L4–L6`](../language.md#l4), [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7) |
-| [Release responsibility](#responsibility) | `input` with `borrow` or `consume`, `retain`, [`give`](../reference/clauses-outcomes.md#give) with `owned` or `borrow` | [Who owns what](contracts.md#who-owns-what); [tutorial 1](../tutorial/01-lifetime.md#4-transfer-responsibility-when-destruction-begins), [tutorial 2](../tutorial/02-lending.md#label-lifecycle), [tutorial 5's change](../tutorial/05-access-and-change.md#guided-change-an-owned-snapshot) | [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
-| [Validity](#validity) | `valid`, regions `call`, `static`, `owner`, [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by), `mutation` | [How long a borrow lasts](contracts.md#how-long-a-borrow-lasts); [tutorial 2](../tutorial/02-lending.md#4-tie-the-returned-label-to-the-cards-lifetime) | [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
-| [Storage](#storage) | `extent` with `one` or `buffer`, `contents`, `direction`, `aliasing` | [Buffers and strings](contracts.md#buffers-and-strings); [tutorial 3](../tutorial/03-storage.md#4-describe-the-writable-storage) | [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4) |
-| [Where and when calls run](#execution) | `execution`, `executor`, `concurrency`, `reentrancy`, `sharing`, `isolation` | [Threads and sharing](contracts.md#threads-and-sharing); [tutorial 4](../tutorial/04-callbacks.md) | [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3) |
-| [Callbacks and their schedules](#callbacks) | `callback` declarations and use blocks, [`timing`](../reference/clauses-outcomes.md#timing), [`count`](../reference/clauses-outcomes.md#count), [`scope`](../reference/clauses-outcomes.md#scope), [`quiescence`](../reference/clauses-outcomes.md#quiescence), `outside_callback` | [Callbacks](contracts.md#callbacks); [tutorial 4](../tutorial/04-callbacks.md) | [`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6) |
-| [The published description](#description) | `language`, `package`, `surface`, `exports`, `import`, `digest`, `as`; declaration identity; `environment`, `available`, `deprecated` | [Packages contain declarations](packages.md#packages-contain-declarations), [What a package claims](packages.md#what-a-package-claims), [Where it holds](packages.md#where-it-holds), [What it depends on](packages.md#what-it-depends-on); [tutorial 1](../tutorial/01-lifetime.md#5-name-the-package-and-the-api-it-covers) | [`L1–L3`](../language.md#l1), [`L5`](../language.md#l5) |
-| [Reaching the code](#access) | `use abi`, `use profile`, `access`, `in`, [`abi`](../reference/clauses-access.md#abi), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping), [`compatibility`](../reference/clauses-access.md#compatibility), [`representation`](../reference/clauses-access.md#representation), [`callback_abi`](../reference/clauses-access.md#callback_abi) | [Reaching the code](packages.md#reaching-the-code), [Profiles and ABI entries](packages.md#profiles-and-abi-entries); [tutorial 5](../tutorial/05-access-and-change.md) | [`A1–A4`](../profiles.md#a1), [`F1`](../profiles.md#f1) |
-| [Writers, checkers and users](#agreement) | Agreement across the description and required profiles; no single construct | [One contract, several views](packages.md#one-contract-several-views), [Extending the language with profiles](contracts.md#extending-the-language-with-profiles); [tutorial checking](../tutorial/README.md#how-to-check-your-work) | [`L1`](../language.md#l1), [`L3`](../language.md#l3), [`C8`](../contracts.md#c8), [`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5) |
+| [Operations and their values](#operations) | [`fn`](../reference/declarations.md#fn), callable signatures; `record` and `field`, `alias`, `enum`, `flags`, scalars and pointers; parameter, result and thrown-value slots; `@operation::slot` and places such as `$p`, `.*`, `[]`, `.field` | [From signature to contract](contracts.md#from-signature-to-contract), [Naming what a contract talks about](contracts.md#naming-what-a-contract-talks-about); [tutorial 1](../tutorial/01-lifetime.md#1-identify-the-values-the-caller-receives); review: [Trace](../review/tasks.md#trace) | [`L4`](../language.md#l4), [`L5`](../language.md#l5), [`C1`](../contracts.md#c1) |
+| [How a call finishes](#outcomes) | `completions`, [`outcome`](../reference/declarations.md#outcome), [`when`](../reference/clauses-outcomes.md#when), `null`, `nonnull`, `equal`, `range`, [`meaning`](../reference/clauses-outcomes.md#meaning), [`state`](../reference/clauses-outcomes.md#state) | [Every way a call can end](contracts.md#every-way-a-call-can-end); [tutorial 1](../tutorial/01-lifetime.md#3-describe-creations-success-and-failure), [tutorial 3](../tutorial/03-storage.md#5-state-what-the-caller-can-read-on-each-outcome); review: [Author](../review/tasks.md#author) | [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
+| [Entities that outlive a call](#entities) | [`resource`](../reference/declarations.md#resource), `object`, `interface`, `global`, `constant`, `property`; [`lifecycle`](../reference/clauses-package.md#lifecycle), `member`, `receiver`; `pattern`, `role`, `instance`, [`law`](../reference/clauses-access.md#law) | [Entities and their lifecycles](contracts.md#entities-and-their-lifecycles), [Patterns and laws](contracts.md#patterns-and-laws), [member example](packages.md#packages-contain-declarations); [tutorial 1](../tutorial/01-lifetime.md#card-lifetime); review: [Author](../review/tasks.md#author) | [`L4–L6`](../language.md#l4), [`C2`](../contracts.md#c2), [`C7`](../contracts.md#c7) |
+| [Release responsibility](#responsibility) | [`input`](../reference/clauses-callable.md#input) with `borrow` or `consume`, [`retain`](../reference/clauses-callable.md#retain), [`give`](../reference/clauses-outcomes.md#give) with `owned` or `borrow` | [Who owns what](contracts.md#who-owns-what); [tutorial 1](../tutorial/01-lifetime.md#4-transfer-responsibility-when-destruction-begins), [tutorial 2](../tutorial/02-lending.md#label-lifecycle), [tutorial 5's change](../tutorial/05-access-and-change.md#guided-change-an-owned-snapshot); review: [Compare](../review/tasks.md#compare) | [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
+| [Validity](#validity) | [`valid`](../reference/clauses-callable.md#valid), regions `call`, `static`, `owner`, [`invalidated_by`](../reference/clauses-outcomes.md#invalidated_by), `mutation` | [How long a borrow lasts](contracts.md#how-long-a-borrow-lasts); [tutorial 2](../tutorial/02-lending.md#4-tie-the-returned-label-to-the-cards-lifetime); review: [Predict](../review/tasks.md#predict) | [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
+| [Storage](#storage) | [`extent`](../reference/clauses-callable.md#extent) with `one` or `buffer`, [`contents`](../reference/clauses-callable.md#contents), [`direction`](../reference/clauses-callable.md#direction), [`aliasing`](../reference/clauses-callable.md#aliasing) | [Buffers and strings](contracts.md#buffers-and-strings); [tutorial 3](../tutorial/03-storage.md#4-describe-the-writable-storage); review: [Change](../review/tasks.md#change) | [`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4) |
+| [Where and when calls run](#execution) | `execution`, [`executor`](../reference/clauses-callable.md#executor), [`concurrency`](../reference/clauses-callable.md#concurrency), [`reentrancy`](../reference/clauses-callable.md#reentrancy), `sharing`, `isolation` | [Threads and sharing](contracts.md#threads-and-sharing); [tutorial 4](../tutorial/04-callbacks.md); review: [Author](../review/tasks.md#author) | [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3) |
+| [Callbacks and their schedules](#callbacks) | `callback` declarations and use blocks, [`timing`](../reference/clauses-outcomes.md#timing), [`count`](../reference/clauses-outcomes.md#count), [`scope`](../reference/clauses-outcomes.md#scope), [`quiescence`](../reference/clauses-outcomes.md#quiescence), `outside_callback` | [Callbacks](contracts.md#callbacks); [tutorial 4](../tutorial/04-callbacks.md); review: [Stretch](../review/tasks.md#stretch) | [`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6) |
+| [The published description](#description) | `language`, [`package`](../reference/declarations.md#package), `surface`, `exports`, [`import`](../reference/declarations.md#import), `digest`, `as`; declaration identity; `environment`, [`available`](../reference/clauses-package.md#available), `deprecated` | [Packages contain declarations](packages.md#packages-contain-declarations), [What a package claims](packages.md#what-a-package-claims), [Where it holds](packages.md#where-it-holds), [What it depends on](packages.md#what-it-depends-on); [tutorial 1](../tutorial/01-lifetime.md#5-name-the-package-and-the-api-it-covers); review: [Trace](../review/tasks.md#trace) | [`L1–L3`](../language.md#l1), [`L5`](../language.md#l5) |
+| [Reaching the code](#access) | `use abi`, `use profile`, [`access`](../reference/declarations.md#access), `in`, [`abi`](../reference/clauses-access.md#abi), [`via`](../reference/clauses-access.md#via), [`mapping`](../reference/clauses-access.md#mapping), [`compatibility`](../reference/clauses-access.md#compatibility), [`representation`](../reference/clauses-access.md#representation), [`callback_abi`](../reference/clauses-access.md#callback_abi) | [Reaching the code](packages.md#reaching-the-code), [Profiles and ABI entries](packages.md#profiles-and-abi-entries); [tutorial 5](../tutorial/05-access-and-change.md); review: [Author](../review/tasks.md#author) | [`A1–A4`](../profiles.md#a1), [`F1`](../profiles.md#f1) |
+| [Writers, checkers and users](#agreement) | Agreement across the description and required profiles; no single construct; [`use` selects shared provider definitions](../reference/declarations.md#use) | [One contract, several views](packages.md#one-contract-several-views), [Extending the language with profiles](contracts.md#extending-the-language-with-profiles); [tutorial checking](../tutorial/README.md#how-to-check-your-work); review: [Author](../review/tasks.md#author) | [`L1`](../language.md#l1), [`L3`](../language.md#l3), [`C8`](../contracts.md#c8), [`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5) |
 
 ## Where next
 

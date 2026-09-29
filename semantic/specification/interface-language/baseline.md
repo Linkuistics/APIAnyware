@@ -7,6 +7,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [language](language.md), [contracts](contracts.md), [profiles](profiles.md) and [grammar](grammar.ebnf) are canonical; this page supplies supporting material.
+> **Reading routes:** [expressive-scope review](review/README.md#expressive-scope) or [the documentation map](README.md#paths-through-the-documentation).
 
 This is a bounded disposition inventory, not an assertion that the whole frontend
 was exhaustively audited. The source is the seven files below in

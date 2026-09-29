@@ -7,6 +7,7 @@
 > and synthetic examples. Parser, validator and implementation development
 > are future work.
 > **Rules:** [language](language.md), [contracts](contracts.md), [profiles](profiles.md) and [grammar](grammar.ebnf) are canonical; this page supplies supporting material.
+> **Reading routes:** [buffer](review/walkthroughs.md#buffers), [callback](review/walkthroughs.md#callbacks) and [object](review/walkthroughs.md#objects) walkthroughs; [review tasks](review/tasks.md); [documentation map](README.md#paths-through-the-documentation).
 
 This is an acceptance specification for future implementations. The examples
 have no native implementation and use the synthetic catalogue in

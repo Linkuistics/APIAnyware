@@ -165,6 +165,8 @@ rules determine which values each named clause accepts.
 
 [Diagram source](../figures/g10-clause.puml) · [Exact grammar](../grammar.ebnf)
 
+Review tasks: [Predict](../review/tasks.md#predict), [Change](../review/tasks.md#change) and [Compare](../review/tasks.md#compare).
+
 <a id="names"></a>
 
 ## Names and references
@@ -219,6 +221,8 @@ to refer to declarations and slots.
 
 [Diagram source](../figures/g10-names.puml) · [Exact grammar](../grammar.ebnf)
 
+Review tasks: [Trace](../review/tasks.md#trace).
+
 <a id="callable"></a>
 
 ## Callables
@@ -262,6 +266,8 @@ within its callable declaration.
 [Full-size callable view](../figures/g10-callable.svg) ·
 [Diagram source](../figures/g10-callable.puml) · [Exact grammar](../grammar.ebnf)
 
+Review tasks: [Trace](../review/tasks.md#trace), [Change](../review/tasks.md#change) and [Author](../review/tasks.md#author).
+
 <a id="places"></a>
 
 ## Places
@@ -299,6 +305,8 @@ Use this view to trace a place from its callable-local slot to the value or
 storage an obligation addresses.
 
 [Diagram source](../figures/g10-places.puml) · [Exact grammar](../grammar.ebnf)
+
+Review task: [Trace](../review/tasks.md#trace).
 
 <a id="environment"></a>
 
@@ -435,6 +443,8 @@ Use this view to locate the clauses describing one named completion case.
 
 [Diagram source](../figures/g10-outcome.puml) · [Exact grammar](../grammar.ebnf)
 
+Review tasks: [Model fit](../review/tasks.md#model-fit).
+
 <a id="callback-use"></a>
 
 ## Callback use
@@ -488,6 +498,8 @@ Use this view to connect a registration's callback value to the block
 describing its schedule.
 
 [Diagram source](../figures/g10-callback-use.puml) · [Exact grammar](../grammar.ebnf)
+
+Review tasks: [Stretch](../review/tasks.md#stretch).
 
 <a id="dependency"></a>
 
@@ -577,6 +589,8 @@ Use this view to locate a named implementation route, its environments and
 the clauses defining that route.
 
 [Diagram source](../figures/g10-access.puml) · [Exact grammar](../grammar.ebnf)
+
+Review tasks: [Change](../review/tasks.md#change).
 
 ## Vocabulary and validity
 

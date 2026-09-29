@@ -228,3 +228,5 @@ value constructors are described with their owning clause.
 
 For a guided introduction, follow [the tutorial](../tutorial/README.md).
 For reasons and alternatives, use [design choices](../explanation/choices.md).
+For evaluation, choose a [review task](../review/tasks.md). Return to
+[the documentation map](../README.md#paths-through-the-documentation) for the guided route.
