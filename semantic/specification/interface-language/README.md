@@ -100,7 +100,7 @@ different reading purpose.
 | Understand package scope and how calls reach code | [Packages, environments and access paths](explanation/packages.md) |
 | Assess alternatives, costs and limits | [Design choices, limits and open questions](explanation/choices.md) |
 | Learn to read and write the notation | [Describing a small API](tutorial/README.md), with complete checkpoint packages |
-| Place names and references in their containing packages | [The language model and two named packages](language.md#l2), followed by member and slot examples |
+| Place names and references in their containing packages | [The two-package language-containment view](language.md#l2), followed by member and slot examples |
 | Follow the syntax beside a rule | [The model-to-notation map](explanation/model.md#from-the-model-to-ail), then [the package shell](language.md#l1) and [names, references and callable slots](language.md#reading-aid-non-normative-names-references-and-callable-slots) |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
@@ -114,9 +114,9 @@ by [the tutorial](tutorial/README.md).
 
 For a direct entry into the notation, choose a concept from
 [the model-to-notation map](explanation/model.md#from-the-model-to-ail).
-The [package shell](language.md#l1) and [two-package language model](language.md#l2)
-then supply the containing context. The language model locates a declaration
-in its own package and shows how another package refers to it through an import. The accompanying snippets
+The [package shell](language.md#l1) and [two-package language-containment view](language.md#l2)
+then supply the containing context. The view locates a declaration in its own
+package and shows how another package refers to it through an import. The accompanying snippets
 also show a function associated with a type and the parameters and result that
 belong to that function. The railroad views show the syntax productions;
 the adjacent rules determine what the names mean and whether a description is

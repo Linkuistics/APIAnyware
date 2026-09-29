@@ -16,8 +16,9 @@ than additional fixture definitions. Terms such as [FFI](#ffi) describe the
 domain; terms such as [clause](#clause) also name parts of AIL's notation.
 
 The [API model](explanation/model.md) connects the concepts these terms name.
-The notation examples show how AIL records operations, their values and the
-published description, using the same invented geometry and canvas packages as
+The notation examples illustrate [Operations and their values](explanation/model.md#operations)
+and [The published description](explanation/model.md#description).
+They use the same invented geometry and canvas packages as
 the [language-containment view and reading aids](language.md#l2). Read that view
 from packages to their declarations, then to a function's parameters and result.
 For the surrounding document syntax, see the

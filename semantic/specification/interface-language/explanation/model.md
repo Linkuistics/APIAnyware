@@ -19,15 +19,16 @@ one account; AIL is a proposed notation for recording them.
 
 Recall the invented watch API. A program supplies a notification function and
 some context when it calls `watch_open`. A successful open gives it a watch
-handle. It can pass that handle to `watch_view` to obtain bytes and their
-length, and to `watch_close` to end the watch. The domain page considers
+[handle](../glossary.md#handle). It can pass that handle to `watch_view` to
+obtain bytes and their length, and to `watch_close` to end the watch. The domain page considers
 different possible promises about these operations. Those alternatives remain
 separate here: the header is an illustration, not a complete implemented API
 or one of the synthetic AIL fixture packages.
 
 The **call layer** describes what happens when the program uses the API:
-values pass between caller and callee, some entities remain alive afterwards,
-and each party has duties concerning those values. The **description layer**
+values pass between [caller and callee](../glossary.md#caller-and-callee), some
+entities remain alive afterwards, and each party has duties concerning those
+values. The **description layer**
 states which API those facts cover, how a tool reaches its implementation and
 what writers, checkers and users of the description agree on.
 
@@ -42,8 +43,8 @@ for review.
 
 Start with an **operation**, such as `watch_view`. Its parameters identify
 values the caller supplies; its result and writable output storage identify
-what the caller can receive. Each **outcome** connects an observable finish
-to its meaning and the outputs the caller can read.
+what the caller can receive. Each [outcome](../glossary.md#outcome) connects an
+observable finish to its meaning and the outputs the caller can read.
 
 Some of those values identify **entities that outlive a call**. The watch
 handle identifies a live watch. Its release rules say how that lifetime ends;
@@ -54,17 +55,18 @@ The **storage** contract separately describes the bytes' bounds and contents.
 
 Calls also have rules for **where and when they run**. These govern where a
 call can start and whether calls can overlap or nest. When `watch_open`
-registers `notice`, a **callback schedule** relates possible invocations to
-that registration. It bounds use of the saved context and identifies when
+registers `notice`, a [callback](../glossary.md#callback) schedule relates
+possible invocations to that registration. It bounds use of the saved context and identifies when
 callback activity has ended.
 
-The **published description** gathers these declarations and contracts for
-a stated part and release of the API, with its dependencies and supported
-configurations. **Access paths** connect the described operations to code,
-using selected definitions of machine representations and calling rules.
+The **published description** gathers these [declarations](../glossary.md#declaration)
+and contracts for a stated part and release of the API, with its dependencies
+and supported configurations. [Access paths](../glossary.md#access-path)
+connect the described operations to code, using selected definitions of
+machine representations and calling rules.
 Finally, **writers, checkers and users** carry the same facts from the API
-author's account through validation to bindings and documentation. Checking
-the description and establishing the implementation's behaviour are separate
+author's account through [validation](../glossary.md#validation) to bindings
+and documentation. Checking the description and establishing the implementation's behaviour are separate
 pieces of that work.
 
 <a id="operations"></a>
@@ -77,10 +79,10 @@ signature names the inputs and the result, and gives each a type. In the
 the address of a length variable. It returns a pointer to bytes. The length
 variable is another output, written through the address supplied by the caller.
 
-A contract attaches each fact to the value or storage it concerns. Keeping
-the length variable's address usable is one obligation; initializing the
-count stored there is another. A larger value may contain fields that carry
-their own obligations. Naming the precise part lets a checker associate a
+A contract attaches each fact to the value or storage it concerns. The caller
+keeps the length variable's address usable during the call. The library's
+contract separately says whether it writes a readable count there. A larger
+value may contain fields that carry their own obligations. Naming the precise part lets a checker associate a
 fact with the right type and lets a binding arrange the right action.
 
 The model accommodates scalar values, structured values and references to
@@ -99,8 +101,8 @@ Notation and practice: [From signature to contract](contracts.md#from-signature-
 
 A call's [outcomes](../glossary.md#outcome) describe the cases the caller can
 distinguish when it finishes. Each case connects an observation to its meaning
-and to the state of the outputs. If `watch_view` returns null on failure,
-that null result identifies the failure case. The contract also says whether
+and to the [state of the outputs](../glossary.md#output-state). If `watch_view`
+returns null on failure, that null result identifies the failure case. The contract also says whether
 the library has written a readable count into the length variable.
 
 Compare a failure that writes zero there with one that leaves it
@@ -138,8 +140,8 @@ holds. The [release example](unsaid.md#who-is-responsible-for-releasing-a-value)
 shows the leaks and double destruction that a mistaken choice can cause.
 
 The description also records relationships between entities and operations.
-An operation can be associated with a type as a member, and a property can
-connect a readable or writable value to its accessor operations. Shared
+An operation can be associated with a type as a [member](../glossary.md#member),
+and a property can connect a readable or writable value to its accessor operations. Shared
 storage and constant values have their own descriptions. Where a reusable
 relationship imposes an ordering or release obligation, the model records its
 participants and that obligation explicitly. It distinguishes a required
@@ -156,8 +158,8 @@ Notation and practice: [Lifecycles and patterns](contracts.md#lifecycles-and-pat
 For a value referring to a live entity, the caller needs to know who owes its
 release. In the owned-watch case, successful `watch_open` gives that duty to
 the caller. A `watch_view` that uses the watch for the call leaves the duty
-there. A consuming `watch_close` takes it over at entry and destroys the
-watch. These are the three separate cases in the
+with the caller. A [consuming](../glossary.md#consume) `watch_close` takes it
+over at entry and destroys the watch. These are the three separate cases in the
 [ownership example](unsaid.md#who-is-responsible-for-releasing-a-value).
 
 An [owned](../glossary.md#owned) reference carries one release obligation.
@@ -174,9 +176,10 @@ reference relies on the caller to keep the referent alive for the stated
 period. These facts let a binding arrange cleanup without mistaking an
 address copy for a new owned reference.
 
-Input transfer happens at entry, including when the operation later fails.
-Returned obligations depend on the outcome: a non-null owned result gives
-one to the caller; null gives none. The callee discharges a consumed
+Input [ownership transfer](../glossary.md#ownership-transfer) happens at entry,
+including when the operation later fails. Returned obligations depend on the
+outcome: a non-null owned result gives the caller one release obligation;
+null gives none. The callee discharges a consumed
 obligation unless it explicitly returns that obligation as an owned output
 (non-normative; [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3),
 [`C5`](../contracts.md#c5)).
@@ -203,7 +206,7 @@ to know when to stop reading.
 Different uses need different bounds. An input used only during an invocation
 can be valid for that call. A view delivered to the caller needs a lifetime
 that survives delivery, such as its owner's lifetime or the loaded API
-instance's lifetime. Ending the latter can occur before process exit.
+instance's lifetime. The loaded API instance can end before the process exits.
 These bounds describe permitted use of the referent; the pointer's bits can
 remain unchanged after use becomes invalid (non-normative;
 [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
@@ -224,8 +227,9 @@ storage that the caller provides for the library to write.
 The [buffer example](unsaid.md#how-many-bytes-exist-and-what-do-they-contain)
 compares binary data with zero-terminated text. Three binary bytes fit in
 three bytes of storage. Three text code units with a final zero need room
-for that extra code unit. Length describes the initialized payload; capacity
-describes allocated room. Contents supply the interpretation and any
+for that extra code unit. [Buffer extent](../glossary.md#buffer-extent) records
+the initialized payload length and allocated capacity.
+[Contents](../glossary.md#contents) supply the interpretation and any
 termination convention. Together they let a binding choose a bounded read
 and the appropriate text conversion.
 
@@ -279,8 +283,9 @@ that context and an event number. Its own call contract describes those
 values. The registration's schedule describes when such invocations may occur.
 
 Compare a registration that finishes all invocations before returning with
-one that stores the callback for later notifications. The first can use
-temporary context storage. The second needs saved state that survives return.
+one that stores the callback for later notifications. The first lets the
+caller use temporary context storage. For the second, the caller keeps the
+saved state alive after `watch_open` returns.
 The [callback teardown example](unsaid.md#when-is-it-safe-to-discard-callback-state)
 shows why releasing that state too early leaves an invocation using a dangling
 pointer.
@@ -289,15 +294,17 @@ The schedule records permitted start times and counts, the execution rules
 for invocations and the event that establishes
 [quiescence](../glossary.md#quiescence): no invocation remains running or can
 start. In the core, use ends within the registration call or through destruction
-of a returned unique owner. In the latter case, such a watch's destructor
+of a returned unique owner. When the watch is that owner, its destructor
 establishes quiescence before returning. The caller can then release state
-kept alive for those invocations. A blocking destructor is called from outside
-them unless an extension defines a protocol that avoids deadlock.
+kept alive for those invocations. The caller invokes a blocking destructor
+from outside those callbacks unless an extension defines a protocol that
+avoids deadlock.
 
 A schedule might require one invocation or allow any number, including zero.
-Those counts apply if its scope eventually ends; they promise no deadline or
-eventual end. Cancellation with a later acknowledgement needs an extension
-that identifies the events and their ordering. This lets a binding distinguish
+Those counts apply if the registration's scope eventually ends: at return
+from the registration call or at destruction of its returned owner. The counts
+promise no deadline or eventual end. Cancellation with a later acknowledgement
+needs an extension that identifies the events and their ordering. This lets a binding distinguish
 a stop request from the point where callback state is safe to release
 (non-normative; [`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
 
@@ -325,15 +332,16 @@ several releases exist. Following all those dependencies yields the
 the chosen surface.
 
 The description also states the exact configurations in which its claims
-hold and where each declaration is offered. A configuration outside that set
-remains outside the claims. A changed signature or contract needs a distinct
+hold. Each declaration's [availability](../glossary.md#availability) says
+where it is offered within that set. A configuration outside the set remains
+outside the claims. A changed signature or contract needs a distinct
 declaration, with disjoint availability or a distinct identity. Advisory
 deprecation can guide a caller's choice while availability determines where
 the declaration is offered.
 
 This scope lets a checker distinguish a deliberately small description from
-one missing required facts. A producer settles those facts before publication;
-uncertainty in the producer's investigation remains work to resolve
+one missing required facts. A [producer](../glossary.md#producer) settles those
+facts before publication; uncertainty in the producer's investigation remains work to resolve
 (non-normative; [`L1–L3`](../language.md#l1), [`L5`](../language.md#l5)).
 
 Notation and practice: [What a package claims](packages.md#what-a-package-claims) · [tutorial 1](../tutorial/01-lifetime.md).
@@ -356,14 +364,16 @@ that boundary. For the watch header, it would need to account for both
 `notice` and its context argument. This header has no complete mapping here;
 the synthetic callback fixture describes a different representation.
 
-A path's compatibility conditions tell a tool when the selected representations
-can be used together. One provider might guarantee compatibility across a
-stated binary domain. Another path might be tied to particular built artifacts
+A path's [compatibility domain](../glossary.md#compatibility-domain) states when
+the selected [representations](../glossary.md#representation) can be used
+together. One [provider](../glossary.md#provider) might guarantee compatibility
+across a stated binary domain. Another path might be tied to particular built artifacts
 or to a fully specified source-build recipe. A caller needs that agreement
 for value layout as well as argument passing.
 
-Several paths can implement one operation's entire contract. A consumer then
-selects a supported path explicitly. If an adaptation discards an observable
+Several paths can implement one operation's entire contract. A
+[consumer](../glossary.md#consumer) then selects a supported path explicitly.
+If an adaptation discards an observable
 status distinction, it needs its own operation description. These facts let
 a generator decide how to reach the code while preserving what callers can
 observe (non-normative; [`A1–A4`](../profiles.md#a1),
@@ -399,8 +409,9 @@ own output.
 Extensions also participate in this agreement. A
 [profile](../glossary.md#profile) defines additional meanings and checking
 rules while preserving the core requirements. A full checker needs to
-understand every required extension; a reader that only preserves unfamiliar
-text has established less. This separation lets a reviewer assess the
+understand every required extension. A tool that preserves unfamiliar text
+can pass it to another consumer; validating that text also requires
+understanding the extension's rules. This separation lets a reviewer assess the
 description's validity, its evidence and a consumer's capabilities as distinct
 questions (non-normative; [`L1`](../language.md#l1),
 [`L3`](../language.md#l3), [`C8`](../contracts.md#c8),
