@@ -305,6 +305,17 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+The complete eight-page reference is proofed (`reference-k88`, closing
+`reference-k9`). `reference/README.md` provides model-concept, rule,
+N01–N33 mutation and alphabetical clause indexes; `declarations.md#applicability`
+provides the scope route. `notation.md#integer` now supplies the integer-token
+entry, separate from integer types. Canonical reading aids, explanations,
+tutorials and the glossary link into the reference. Complete coverage reports
+229 classified candidates with no pending entries. Keep the shared spelling
+scopes, optional fixture facts without inferred defaults, and N11/N14's
+implementation/runtime qualifications. These are document consistency checks;
+the later reader checkpoints still assess human understanding.
+
 The model-first tutorial run is proofed (`tutorial-k84`, closing
 `tutorial-k7`). The index and five parts connect each construct-introducing
 step to named model concepts. Part 1 now teaches the card's lifecycle,

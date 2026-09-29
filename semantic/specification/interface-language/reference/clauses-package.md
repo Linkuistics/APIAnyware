@@ -237,7 +237,7 @@ The message advises using `Position` from version `2`. It does not remove `Point
 
 **Constraints:** Documentation cannot replace a required contract or create a pattern law. Navigation and documentation survive a lossless authoring round trip even though they are excluded from semantic equality ([`L5`](../language.md#l5), [`L6`](../language.md#l6), [`A5`](../profiles.md#a5), [`C8`](../contracts.md#c8)).
 
-**Rejected when:** The clause repeats in a scope, appears outside its allowed scopes, or a package relies on prose in [place](../glossary.md#place) of a required contract ([`L5`](../language.md#l5), [`L6`](../language.md#l6), [`A5`](../profiles.md#a5), [`C8`](../contracts.md#c8)).
+**Rejected when:** The clause repeats in a scope, appears outside its allowed scopes, or a package relies on prose in place of a required contract ([`L5`](../language.md#l5), [`L6`](../language.md#l6), [`A5`](../profiles.md#a5), [`C8`](../contracts.md#c8)).
 
 **Example.** Fragment — the existing navigation teaching sketch. Header, fixture profile pin, fields and publication/nominal facts are omitted. The URL is illustrative.
 

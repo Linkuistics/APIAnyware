@@ -46,6 +46,48 @@ Use this table to go from the form you are writing to its grammar view.
 | [Profile](../glossary.md#profile) and [ABI](../glossary.md#abi) definitions | [Dependencies](#dependency) |
 | Routes to an implementation | [Access paths](#access) |
 
+<a id="integer"></a>
+
+## Integer literals
+
+**Expresses:** [Operations and their values](../explanation/model.md#operations) — numeric values recorded in cases, constants and contract operands.
+
+**Form:** `integer = [ "-" ], unsigned_integer;` in the [grammar](../grammar.ebnf). A type argument uses `unsigned_integer` directly.
+
+**Operands and types:** A decimal integer token; its containing declaration, clause or type constructor determines the permitted value domain.
+
+**Applies to:** Enum/flags case values and integer clause arguments; unsigned integers also supply array sizes.
+
+**Required and repeatability:** Each integer position contains one literal; the enclosing form determines how many positions exist.
+
+**Default:** No implicit numeric value.
+
+**Meaning (non-normative; [`L1`](../language.md#l1), [`L4`](../language.md#l4)):** Integers have arbitrary mathematical precision during parsing. Their use remains subject to the containing type or contract's bounds.
+
+**Constraints:** Decimal tokens have no leading zero except `0`; `-0` is forbidden. Enum and flags cases fit their underlying core integer type. Array sizes are nonnegative ([`L1`](../language.md#l1), [`L4`](../language.md#l4)).
+
+**Rejected when:** The token has a forbidden spelling, a case is outside its underlying type, or a value violates its operand's bounds. For example, `01` and `-0` are invalid tokens; a negative array size is outside the type-argument grammar ([`L1`](../language.md#l1), [`L4`](../language.md#l4), [grammar](../grammar.ebnf)).
+
+**Example.** Fragment — integer cases in an invented geometry API. The header, publication context and nominal contracts are omitted.
+
+<!-- ail-example: ../examples/reference/declarations.ail region=case -->
+```ail
+package example::geometry version "1" {
+  enum Axis: u8 {
+    values(closed);
+    case horizontal = 0;
+    case vertical = 1;
+  }
+  // Nominal contracts omitted.
+}
+```
+
+Both literals fit `u8`; `values(closed)` limits `Axis` to those two values. A syntactically valid decimal integer such as `256` would exceed this underlying type.
+
+**Used by and see also:** [Integer types](types.md#integers); [enum/flags cases](declarations.md#case); [`literal`](clauses-package.md#literal); [array sizes](types.md#array); [`extent`](clauses-callable.md#extent).
+
+**Rationale:** [Operations and their values](../explanation/model.md#operations).
+
 <a id="shell"></a>
 
 ## Package shell
@@ -129,6 +171,7 @@ rules determine which values each named clause accepts.
 
 **Expresses:** identities and dependencies in
 [The published description](../explanation/model.md#description).
+Slot references also identify [Operations and their values](../explanation/model.md#operations).
 Use names to distinguish local declarations, imported declarations and the
 slots belonging to an operation. **Productions:** `import`, `reference`, `name`.
 

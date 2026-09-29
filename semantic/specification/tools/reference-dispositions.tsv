@@ -173,7 +173,7 @@ production:field	covered	keyword:field				Production documented with its enclosi
 production:global	covered	keyword:global				Production documented with its enclosing declaration form.
 production:import	covered	keyword:import				Production documented with its enclosing declaration form.
 production:instance	covered	keyword:instance				Production documented with its enclosing declaration form.
-production:integer	entry	reference/notation.md#grammar-source-and-dialect	operations	ready	reference-k16	Grammar form; semantics and example are in the notation section.
+production:integer	entry	reference/notation.md#integer	operations	ready	reference-k16	Grammar form; semantics and example are in the notation section.
 production:item	covered	keyword:package				Production documented with its enclosing declaration form.
 production:list	covered	production:clause				Generic clause/value grammar; names receive their closed meaning from the rules.
 production:name	entry	reference/notation.md#names	description	ready	reference-k16	Grammar form; semantics and example are in the notation section.
